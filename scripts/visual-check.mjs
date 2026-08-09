@@ -71,9 +71,13 @@ await page.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
 if (!(await page.getByText("要塞分数统计", { exact: true }).first().isVisible())) throw new Error("分数页未显示");
 if (!(await page.getByText("2,287", { exact: true }).isVisible())) throw new Error("总分校验失败");
 if (!(await page.getByText("是溅诗啊", { exact: true }).first().isVisible())) throw new Error("成员昵称纠正未生效");
+const firstMemberRow = page.locator(".score-table tbody tr").filter({ hasText: "是溅诗啊" });
+if (!(await firstMemberRow.getByText("第 1 轮", { exact: true }).isVisible())) throw new Error("第一轮标签未同步到战绩表");
+if (!(await firstMemberRow.getByText("第 2 轮", { exact: true }).isVisible())) throw new Error("第二轮标签未同步到战绩表");
 if ((await page.locator(".stat-card > .stat-icon").first().evaluate((element) => getComputedStyle(element).display)) !== "grid") throw new Error("统计图标未居中");
 if ((await page.locator(".chart-bar").evaluate((element) => getComputedStyle(element).overflowY)) !== "visible") throw new Error("柱状图仍有内置滚动");
 await page.screenshot({ path: path.join(output, "scores-desktop.png"), fullPage: false });
+await page.locator(".score-table-panel").screenshot({ path: path.join(output, "scores-rounds-table.png") });
 
 await page.getByRole("button", { name: "选择统计周" }).click();
 if (!(await page.getByText("战绩卷轴", { exact: true }).isVisible())) throw new Error("主题周次菜单未显示");

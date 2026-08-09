@@ -5,6 +5,7 @@ import { Avatar } from "@/components/avatar";
 import { ONLINE_WINDOW_MS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/auth";
 import { getAuditLogs, getLatestWeek, getMembers, getScoreRows } from "@/lib/data";
+import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 
 export const metadata = { title: "管理员页面" };
 
@@ -35,6 +36,9 @@ export default async function AdminPage() {
   }).length;
   const week = getLatestWeek();
   const scores = week ? getScoreRows(week.id) : [];
+  const packageRounds = week
+    ? getPackageRoundsByMember(generatePackagePlan(scores, week.eventDate).assignments)
+    : new Map<number, number[]>();
   const audits = getAuditLogs();
 
   return (
@@ -90,23 +94,26 @@ export default async function AdminPage() {
       {week && (
         <section className="panel score-editor-panel">
           <div className="panel-heading">
-            <div><span className="eyebrow">SCORE CONTROL</span><h2>本期分数、轮次与扣包</h2><p>{week.title} · 修改后排名及发包安排会自动重新计算。</p></div>
+            <div><span className="eyebrow">SCORE CONTROL</span><h2>本期分数、自动轮次与扣包</h2><p>{week.title} · 发包轮次由同一套排包算法自动同步。</p></div>
           </div>
           <form action={saveScoresAction}>
             <input type="hidden" name="weekId" value={week.id} />
             <div className="table-scroll">
               <table className="score-table editable-table">
-                <thead><tr><th>排名</th><th>组员</th><th>分数</th><th>发包轮次</th><th>扣包次数</th></tr></thead>
+                <thead><tr><th>排名</th><th>组员</th><th>分数</th><th>自动发包轮次</th><th>扣包次数</th></tr></thead>
                 <tbody>
-                  {scores.map((row) => (
+                  {scores.map((row) => {
+                    const rounds = packageRounds.get(row.userId) || [];
+                    return (
                     <tr key={row.userId}>
                       <td><span className="rank-cell">#{String(row.rank).padStart(2, "0")}</span></td>
                       <td><span className="member-cell"><Avatar name={row.displayName} src={row.avatarUrl} size={32} /><strong>{row.displayName}</strong></span></td>
                       <td><input className="table-input score-input" type="number" min="0" name={`score_${row.userId}`} defaultValue={row.score} aria-label={`${row.displayName}分数`} /></td>
-                      <td><input className="table-input" type="number" min="0" name={`round_${row.userId}`} defaultValue={row.packageRound ?? ""} placeholder="未设置" aria-label={`${row.displayName}发包轮次`} /></td>
+                      <td>{rounds.length ? <span className="round-badge-list">{rounds.map((round) => <span key={round} className={`round-badge round-badge-${round}`}>第 {round} 轮</span>)}</span> : <span className="muted">本期未排到</span>}</td>
                       <td><input className="table-input deduction-input" type="number" min="0" max="99" name={`deductions_${row.userId}`} defaultValue={row.packageDeductions} aria-label={`${row.displayName}扣包次数`} /></td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

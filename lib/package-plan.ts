@@ -27,6 +27,16 @@ export type PackageDeductionRank = {
   member: ScoreRow;
 };
 
+export function getPackageRoundsByMember(assignments: PackageAssignment[]) {
+  const roundsByMember = new Map<number, number[]>();
+  for (const assignment of assignments) {
+    const rounds = roundsByMember.get(assignment.member.userId) || [];
+    if (!rounds.includes(assignment.round)) rounds.push(assignment.round);
+    roundsByMember.set(assignment.member.userId, rounds);
+  }
+  return roundsByMember;
+}
+
 function addUtcDays(date: string, offset: number) {
   const [year, month, day] = date.split("-").map(Number);
   const value = new Date(Date.UTC(year, month - 1, day + offset));

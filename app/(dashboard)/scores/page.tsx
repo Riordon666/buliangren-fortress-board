@@ -3,6 +3,7 @@ import { Avatar } from "@/components/avatar";
 import { ScoreVisualizations } from "@/components/score-visualizations";
 import { WeekPicker } from "@/components/week-picker";
 import { getLatestWeek, getScoreOverview, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 
 export const metadata = { title: "要塞分数统计" };
 
@@ -15,6 +16,9 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
     return <div className="empty-state">还没有创建统计周。</div>;
   }
   const rows = getScoreRows(selectedWeek.id);
+  const packagePlan = generatePackagePlan(rows, selectedWeek.eventDate);
+  const packageRounds = getPackageRoundsByMember(packagePlan.assignments);
+  const packageRoundsByUser = Object.fromEntries(packageRounds);
   const overview = getScoreOverview(rows);
   const topThree = rows.slice(0, 3);
 
@@ -66,7 +70,7 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
         </div>
       </section>
 
-      <ScoreVisualizations rows={rows} />
+      <ScoreVisualizations rows={rows} packageRoundsByUser={packageRoundsByUser} />
 
       <section className="panel score-table-panel">
         <div className="panel-heading">
@@ -83,15 +87,18 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
               <tr><th>排名</th><th>组员</th><th>分数</th><th>发包轮次</th><th>备注</th></tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {rows.map((row) => {
+                const rounds = packageRounds.get(row.userId) || [];
+                return (
                 <tr key={row.userId} className={row.rank <= 3 ? `top-row rank-${row.rank}` : ""}>
                   <td><span className="rank-cell">{row.rank <= 3 && <Trophy size={15} />}#{String(row.rank).padStart(2, "0")}</span></td>
                   <td><span className="member-cell"><Avatar name={row.displayName} src={row.avatarUrl} size={34} /><strong>{row.displayName}</strong></span></td>
                   <td><strong className="score-value">{row.score}</strong></td>
-                  <td>{row.packageRound === null ? <span className="muted">待设置</span> : <span className="round-badge">第 {row.packageRound} 轮</span>}</td>
+                  <td>{rounds.length ? <span className="round-badge-list">{rounds.map((round) => <span key={round} className={`round-badge round-badge-${round}`}>第 {round} 轮</span>)}</span> : <span className="muted">本期未排到</span>}</td>
                   <td>{row.note ? <span className={`role-badge ${row.note === "首领" ? "leader" : ""}`}>{row.note}</span> : <span className="muted">—</span>}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

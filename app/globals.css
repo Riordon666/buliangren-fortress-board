@@ -1381,6 +1381,29 @@ button:disabled {
   font-weight: 750;
 }
 
+.round-badge-list {
+  display: inline-flex;
+  max-width: 260px;
+  flex-wrap: wrap;
+  gap: 5px;
+  vertical-align: middle;
+}
+
+.round-badge-list .round-badge:nth-child(2) {
+  color: #a34b26;
+  background: rgba(218, 96, 43, .1);
+}
+
+.round-badge-list .round-badge:nth-child(3) {
+  color: #91661f;
+  background: rgba(197, 145, 63, .13);
+}
+
+.round-badge-list .round-badge:nth-child(n + 4) {
+  color: #755184;
+  background: rgba(117, 81, 132, .1);
+}
+
 .role-badge {
   color: #9b692d;
   background: rgba(197,145,63,.12);

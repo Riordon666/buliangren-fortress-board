@@ -52,7 +52,13 @@ function ChartTooltip({ active, payload, label }: {
   );
 }
 
-export function ScoreVisualizations({ rows }: { rows: ScoreRow[] }) {
+export function ScoreVisualizations({
+  rows,
+  packageRoundsByUser
+}: {
+  rows: ScoreRow[];
+  packageRoundsByUser: Record<number, number[]>;
+}) {
   const [view, setView] = useState<View>("bar");
 
   const data = useMemo(() => {
@@ -87,10 +93,10 @@ export function ScoreVisualizations({ rows }: { rows: ScoreRow[] }) {
       { metric: "80分达成", value: Math.round(rows.filter((row) => row.score >= 80).length / total * 100) },
       { metric: "100分达成", value: Math.round(rows.filter((row) => row.score >= 100).length / total * 100) },
       { metric: "中坚厚度", value: Math.round(active.filter((row) => row.score >= average).length / activeCount * 100) },
-      { metric: "发包登记", value: Math.round(rows.filter((row) => row.packageRound !== null).length / total * 100) }
+      { metric: "排包覆盖", value: Math.round(rows.filter((row) => packageRoundsByUser[row.userId]?.length).length / total * 100) }
     ];
     return { barData, lineData, pieData, ranges, radarData };
-  }, [rows]);
+  }, [rows, packageRoundsByUser]);
 
   return (
     <section className="panel visualization-panel">

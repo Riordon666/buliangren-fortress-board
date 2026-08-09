@@ -104,20 +104,17 @@ export async function saveScoresAction(formData: FormData) {
   const rows = db.prepare("SELECT user_id AS userId FROM weekly_scores WHERE week_id = ?")
     .all(weekId) as { userId: number }[];
   const update = db.prepare(`
-    UPDATE weekly_scores SET score = ?, package_round = ?, package_deductions = ?, updated_at = CURRENT_TIMESTAMP
+    UPDATE weekly_scores SET score = ?, package_deductions = ?, updated_at = CURRENT_TIMESTAMP
     WHERE week_id = ? AND user_id = ?
   `);
 
   db.transaction(() => {
     for (const row of rows) {
       const scoreValue = Number(formData.get(`score_${row.userId}`));
-      const roundRaw = String(formData.get(`round_${row.userId}`) || "").trim();
-      const packageRound = roundRaw === "" ? null : Number(roundRaw);
       const packageDeductions = Number(formData.get(`deductions_${row.userId}`));
       if (!Number.isInteger(scoreValue) || scoreValue < 0) continue;
-      if (packageRound !== null && (!Number.isInteger(packageRound) || packageRound < 0)) continue;
       if (!Number.isInteger(packageDeductions) || packageDeductions < 0 || packageDeductions > 99) continue;
-      update.run(scoreValue, packageRound, packageDeductions, weekId, row.userId);
+      update.run(scoreValue, packageDeductions, weekId, row.userId);
     }
   })();
   writeAuditLog(admin.id, "批量更新要塞分数", undefined, { weekId, memberCount: rows.length });

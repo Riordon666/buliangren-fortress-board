@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { INITIAL_PASSWORD } from "@/lib/constants";
 import { getDb } from "@/lib/db";
 import { getLatestWeek, getMembers, getScoreRows } from "@/lib/data";
-import { generatePackagePlan } from "@/lib/package-plan";
+import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 import { verifyPassword } from "@/lib/password";
 import type { ScoreRow } from "@/lib/types";
 
@@ -55,6 +55,9 @@ describe("初始组织数据", () => {
     expect(plan.assignments[26]).toMatchObject({ round: 1, member: { displayName: "村子来个青年", score: 40 } });
     expect(plan.assignments[27]).toMatchObject({ round: 2, member: { displayName: "是溅诗啊" } });
     expect(plan.assignments.some((item) => item.round > 1 && item.member.score < 60)).toBe(false);
+    const rounds = getPackageRoundsByMember(plan.assignments);
+    expect(rounds.get(plan.assignments[0].member.userId)).toEqual([1, 2]);
+    expect(rounds.get(plan.assignments[26].member.userId)).toEqual([1]);
     expect(plan.days[0]).toMatchObject({ date: "2026-08-08", weekday: "星期六" });
     expect(plan.days[7]).toMatchObject({ date: "2026-08-15", weekday: "星期六" });
   });
@@ -71,6 +74,7 @@ describe("初始组织数据", () => {
     expect(plan.days.every((day) => day.assignments.length === 5)).toBe(true);
     expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "是溅诗啊" } });
     expect(plan.assignments.some((item) => item.round >= 2 && item.member.displayName === "是溅诗啊")).toBe(false);
+    expect(getPackageRoundsByMember(plan.assignments).get(rows[0].userId)).toEqual([1]);
     expect(plan.deductionRanking[0]).toMatchObject({ count: 1, applied: 1, member: { displayName: "是溅诗啊" } });
   });
 
