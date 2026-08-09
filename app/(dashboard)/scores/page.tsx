@@ -2,7 +2,7 @@ import { Award, Flame, Gauge, ScrollText, Target, Trophy } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { ScoreVisualizations } from "@/components/score-visualizations";
 import { WeekPicker } from "@/components/week-picker";
-import { getLatestWeek, getScoreOverview, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { getCurrentWeek, getScoreOverview, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 
 export const metadata = { title: "要塞分数统计" };
@@ -11,7 +11,7 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const weeks = getWeeks();
   const requestedId = Number(params.week);
-  const selectedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : getLatestWeek();
+  const selectedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : getCurrentWeek();
   if (!selectedWeek) {
     return <div className="empty-state">还没有创建统计周。</div>;
   }

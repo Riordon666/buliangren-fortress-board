@@ -1,10 +1,10 @@
 import { Activity, Clock3, FileSpreadsheet, KeyRound, ListChecks, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
 import { saveScoresAction } from "@/app/admin/actions";
-import { AddMemberForm, AdminMemberList, CreateWeekForm, ScoreImportForm } from "@/components/admin-forms";
+import { AddMemberForm, AdminMemberList, CreateWeekForm, ScoreImportForm, WeekManagementList } from "@/components/admin-forms";
 import { Avatar } from "@/components/avatar";
 import { ONLINE_WINDOW_MS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/auth";
-import { getAuditLogs, getLatestWeek, getMembers, getScoreRows } from "@/lib/data";
+import { getAuditLogs, getCurrentWeek, getMembers, getScoreRows, getWeeks } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 
 export const metadata = { title: "管理员页面" };
@@ -17,6 +17,7 @@ const actionLabels: Record<string, string> = {
   "批量更新要塞分数": "更新了本周战绩",
   "导入要塞积分": "导入了本周战绩",
   "创建统计周": "创建了新的统计周",
+  "删除统计周": "删除了一个统计周",
   "修改本人密码": "修改了自己的密码",
   "更新头像": "更新了个人头像"
 };
@@ -34,7 +35,8 @@ export default async function AdminPage() {
     const date = parseSqliteDate(member.lastSeenAt);
     return date && Date.now() - date.getTime() <= ONLINE_WINDOW_MS;
   }).length;
-  const week = getLatestWeek();
+  const weeks = getWeeks();
+  const week = getCurrentWeek();
   const scores = week ? getScoreRows(week.id) : [];
   const packageRounds = week
     ? getPackageRoundsByMember(generatePackagePlan(scores, week.eventDate).assignments)
@@ -62,7 +64,7 @@ export default async function AdminPage() {
       <section className="admin-tools-grid">
         <div className="panel admin-tool-card add-member-card">
           <div className="panel-heading">
-            <div><span className="eyebrow"><UserPlus size={13} /> NEW MEMBER</span><h2>添加组员</h2><p>新账号初始密码统一为 7891666。</p></div>
+            <div><span className="eyebrow"><UserPlus size={13} /> NEW MEMBER</span><h2>添加组员</h2><p>游戏昵称同时作为登录账号，初始密码由你设置。</p></div>
           </div>
           <AddMemberForm />
         </div>
@@ -71,6 +73,8 @@ export default async function AdminPage() {
             <div><span className="eyebrow"><Clock3 size={13} /> NEW CYCLE</span><h2>新建统计周</h2><p>为所有当前有效组员生成 0 分记录。</p></div>
           </div>
           <CreateWeekForm />
+          <div className="week-list-heading"><strong>已有统计周</strong><span>删除前会自动备份数据库</span></div>
+          <WeekManagementList weeks={weeks} currentWeekId={week?.id || null} />
         </div>
       </section>
 

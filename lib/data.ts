@@ -12,6 +12,28 @@ export function getLatestWeek() {
   return getWeeks()[0] || null;
 }
 
+export function getShanghaiDate(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+export function selectCurrentWeek(weeks: ScoreWeek[], today: string) {
+  const orderedWeeks = [...weeks].sort((left, right) =>
+    right.eventDate.localeCompare(left.eventDate) || right.id - left.id
+  );
+  return orderedWeeks.find((week) => week.eventDate <= today) || orderedWeeks.at(-1) || null;
+}
+
+export function getCurrentWeek(today = getShanghaiDate()) {
+  return selectCurrentWeek(getWeeks(), today);
+}
+
 export function getWeekById(weekId: number) {
   return getDb().prepare(`
     SELECT id, title, event_date AS eventDate, status

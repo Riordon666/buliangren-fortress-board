@@ -1,7 +1,7 @@
 import { CalendarDays, CheckCircle2, CircleMinus, Gift, Layers3, ListOrdered, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { WeekPicker } from "@/components/week-picker";
-import { getLatestWeek, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { getCurrentWeek, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
 import {
   FIRST_ROUND_MIN_SCORE,
   LATER_ROUND_MIN_SCORE,
@@ -15,7 +15,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
   const params = await searchParams;
   const weeks = getWeeks();
   const requestedId = Number(params.week);
-  const selectedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : getLatestWeek();
+  const selectedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : getCurrentWeek();
   if (!selectedWeek) return <div className="empty-state">还没有可以生成发包安排的统计周。</div>;
 
   const rows = getScoreRows(selectedWeek.id);

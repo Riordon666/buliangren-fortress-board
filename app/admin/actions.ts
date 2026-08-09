@@ -8,6 +8,7 @@ import { z } from "zod";
 import { INITIAL_PASSWORD } from "@/lib/constants";
 import { requireAdmin, revokeUserSessions, writeAuditLog } from "@/lib/auth";
 import { getDb } from "@/lib/db";
+import { getShanghaiDate } from "@/lib/data";
 import { hashPassword } from "@/lib/password";
 
 export type AdminFormState = { error?: string; success?: string };
@@ -29,43 +30,47 @@ function listNames(names: string[]) {
 }
 
 const memberSchema = z.object({
-  username: z.string().trim().min(1, "请输入登录账号。 ").max(40),
-  displayName: z.string().trim().min(1, "请输入游戏昵称。 ").max(40),
+  displayName: z.string().trim().min(1, "请输入游戏昵称。").max(40),
+  initialPassword: z.string().min(7, "初始密码至少需要7位。").max(128, "初始密码不能超过128位。"),
   note: z.string().trim().max(30).optional()
 });
 
 export async function addMemberAction(_state: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const admin = await requireAdmin();
   const parsed = memberSchema.safeParse({
-    username: formData.get("username"),
     displayName: formData.get("displayName"),
+    initialPassword: formData.get("initialPassword"),
     note: formData.get("note") || undefined
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message.trim() };
 
   const db = getDb();
-  const exists = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE").get(parsed.data.username);
+  const exists = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE").get(parsed.data.displayName);
   if (exists) return { error: "这个登录账号已经存在。" };
 
-  const passwordHash = await hashPassword(INITIAL_PASSWORD);
+  const passwordHash = await hashPassword(parsed.data.initialPassword);
+  const currentDate = getShanghaiDate();
   let userId = 0;
   db.transaction(() => {
     const result = db.prepare(`
       INSERT INTO users (username, display_name, password_hash, note, roster_order)
       VALUES (?, ?, ?, ?, (SELECT COALESCE(MAX(roster_order), 0) + 1 FROM users))
-    `).run(parsed.data.username, parsed.data.displayName, passwordHash, parsed.data.note || null);
+    `).run(parsed.data.displayName, parsed.data.displayName, passwordHash, parsed.data.note || null);
     userId = Number(result.lastInsertRowid);
-    const week = db.prepare("SELECT id FROM weeks ORDER BY event_date DESC, id DESC LIMIT 1")
-      .get() as { id: number } | undefined;
-    if (week) {
-      db.prepare("INSERT INTO weekly_scores (week_id, user_id, score) VALUES (?, ?, 0)")
-        .run(week.id, userId);
-    }
+    db.prepare(`
+      INSERT INTO weekly_scores (week_id, user_id, score)
+      SELECT id, ?, 0 FROM weeks
+      WHERE event_date >= COALESCE(
+        (SELECT MAX(event_date) FROM weeks WHERE event_date <= ?),
+        (SELECT MIN(event_date) FROM weeks)
+      )
+    `).run(userId, currentDate);
   })();
-  writeAuditLog(admin.id, "添加组员", userId, { username: parsed.data.username });
+  writeAuditLog(admin.id, "添加组员", userId, { username: parsed.data.displayName });
   revalidatePath("/admin");
   revalidatePath("/scores");
-  return { success: `已添加 ${parsed.data.displayName}，初始密码为 ${INITIAL_PASSWORD}。` };
+  revalidatePath("/packages");
+  return { success: `已添加 ${parsed.data.displayName}，初始密码已加密保存。` };
 }
 
 export async function resetPasswordAction(formData: FormData) {
@@ -120,6 +125,7 @@ export async function saveScoresAction(formData: FormData) {
   writeAuditLog(admin.id, "批量更新要塞分数", undefined, { weekId, memberCount: rows.length });
   revalidatePath("/scores");
   revalidatePath("/packages");
+  revalidatePath("/profile");
   revalidatePath("/admin");
 }
 
@@ -250,4 +256,31 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
   revalidatePath("/scores");
   revalidatePath("/admin");
   return { success: "新一周已经创建。" };
+}
+
+export async function deleteWeekAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const weekId = Number(formData.get("weekId"));
+  if (!Number.isInteger(weekId) || weekId <= 0) return;
+
+  const db = getDb();
+  const week = db.prepare("SELECT id, title, event_date AS eventDate FROM weeks WHERE id = ?")
+    .get(weekId) as { id: number; title: string; eventDate: string } | undefined;
+  if (!week) return;
+
+  const backupDir = path.join(process.cwd(), "data", "backups");
+  await fs.mkdir(backupDir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  await db.backup(path.join(backupDir, `naruto-fortress-before-delete-week-${week.id}-${stamp}.db`));
+
+  db.prepare("DELETE FROM weeks WHERE id = ?").run(week.id);
+  writeAuditLog(admin.id, "删除统计周", undefined, {
+    weekId: week.id,
+    title: week.title,
+    eventDate: week.eventDate
+  });
+  revalidatePath("/scores");
+  revalidatePath("/packages");
+  revalidatePath("/profile");
+  revalidatePath("/admin");
 }

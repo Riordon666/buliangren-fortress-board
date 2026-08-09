@@ -2,28 +2,38 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, CheckCircle2, Download, FileSpreadsheet, LoaderCircle, Plus, RotateCcw, Search, Upload, UserMinus, UserRoundCheck } from "lucide-react";
+import { CalendarDays, CalendarPlus, CheckCircle2, Download, Eye, EyeOff, FileSpreadsheet, LoaderCircle, Plus, RotateCcw, Search, Trash2, Upload, UserMinus, UserRoundCheck } from "lucide-react";
 import {
   addMemberAction,
   createWeekAction,
+  deleteWeekAction,
   importScoresAction,
   resetPasswordAction,
   toggleMemberAction,
   type AdminFormState
 } from "@/app/admin/actions";
 import { Avatar } from "@/components/avatar";
-import { ONLINE_WINDOW_MS } from "@/lib/constants";
-import type { MemberRow } from "@/lib/types";
+import { INITIAL_PASSWORD, ONLINE_WINDOW_MS } from "@/lib/constants";
+import type { MemberRow, ScoreWeek } from "@/lib/types";
 
 const initialState: AdminFormState = {};
 
 export function AddMemberForm() {
   const [state, action, pending] = useActionState(addMemberAction, initialState);
+  const [showInitialPassword, setShowInitialPassword] = useState(false);
   return (
     <form action={action} className="compact-form">
       <div className="form-grid three">
-        <label><span>登录账号</span><input name="username" placeholder="可直接使用游戏昵称" required /></label>
-        <label><span>游戏昵称</span><input name="displayName" placeholder="组员在游戏中的名字" required /></label>
+        <label><span>游戏昵称 / 登录账号</span><input name="displayName" placeholder="输入游戏中的名字" required /></label>
+        <label>
+          <span>初始密码</span>
+          <span className="password-control">
+            <input name="initialPassword" type={showInitialPassword ? "text" : "password"} minLength={7} maxLength={128} defaultValue={INITIAL_PASSWORD} autoComplete="new-password" required />
+            <button type="button" onClick={() => setShowInitialPassword((value) => !value)} aria-label="显示或隐藏初始密码">
+              {showInitialPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+            </button>
+          </span>
+        </label>
         <label><span>备注</span><input name="note" placeholder="如：高层（可空）" /></label>
       </div>
       {state.error && <div className="form-message error">{state.error}</div>}
@@ -49,6 +59,34 @@ export function CreateWeekForm() {
         {pending ? <LoaderCircle className="spin" size={17} /> : <CalendarPlus size={17} />} 创建新一周
       </button>
     </form>
+  );
+}
+
+export function WeekManagementList({ weeks, currentWeekId }: { weeks: ScoreWeek[]; currentWeekId: number | null }) {
+  return (
+    <div className="week-management-list">
+      {weeks.map((week) => (
+        <article key={week.id} className={week.id === currentWeekId ? "current" : ""}>
+          <span className="week-list-icon"><CalendarDays size={16} /></span>
+          <div>
+            <strong>{week.title}</strong>
+            <small>{week.eventDate}{week.id === currentWeekId ? " · 当前默认周" : ""}</small>
+          </div>
+          <form
+            action={deleteWeekAction}
+            onSubmit={(event) => {
+              if (!confirm(`确定删除“${week.title}”吗？\n该周全部积分、扣包记录和发包安排都会删除，成员账号不受影响。`)) {
+                event.preventDefault();
+              }
+            }}
+          >
+            <input type="hidden" name="weekId" value={week.id} />
+            <button type="submit" className="text-button danger week-delete-button"><Trash2 size={14} />删除</button>
+          </form>
+        </article>
+      ))}
+      {!weeks.length && <div className="empty-inline">还没有统计周。</div>}
+    </div>
   );
 }
 

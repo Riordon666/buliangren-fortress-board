@@ -98,6 +98,10 @@ await page.screenshot({ path: path.join(output, "packages-desktop.png"), fullPag
 
 await page.goto("http://localhost:3000/admin", { waitUntil: "networkidle" });
 if (!(await page.getByText("组员与在线状态").isVisible())) throw new Error("管理员页未显示");
+if (!(await page.getByLabel("游戏昵称 / 登录账号").isVisible())) throw new Error("合并后的组员账号输入框未显示");
+if (!(await page.locator('input[name="initialPassword"]').isVisible())) throw new Error("自定义初始密码输入框未显示");
+if (!(await page.getByText("已有统计周", { exact: true }).isVisible())) throw new Error("统计周管理列表未显示");
+if (!(await page.getByRole("button", { name: "删除" }).first().isVisible())) throw new Error("删除统计周入口未显示");
 if (!(await page.getByText("表格导入积分").isVisible())) throw new Error("积分导入区域未显示");
 if (!(await page.getByRole("link", { name: "下载标准模板" }).isVisible())) throw new Error("标准模板下载入口未显示");
 if (!(await page.getByRole("columnheader", { name: "扣包次数" }).isVisible())) throw new Error("管理员扣包设置入口未显示");
@@ -116,6 +120,9 @@ await mobilePage.screenshot({ path: path.join(output, "scores-mobile.png"), full
 await mobilePage.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
 if ((await mobilePage.locator(".package-day-card").count()) !== 8) throw new Error("手机端发包周期不是8天");
 await mobilePage.screenshot({ path: path.join(output, "packages-mobile.png"), fullPage: true });
+await mobilePage.goto("http://localhost:3000/admin", { waitUntil: "networkidle" });
+if (!(await mobilePage.getByText("已有统计周", { exact: true }).isVisible())) throw new Error("手机端统计周管理未显示");
+await mobilePage.screenshot({ path: path.join(output, "admin-mobile.png"), fullPage: false });
 await mobileContext.close();
 
 await browser.close();

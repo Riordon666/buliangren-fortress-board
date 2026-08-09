@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { INITIAL_PASSWORD } from "@/lib/constants";
 import { getDb } from "@/lib/db";
-import { getLatestWeek, getMembers, getScoreRows } from "@/lib/data";
+import { getLatestWeek, getMembers, getScoreRows, getShanghaiDate, selectCurrentWeek } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 import { verifyPassword } from "@/lib/password";
-import type { ScoreRow } from "@/lib/types";
+import type { ScoreRow, ScoreWeek } from "@/lib/types";
 
 describe("初始组织数据", () => {
   it("导入30名组员，并将九天惊落设为唯一管理员", () => {
@@ -41,6 +41,36 @@ describe("初始组织数据", () => {
     const version = getDb().prepare("SELECT sqlite_version() AS version").get() as { version: string };
     const [major, minor, patch] = version.version.split(".").map(Number);
     expect(major > 3 || (major === 3 && (minor > 51 || (minor === 51 && patch >= 3)))).toBe(true);
+  });
+
+  it("按北京时间选择已经开始的当前统计周，不会提前跳到未来周", () => {
+    const weeks: ScoreWeek[] = [
+      { id: 2, title: "8月15日统计周", eventDate: "2026-08-15", status: "published" },
+      { id: 1, title: "8月8日统计周", eventDate: "2026-08-08", status: "published" }
+    ];
+
+    expect(selectCurrentWeek(weeks, "2026-08-09")?.id).toBe(1);
+    expect(selectCurrentWeek(weeks, "2026-08-15")?.id).toBe(2);
+    expect(getShanghaiDate(new Date("2026-08-14T16:30:00.000Z"))).toBe("2026-08-15");
+  });
+
+  it("删除统计周会级联删除该周积分但保留成员账号", () => {
+    const db = getDb();
+    const member = db.prepare("SELECT id FROM users ORDER BY id LIMIT 1").get() as { id: number };
+    db.exec("BEGIN");
+    try {
+      const result = db.prepare("INSERT INTO weeks (title, event_date) VALUES (?, ?)")
+        .run("删除测试周", "2099-12-19");
+      const weekId = Number(result.lastInsertRowid);
+      db.prepare("INSERT INTO weekly_scores (week_id, user_id, score) VALUES (?, ?, ?)")
+        .run(weekId, member.id, 88);
+      db.prepare("DELETE FROM weeks WHERE id = ?").run(weekId);
+
+      expect(db.prepare("SELECT id FROM weekly_scores WHERE week_id = ?").get(weekId)).toBeUndefined();
+      expect(db.prepare("SELECT id FROM users WHERE id = ?").get(member.id)).toBeTruthy();
+    } finally {
+      db.exec("ROLLBACK");
+    }
   });
 
   it("按40分首轮、60分后续轮次生成连续8天发包安排", () => {
