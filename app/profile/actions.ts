@@ -68,9 +68,9 @@ export async function updateAvatarAction(_state: FormState, formData: FormData):
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(uploadDir, { recursive: true });
     const buffer = Buffer.from(await file.arrayBuffer());
-    await sharp(buffer)
+    await sharp(buffer, { limitInputPixels: 40_000_000, failOn: "error" })
       .rotate()
-      .resize(512, 512, { fit: "cover", position: "attention" })
+      .resize(512, 512, { fit: "cover", position: "centre" })
       .webp({ quality: 86 })
       .toFile(path.join(uploadDir, filename));
 
@@ -81,7 +81,8 @@ export async function updateAvatarAction(_state: FormState, formData: FormData):
     revalidatePath("/profile");
     revalidatePath("/scores");
     return { success: "头像已更新。" };
-  } catch {
+  } catch (error) {
+    console.error("Avatar processing failed", error);
     return { error: "图片处理失败，请换一张图片重试。" };
   }
 }

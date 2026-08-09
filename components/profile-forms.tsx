@@ -6,10 +6,52 @@ import { changePasswordAction, updateAvatarAction, type FormState } from "@/app/
 import { Avatar } from "@/components/avatar";
 
 const initialState: FormState = {};
+const avatarTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+const maxAvatarBytes = 2 * 1024 * 1024;
+const maxAvatarDimension = 1280;
+
+async function prepareAvatar(file: File) {
+  if (!avatarTypes.has(file.type)) {
+    throw new Error("仅支持 JPG、PNG 或 WebP 图片。");
+  }
+
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error("无法读取这张图片，请换一张重试。"));
+      element.src = sourceUrl;
+    });
+    const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+    if (!longestSide) throw new Error("无法读取这张图片，请换一张重试。");
+
+    const scale = Math.min(1, maxAvatarDimension / longestSide);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("当前浏览器无法处理图片，请换浏览器重试。");
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
+    if (!blob) throw new Error("图片压缩失败，请换一张重试。");
+    if (blob.size > maxAvatarBytes) throw new Error("图片处理后仍超过 2MB，请换一张较小的图片。");
+
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "avatar";
+    return new File([blob], `${baseName}.webp`, { type: "image/webp", lastModified: Date.now() });
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
+}
 
 export function AvatarForm({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
   const [state, action, pending] = useActionState(updateAvatarAction, initialState);
   const [preview, setPreview] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   useEffect(() => () => {
     if (preview) URL.revokeObjectURL(preview);
@@ -30,19 +72,41 @@ export function AvatarForm({ name, avatarUrl }: { name: string; avatarUrl: strin
             type="file"
             name="avatar"
             accept="image/jpeg,image/png,image/webp"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
+            onChange={async (event) => {
+              const input = event.currentTarget;
+              const file = input.files?.[0];
               if (preview) URL.revokeObjectURL(preview);
-              setPreview(file ? URL.createObjectURL(file) : null);
+              setPreview(null);
+              setFileError(null);
+              if (!file) return;
+
+              setPreparing(true);
+              try {
+                const prepared = await prepareAvatar(file);
+                const transfer = new DataTransfer();
+                transfer.items.add(prepared);
+                input.files = transfer.files;
+                setPreview(URL.createObjectURL(prepared));
+              } catch (error) {
+                input.value = "";
+                setFileError(error instanceof Error ? error.message : "图片处理失败，请换一张重试。");
+              } finally {
+                setPreparing(false);
+              }
             }}
             required
           />
         </label>
-        {state.error && <div className="form-message error">{state.error}</div>}
+        {fileError && <div className="form-message error">{fileError}</div>}
+        {!fileError && state.error && <div className="form-message error">{state.error}</div>}
         {state.success && <div className="form-message success"><CheckCircle2 size={15} />{state.success}</div>}
       </div>
-      <button className="primary-button" type="submit" disabled={pending}>
-        {pending ? <><LoaderCircle className="spin" size={17} /> 处理中</> : "保存新头像"}
+      <button className="primary-button" type="submit" disabled={pending || preparing || Boolean(fileError)}>
+        {preparing
+          ? <><LoaderCircle className="spin" size={17} /> 正在压缩</>
+          : pending
+            ? <><LoaderCircle className="spin" size={17} /> 处理中</>
+            : "保存新头像"}
       </button>
     </form>
   );
@@ -86,4 +150,3 @@ export function PasswordForm({ required }: { required: boolean }) {
     </form>
   );
 }
-
