@@ -20,6 +20,13 @@ export type PackageDay = {
   assignments: PackageAssignment[];
 };
 
+export type PackageDeductionRank = {
+  rank: number;
+  count: number;
+  applied: number;
+  member: ScoreRow;
+};
+
 function addUtcDays(date: string, offset: number) {
   const [year, month, day] = date.split("-").map(Number);
   const value = new Date(Date.UTC(year, month - 1, day + offset));
@@ -38,10 +45,14 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
   const laterRoundMembers = rows.filter((row) => row.score >= LATER_ROUND_MIN_SCORE);
   const totalSlots = PACKAGE_DAYS * PACKAGES_PER_DAY;
   const assignments: PackageAssignment[] = [];
+  const remainingDeductions = new Map(
+    rows.map((row) => [row.userId, Math.max(0, Math.trunc(row.packageDeductions || 0))])
+  );
+  const appliedDeductions = new Map<number, number>();
 
   let round = 1;
   let memberIndex = 0;
-  for (let slot = 0; slot < totalSlots; slot += 1) {
+  while (assignments.length < totalSlots) {
     let eligible = round === 1 ? firstRoundMembers : laterRoundMembers;
     if (!eligible.length) break;
     if (memberIndex >= eligible.length) {
@@ -51,15 +62,44 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
       if (!eligible.length) break;
     }
 
+    const member = eligible[memberIndex];
+    memberIndex += 1;
+    const deductions = remainingDeductions.get(member.userId) || 0;
+    if (deductions > 0) {
+      remainingDeductions.set(member.userId, deductions - 1);
+      appliedDeductions.set(member.userId, (appliedDeductions.get(member.userId) || 0) + 1);
+      continue;
+    }
+
+    const slot = assignments.length;
     assignments.push({
       slot,
       dayIndex: Math.floor(slot / PACKAGES_PER_DAY),
       position: (slot % PACKAGES_PER_DAY) + 1,
       round,
-      member: eligible[memberIndex]
+      member
     });
-    memberIndex += 1;
   }
+
+  const deductionMembers = rows
+    .filter((row) => row.packageDeductions > 0)
+    .sort((left, right) =>
+      right.packageDeductions - left.packageDeductions
+      || right.score - left.score
+      || left.displayName.localeCompare(right.displayName, "zh-CN")
+    );
+  let previousCount: number | null = null;
+  let previousRank = 0;
+  const deductionRanking: PackageDeductionRank[] = deductionMembers.map((member, index) => {
+    if (member.packageDeductions !== previousCount) previousRank = index + 1;
+    previousCount = member.packageDeductions;
+    return {
+      rank: previousRank,
+      count: member.packageDeductions,
+      applied: appliedDeductions.get(member.userId) || 0,
+      member
+    };
+  });
 
   const days: PackageDay[] = Array.from({ length: PACKAGE_DAYS }, (_, dayIndex) => {
     const date = addUtcDays(startDate, dayIndex);
@@ -76,6 +116,9 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
     assignments,
     firstRoundEligible: firstRoundMembers.length,
     laterRoundEligible: laterRoundMembers.length,
+    deductionRanking,
+    totalDeductions: deductionRanking.reduce((sum, item) => sum + item.count, 0),
+    appliedDeductionCount: deductionRanking.reduce((sum, item) => sum + item.applied, 0),
     totalSlots,
     unfilledSlots: totalSlots - assignments.length,
     maxRound: assignments.at(-1)?.round || 0

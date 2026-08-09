@@ -26,6 +26,7 @@ export type ScoreRow = {
   note: string | null;
   score: number;
   packageRound: number | null;
+  packageDeductions: number;
   rank: number;
 };
 
@@ -41,4 +42,3 @@ export type TrendPoint = {
   score: number;
   rank: number;
 };
-

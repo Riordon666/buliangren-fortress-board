@@ -29,6 +29,7 @@ export function getScoreRows(weekId: number): ScoreRow[] {
       u.note,
       ws.score,
       ws.package_round AS packageRound,
+      ws.package_deductions AS packageDeductions,
       RANK() OVER (ORDER BY ws.score DESC) AS rank
     FROM weekly_scores ws
     JOIN users u ON u.id = ws.user_id

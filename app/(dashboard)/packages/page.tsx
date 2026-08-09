@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, Gift, Layers3, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
+import { CalendarDays, CheckCircle2, CircleMinus, Gift, Layers3, ListOrdered, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { WeekPicker } from "@/components/week-picker";
 import { getLatestWeek, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
@@ -52,7 +52,35 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <span><i>02</i>第一轮仅限 40 分及以上</span>
           <span><i>03</i>第二轮起仅限 60 分及以上</span>
           <span><i>04</i>每轮结束后从榜首重新开始</span>
+          <span><i>05</i>每扣 1 次，跳过该成员下一次发包资格</span>
         </div>
+      </section>
+
+      <section className="panel deduction-board">
+        <header className="deduction-board-heading">
+          <div className="package-rule-title">
+            <span className="section-icon deduction-icon"><CircleMinus size={19} /></span>
+            <div><span className="eyebrow">PACKAGE DEDUCTIONS</span><h2>本期扣包次数排行</h2></div>
+          </div>
+          <span className="deduction-summary"><ListOrdered size={15} />共设置 {plan.totalDeductions} 次 · 安排已应用 {plan.appliedDeductionCount} 次</span>
+        </header>
+        {plan.deductionRanking.length ? (
+          <div className="deduction-ranking">
+            {plan.deductionRanking.map((item) => (
+              <article key={item.member.userId} className="deduction-rank-item">
+                <span className="deduction-rank">#{String(item.rank).padStart(2, "0")}</span>
+                <Avatar name={item.member.displayName} src={item.member.avatarUrl} size={40} />
+                <div>
+                  <strong>{item.member.displayName}</strong>
+                  <small>{item.member.score} 分 · 安排已跳过 {item.applied} 次{item.applied < item.count ? ` · 尚余 ${item.count - item.applied} 次` : ""}</small>
+                </div>
+                <b>扣 {item.count} 次</b>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="deduction-empty"><ShieldCheck size={18} />本期暂无扣包记录，所有符合条件的成员按正常顺序轮转。</div>
+        )}
       </section>
 
       <section className="package-days-grid">

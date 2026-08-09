@@ -98,6 +98,7 @@ function createDatabase() {
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
       score INTEGER NOT NULL DEFAULT 0 CHECK (score >= 0),
       package_round INTEGER CHECK (package_round IS NULL OR package_round >= 0),
+      package_deductions INTEGER NOT NULL DEFAULT 0 CHECK (package_deductions >= 0),
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE (week_id, user_id)
     );
@@ -137,6 +138,14 @@ function createDatabase() {
   const userColumns = database.pragma("table_info(users)") as Array<{ name: string }>;
   if (!userColumns.some((column) => column.name === "roster_order")) {
     database.exec("ALTER TABLE users ADD COLUMN roster_order INTEGER");
+  }
+
+  const scoreColumns = database.pragma("table_info(weekly_scores)") as Array<{ name: string }>;
+  if (!scoreColumns.some((column) => column.name === "package_deductions")) {
+    database.exec(`
+      ALTER TABLE weekly_scores
+      ADD COLUMN package_deductions INTEGER NOT NULL DEFAULT 0 CHECK (package_deductions >= 0)
+    `);
   }
 
   const existingUsers = database.prepare("SELECT COUNT(*) AS count FROM users").get() as { count: number };

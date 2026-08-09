@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { getLatestWeek, getMembers, getScoreRows } from "@/lib/data";
 import { generatePackagePlan } from "@/lib/package-plan";
 import { verifyPassword } from "@/lib/password";
+import type { ScoreRow } from "@/lib/types";
 
 describe("初始组织数据", () => {
   it("导入30名组员，并将九天惊落设为唯一管理员", () => {
@@ -56,5 +57,63 @@ describe("初始组织数据", () => {
     expect(plan.assignments.some((item) => item.round > 1 && item.member.score < 60)).toBe(false);
     expect(plan.days[0]).toMatchObject({ date: "2026-08-08", weekday: "星期六" });
     expect(plan.days[7]).toMatchObject({ date: "2026-08-15", weekday: "星期六" });
+  });
+
+  it("扣包会跳过对应资格且由后续成员补齐每日名额", () => {
+    const week = getLatestWeek()!;
+    const rows = getScoreRows(week.id).map((row) => ({
+      ...row,
+      packageDeductions: row.displayName === "是溅诗啊" ? 1 : 0
+    }));
+    const plan = generatePackagePlan(rows, week.eventDate);
+
+    expect(plan.assignments).toHaveLength(40);
+    expect(plan.days.every((day) => day.assignments.length === 5)).toBe(true);
+    expect(plan.assignments[0].member.displayName).toBe("抑郁的农村入");
+    expect(plan.assignments.find((item) => item.member.displayName === "是溅诗啊")?.round).toBe(2);
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 1, applied: 1, member: { displayName: "是溅诗啊" } });
+  });
+
+  it("40至59分成员被扣一次后本期不再进入后续轮次", () => {
+    const week = getLatestWeek()!;
+    const rows = getScoreRows(week.id).map((row) => ({
+      ...row,
+      packageDeductions: row.displayName === "无压力之人" ? 1 : 0
+    }));
+    const plan = generatePackagePlan(rows, week.eventDate);
+
+    expect(plan.assignments.some((item) => item.member.displayName === "无压力之人")).toBe(false);
+    expect(plan.deductionRanking[0]).toMatchObject({ applied: 1 });
+  });
+
+  it("多次扣包会跨轮次依次生效", () => {
+    const week = getLatestWeek()!;
+    const rows = getScoreRows(week.id).map((row) => ({
+      ...row,
+      packageDeductions: row.displayName === "是溅诗啊" ? 2 : 0
+    }));
+    const plan = generatePackagePlan(rows, week.eventDate);
+
+    expect(plan.assignments.find((item) => item.member.displayName === "是溅诗啊")?.round).toBe(3);
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 2, applied: 2 });
+  });
+
+  it("没有后续轮次资格时会安全留空", () => {
+    const rows: ScoreRow[] = [{
+      userId: 999,
+      username: "test",
+      displayName: "测试成员",
+      avatarUrl: null,
+      note: null,
+      score: 50,
+      packageRound: null,
+      packageDeductions: 1,
+      rank: 1
+    }];
+    const plan = generatePackagePlan(rows, "2026-08-08");
+
+    expect(plan.assignments).toHaveLength(0);
+    expect(plan.unfilledSlots).toBe(40);
+    expect(plan.deductionRanking[0]).toMatchObject({ applied: 1 });
   });
 });
