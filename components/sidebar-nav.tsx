@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, ShieldCheck, UserRound } from "lucide-react";
+import { BarChart3, Gift, ShieldCheck, UserRound } from "lucide-react";
 
 const baseItems = [
   { href: "/scores", label: "要塞分数统计", icon: BarChart3 },
+  { href: "/packages", label: "发包安排", icon: Gift },
   { href: "/profile", label: "个人信息", icon: UserRound }
 ];
 
@@ -31,4 +32,3 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
     </nav>
   );
 }
-

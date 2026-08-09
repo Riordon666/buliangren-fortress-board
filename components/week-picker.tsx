@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarDays, Check, ChevronDown } from "lucide-react";
 import type { ScoreWeek } from "@/lib/types";
 
-export function WeekPicker({ weeks, selectedId }: { weeks: ScoreWeek[]; selectedId: number }) {
+export function WeekPicker({ weeks, selectedId, basePath = "/scores" }: { weeks: ScoreWeek[]; selectedId: number; basePath?: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -57,7 +57,7 @@ export function WeekPicker({ weeks, selectedId }: { weeks: ScoreWeek[]; selected
                 className={active ? "active" : ""}
                 onClick={() => {
                   setOpen(false);
-                  if (!active) router.push(`/scores?week=${week.id}`);
+                  if (!active) router.push(`${basePath}?week=${week.id}`);
                 }}
               >
                 <span><strong>{week.title}</strong><small>{week.eventDate}</small></span>

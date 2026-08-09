@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { INITIAL_PASSWORD } from "@/lib/constants";
 import { getDb } from "@/lib/db";
 import { getLatestWeek, getMembers, getScoreRows } from "@/lib/data";
+import { generatePackagePlan } from "@/lib/package-plan";
 import { verifyPassword } from "@/lib/password";
 
 describe("初始组织数据", () => {
@@ -39,5 +40,21 @@ describe("初始组织数据", () => {
     const version = getDb().prepare("SELECT sqlite_version() AS version").get() as { version: string };
     const [major, minor, patch] = version.version.split(".").map(Number);
     expect(major > 3 || (major === 3 && (minor > 51 || (minor === 51 && patch >= 3)))).toBe(true);
+  });
+
+  it("按40分首轮、60分后续轮次生成连续8天发包安排", () => {
+    const week = getLatestWeek()!;
+    const plan = generatePackagePlan(getScoreRows(week.id), week.eventDate);
+    expect(plan.days).toHaveLength(8);
+    expect(plan.assignments).toHaveLength(40);
+    expect(plan.days.every((day) => day.assignments.length === 5)).toBe(true);
+    expect(plan.firstRoundEligible).toBe(27);
+    expect(plan.laterRoundEligible).toBe(14);
+    expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "是溅诗啊" } });
+    expect(plan.assignments[26]).toMatchObject({ round: 1, member: { displayName: "村子来个青年", score: 40 } });
+    expect(plan.assignments[27]).toMatchObject({ round: 2, member: { displayName: "是溅诗啊" } });
+    expect(plan.assignments.some((item) => item.round > 1 && item.member.score < 60)).toBe(false);
+    expect(plan.days[0]).toMatchObject({ date: "2026-08-08", weekday: "星期六" });
+    expect(plan.days[7]).toMatchObject({ date: "2026-08-15", weekday: "星期六" });
   });
 });

@@ -1,6 +1,6 @@
-import { Activity, Clock3, KeyRound, ListChecks, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
+import { Activity, Clock3, FileSpreadsheet, KeyRound, ListChecks, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
 import { saveScoresAction } from "@/app/admin/actions";
-import { AddMemberForm, AdminMemberList, CreateWeekForm } from "@/components/admin-forms";
+import { AddMemberForm, AdminMemberList, CreateWeekForm, ScoreImportForm } from "@/components/admin-forms";
 import { Avatar } from "@/components/avatar";
 import { ONLINE_WINDOW_MS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/auth";
@@ -14,6 +14,7 @@ const actionLabels: Record<string, string> = {
   "停用组员": "停用了一名组员",
   "恢复组员": "恢复了一名组员",
   "批量更新要塞分数": "更新了本周战绩",
+  "导入要塞积分": "导入了本周战绩",
   "创建统计周": "创建了新的统计周",
   "修改本人密码": "修改了自己的密码",
   "更新头像": "更新了个人头像"
@@ -68,6 +69,15 @@ export default async function AdminPage() {
           <CreateWeekForm />
         </div>
       </section>
+
+      {week && (
+        <section className="panel score-import-panel">
+          <div className="panel-heading">
+            <div><span className="eyebrow"><FileSpreadsheet size={13} /> SCORE IMPORT</span><h2>表格导入积分</h2><p>先下载标准模板填写，整份校验通过后才会更新数据库。</p></div>
+          </div>
+          <ScoreImportForm weekId={week.id} weekTitle={week.title} />
+        </section>
+      )}
 
       <section className="panel member-management">
         <div className="panel-heading">

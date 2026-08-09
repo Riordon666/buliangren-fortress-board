@@ -1,6 +1,9 @@
 "use server";
 
+import fs from "node:fs/promises";
+import path from "node:path";
 import { revalidatePath } from "next/cache";
+import readExcelFile from "read-excel-file/node";
 import { z } from "zod";
 import { INITIAL_PASSWORD } from "@/lib/constants";
 import { requireAdmin, revokeUserSessions, writeAuditLog } from "@/lib/auth";
@@ -8,6 +11,22 @@ import { getDb } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 
 export type AdminFormState = { error?: string; success?: string };
+
+const scoreHeaderNames = new Set(["成员", "组员", "游戏昵称", "昵称"]);
+const scoreHeaderValues = new Set(["分数", "总分"]);
+
+function cellText(value: unknown) {
+  return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+}
+
+function normalizedMemberName(value: string) {
+  return value.normalize("NFKC").toLocaleLowerCase("zh-CN");
+}
+
+function listNames(names: string[]) {
+  const visible = names.slice(0, 6).join("、");
+  return names.length > 6 ? `${visible} 等 ${names.length} 人` : visible;
+}
 
 const memberSchema = z.object({
   username: z.string().trim().min(1, "请输入登录账号。 ").max(40),
@@ -104,6 +123,101 @@ export async function saveScoresAction(formData: FormData) {
   revalidatePath("/admin");
 }
 
+export async function importScoresAction(_state: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  const admin = await requireAdmin();
+  const weekId = Number(formData.get("weekId"));
+  const file = formData.get("scoreFile");
+  if (!Number.isInteger(weekId) || weekId <= 0) return { error: "没有可导入的统计周。" };
+  if (!(file instanceof File) || file.size === 0) return { error: "请选择积分表格。" };
+  if (!file.name.toLowerCase().endsWith(".xlsx")) return { error: "请上传标准的 .xlsx 积分表。" };
+  if (file.size > 1024 * 1024) return { error: "积分表不能超过 1MB。" };
+
+  try {
+    const workbook = await readExcelFile(Buffer.from(await file.arrayBuffer()));
+    const sheet = workbook.find((item) => item.sheet === "积分导入") || workbook[0];
+    if (!sheet) return { error: "表格中没有可读取的工作表。" };
+    if (sheet.data.length > 150) return { error: "表格行数过多，请使用标准模板。" };
+
+    const headerIndex = sheet.data.findIndex((row) =>
+      scoreHeaderNames.has(cellText(row[0])) && scoreHeaderValues.has(cellText(row[1]))
+    );
+    if (headerIndex < 0) return { error: "没有找到“成员、分数”表头，请使用标准模板。" };
+
+    const importedRows = sheet.data.slice(headerIndex + 1)
+      .map((row, index) => ({
+        excelRow: headerIndex + index + 2,
+        name: cellText(row[0]),
+        rawScore: row[1]
+      }))
+      .filter((row) => row.name || row.rawScore != null);
+    if (!importedRows.length) return { error: "积分表中没有成员数据。" };
+
+    const duplicateNames: string[] = [];
+    const seen = new Set<string>();
+    for (const row of importedRows) {
+      const key = normalizedMemberName(row.name);
+      if (seen.has(key)) duplicateNames.push(row.name);
+      seen.add(key);
+    }
+    if (duplicateNames.length) return { error: `表格中存在重复成员：${listNames(duplicateNames)}。` };
+
+    const invalidScores = importedRows.filter((row) => {
+      const score = typeof row.rawScore === "number" ? row.rawScore : Number(cellText(row.rawScore));
+      return !Number.isInteger(score) || score < 0 || score > 99_999;
+    });
+    if (invalidScores.length) {
+      return { error: `分数必须是 0–99999 的整数，请检查第 ${invalidScores.slice(0, 6).map((row) => row.excelRow).join("、")} 行。` };
+    }
+
+    const db = getDb();
+    const week = db.prepare("SELECT id, title FROM weeks WHERE id = ?").get(weekId) as { id: number; title: string } | undefined;
+    if (!week) return { error: "目标统计周不存在。" };
+    const members = db.prepare(`
+      SELECT id, display_name AS displayName
+      FROM users WHERE is_active = 1
+      ORDER BY COALESCE(roster_order, 999999), id
+    `).all() as Array<{ id: number; displayName: string }>;
+    const memberMap = new Map(members.map((member) => [normalizedMemberName(member.displayName), member]));
+    const unknownNames = importedRows.filter((row) => !memberMap.has(normalizedMemberName(row.name))).map((row) => row.name);
+    if (unknownNames.length) return { error: `找不到这些有效组员：${listNames(unknownNames)}。请检查名字是否完全一致。` };
+    const importedKeys = new Set(importedRows.map((row) => normalizedMemberName(row.name)));
+    const missingNames = members.filter((member) => !importedKeys.has(normalizedMemberName(member.displayName))).map((member) => member.displayName);
+    if (missingNames.length) return { error: `表格缺少有效组员：${listNames(missingNames)}。` };
+
+    const backupDir = path.join(process.cwd(), "data", "backups");
+    await fs.mkdir(backupDir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    await db.backup(path.join(backupDir, `naruto-fortress-before-import-${stamp}.db`));
+
+    const upsert = db.prepare(`
+      INSERT INTO weekly_scores (week_id, user_id, score, updated_at)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(week_id, user_id) DO UPDATE SET
+        score = excluded.score,
+        updated_at = CURRENT_TIMESTAMP
+    `);
+    db.transaction(() => {
+      for (const row of importedRows) {
+        const member = memberMap.get(normalizedMemberName(row.name))!;
+        const score = typeof row.rawScore === "number" ? row.rawScore : Number(cellText(row.rawScore));
+        upsert.run(weekId, member.id, score);
+      }
+    })();
+    writeAuditLog(admin.id, "导入要塞积分", undefined, {
+      weekId,
+      memberCount: importedRows.length,
+      filename: file.name
+    });
+    revalidatePath("/scores");
+    revalidatePath("/packages");
+    revalidatePath("/admin");
+    return { success: `已将 ${importedRows.length} 名组员的积分导入“${week.title}”，发包安排已自动更新。` };
+  } catch (error) {
+    console.error("Score import failed", error);
+    return { error: "积分表读取失败，请确认文件未损坏并使用标准模板。" };
+  }
+}
+
 const weekSchema = z.object({
   title: z.string().trim().min(1).max(50),
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -113,6 +227,10 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
   const admin = await requireAdmin();
   const parsed = weekSchema.safeParse({ title: formData.get("title"), eventDate: formData.get("eventDate") });
   if (!parsed.success) return { error: "请填写有效的周次名称和日期。" };
+  const [year, month, day] = parsed.data.eventDate.split("-").map(Number);
+  if (new Date(Date.UTC(year, month - 1, day)).getUTCDay() !== 6) {
+    return { error: "发包周期必须从周六开始，请重新选择日期。" };
+  }
   const db = getDb();
   if (db.prepare("SELECT id FROM weeks WHERE event_date = ?").get(parsed.data.eventDate)) {
     return { error: "这个日期已经存在统计周。" };

@@ -2,10 +2,11 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, CheckCircle2, LoaderCircle, Plus, RotateCcw, Search, UserMinus, UserRoundCheck } from "lucide-react";
+import { CalendarPlus, CheckCircle2, Download, FileSpreadsheet, LoaderCircle, Plus, RotateCcw, Search, Upload, UserMinus, UserRoundCheck } from "lucide-react";
 import {
   addMemberAction,
   createWeekAction,
+  importScoresAction,
   resetPasswordAction,
   toggleMemberAction,
   type AdminFormState
@@ -40,13 +41,46 @@ export function CreateWeekForm() {
     <form action={action} className="compact-form week-form">
       <div className="form-grid">
         <label><span>统计周名称</span><input name="title" placeholder="例如：第2期 · 风之要塞" required /></label>
-        <label><span>要塞日期</span><input name="eventDate" type="date" required /></label>
+        <label><span>发包起始日（周六）</span><input name="eventDate" type="date" required /></label>
       </div>
       {state.error && <div className="form-message error">{state.error}</div>}
       {state.success && <div className="form-message success"><CheckCircle2 size={15} />{state.success}</div>}
       <button className="secondary-button" type="submit" disabled={pending}>
         {pending ? <LoaderCircle className="spin" size={17} /> : <CalendarPlus size={17} />} 创建新一周
       </button>
+    </form>
+  );
+}
+
+export function ScoreImportForm({ weekId, weekTitle }: { weekId: number; weekTitle: string }) {
+  const [state, action, pending] = useActionState(importScoresAction, initialState);
+  const [fileName, setFileName] = useState("");
+  return (
+    <form action={action} className="score-import-form">
+      <input type="hidden" name="weekId" value={weekId} />
+      <div className="import-guide">
+        <span className="import-icon"><FileSpreadsheet size={23} /></span>
+        <div><strong>导入到：{weekTitle}</strong><span>成员名称必须与网站完全一致，分数填写非负整数。</span></div>
+      </div>
+      <label className="spreadsheet-picker">
+        <Upload size={18} />
+        <span><strong>{fileName || "选择积分表"}</strong><small>仅支持标准 .xlsx 文件，最大 1MB</small></span>
+        <input
+          name="scoreFile"
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          onChange={(event) => setFileName(event.currentTarget.files?.[0]?.name || "")}
+          required
+        />
+      </label>
+      {state.error && <div className="form-message error">{state.error}</div>}
+      {state.success && <div className="form-message success"><CheckCircle2 size={15} />{state.success}</div>}
+      <div className="import-actions">
+        <a className="secondary-button" href="/assets/buliangren-score-import-template.xlsx" download><Download size={16} />下载标准模板</a>
+        <button className="primary-button" type="submit" disabled={pending}>
+          {pending ? <><LoaderCircle className="spin" size={17} />校验并导入</> : <><Upload size={17} />导入本期积分</>}
+        </button>
+      </div>
     </form>
   );
 }
@@ -131,4 +165,3 @@ export function AdminMemberList({ members, currentUserId }: { members: MemberRow
     </>
   );
 }
-

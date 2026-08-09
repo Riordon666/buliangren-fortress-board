@@ -84,8 +84,17 @@ await page.getByRole("tab", { name: "组织雷达" }).click();
 await page.waitForTimeout(1200);
 await page.locator(".visualization-panel").screenshot({ path: path.join(output, "scores-radar.png") });
 
+await page.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
+if (!(await page.getByText("发包安排", { exact: true }).first().isVisible())) throw new Error("发包安排页未显示");
+if ((await page.locator(".package-day-card").count()) !== 8) throw new Error("发包周期不是8天");
+if ((await page.locator(".package-member:not(.empty-slot)").count()) !== 40) throw new Error("发包名额不是40个");
+if ((await page.getByText("第 2 轮", { exact: true }).count()) !== 13) throw new Error("第二轮发包数量不正确");
+await page.screenshot({ path: path.join(output, "packages-desktop.png"), fullPage: true });
+
 await page.goto("http://localhost:3000/admin", { waitUntil: "networkidle" });
 if (!(await page.getByText("组员与在线状态").isVisible())) throw new Error("管理员页未显示");
+if (!(await page.getByText("表格导入积分").isVisible())) throw new Error("积分导入区域未显示");
+if (!(await page.getByRole("link", { name: "下载标准模板" }).isVisible())) throw new Error("标准模板下载入口未显示");
 await page.screenshot({ path: path.join(output, "admin-desktop.png"), fullPage: false });
 
 await page.goto("http://localhost:3000/profile", { waitUntil: "networkidle" });
@@ -98,6 +107,9 @@ await mobileContext.addCookies([{ name: "fortress_session", value: token, url: "
 const mobilePage = await mobileContext.newPage();
 await mobilePage.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
 await mobilePage.screenshot({ path: path.join(output, "scores-mobile.png"), fullPage: false });
+await mobilePage.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
+if ((await mobilePage.locator(".package-day-card").count()) !== 8) throw new Error("手机端发包周期不是8天");
+await mobilePage.screenshot({ path: path.join(output, "packages-mobile.png"), fullPage: true });
 await mobileContext.close();
 
 await browser.close();
