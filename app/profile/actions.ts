@@ -74,7 +74,7 @@ export async function updateAvatarAction(_state: FormState, formData: FormData):
       .webp({ quality: 86 })
       .toFile(path.join(uploadDir, filename));
 
-    const avatarUrl = `/uploads/${filename}`;
+    const avatarUrl = `/api/avatars/${filename}`;
     getDb().prepare("UPDATE users SET avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
       .run(avatarUrl, user.id);
     writeAuditLog(user.id, "更新头像", user.id);

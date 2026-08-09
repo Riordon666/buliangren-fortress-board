@@ -20,11 +20,13 @@ export function Avatar({ name, src, size = 42, className = "" }: AvatarProps) {
     "--avatar-color": colorForName(name)
   } as CSSProperties;
   const initial = Array.from(name.replace(/^\./, ""))[0]?.toUpperCase() || "忍";
+  const resolvedSrc = src?.startsWith("/uploads/")
+    ? `/api/avatars/${encodeURIComponent(src.slice("/uploads/".length))}`
+    : src;
 
   return (
     <span className={`avatar ${className}`} style={style} aria-label={`${name}的头像`}>
-      {src ? <img src={src} alt="" /> : <span>{initial}</span>}
+      {resolvedSrc ? <img src={resolvedSrc} alt="" /> : <span>{initial}</span>}
     </span>
   );
 }
-
