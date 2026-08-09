@@ -65,7 +65,7 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
     const member = eligible[memberIndex];
     memberIndex += 1;
     const deductions = remainingDeductions.get(member.userId) || 0;
-    if (deductions > 0) {
+    if (round >= 2 && deductions > 0) {
       remainingDeductions.set(member.userId, deductions - 1);
       appliedDeductions.set(member.userId, (appliedDeductions.get(member.userId) || 0) + 1);
       continue;

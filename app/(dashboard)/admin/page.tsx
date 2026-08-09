@@ -110,7 +110,7 @@ export default async function AdminPage() {
                 </tbody>
               </table>
             </div>
-            <div className="editor-actions"><span>扣 1 次会跳过该成员下一次原本有资格获得的包，不占用每日名额。</span><button className="primary-button" type="submit">保存本期战绩</button></div>
+            <div className="editor-actions"><span>第一轮不扣包；第二轮起，扣 1 次会跳过一次发包资格且不占每日名额。</span><button className="primary-button" type="submit">保存本期战绩</button></div>
           </form>
         </section>
       )}

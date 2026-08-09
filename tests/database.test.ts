@@ -59,7 +59,7 @@ describe("初始组织数据", () => {
     expect(plan.days[7]).toMatchObject({ date: "2026-08-15", weekday: "星期六" });
   });
 
-  it("扣包会跳过对应资格且由后续成员补齐每日名额", () => {
+  it("第一轮不执行扣包，第二轮起跳过对应资格", () => {
     const week = getLatestWeek()!;
     const rows = getScoreRows(week.id).map((row) => ({
       ...row,
@@ -69,12 +69,12 @@ describe("初始组织数据", () => {
 
     expect(plan.assignments).toHaveLength(40);
     expect(plan.days.every((day) => day.assignments.length === 5)).toBe(true);
-    expect(plan.assignments[0].member.displayName).toBe("抑郁的农村入");
-    expect(plan.assignments.find((item) => item.member.displayName === "是溅诗啊")?.round).toBe(2);
+    expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "是溅诗啊" } });
+    expect(plan.assignments.some((item) => item.round >= 2 && item.member.displayName === "是溅诗啊")).toBe(false);
     expect(plan.deductionRanking[0]).toMatchObject({ count: 1, applied: 1, member: { displayName: "是溅诗啊" } });
   });
 
-  it("40至59分成员被扣一次后本期不再进入后续轮次", () => {
+  it("40至59分成员无视扣包记录正常获得第一轮包", () => {
     const week = getLatestWeek()!;
     const rows = getScoreRows(week.id).map((row) => ({
       ...row,
@@ -82,23 +82,30 @@ describe("初始组织数据", () => {
     }));
     const plan = generatePackagePlan(rows, week.eventDate);
 
-    expect(plan.assignments.some((item) => item.member.displayName === "无压力之人")).toBe(false);
-    expect(plan.deductionRanking[0]).toMatchObject({ applied: 1 });
+    expect(plan.assignments.filter((item) => item.member.displayName === "无压力之人")).toEqual([
+      expect.objectContaining({ round: 1 })
+    ]);
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 1, applied: 0 });
   });
 
-  it("多次扣包会跨轮次依次生效", () => {
-    const week = getLatestWeek()!;
-    const rows = getScoreRows(week.id).map((row) => ({
-      ...row,
-      packageDeductions: row.displayName === "是溅诗啊" ? 2 : 0
-    }));
-    const plan = generatePackagePlan(rows, week.eventDate);
+  it("多次扣包从第二轮开始跨轮次依次生效", () => {
+    const rows: ScoreRow[] = [
+      {
+        userId: 998, username: "first", displayName: "第一名", avatarUrl: null, note: null,
+        score: 100, packageRound: null, packageDeductions: 2, rank: 1
+      },
+      {
+        userId: 999, username: "second", displayName: "第二名", avatarUrl: null, note: null,
+        score: 90, packageRound: null, packageDeductions: 0, rank: 2
+      }
+    ];
+    const plan = generatePackagePlan(rows, "2026-08-08");
 
-    expect(plan.assignments.find((item) => item.member.displayName === "是溅诗啊")?.round).toBe(3);
+    expect(plan.assignments.filter((item) => item.member.displayName === "第一名").slice(0, 2).map((item) => item.round)).toEqual([1, 4]);
     expect(plan.deductionRanking[0]).toMatchObject({ count: 2, applied: 2 });
   });
 
-  it("没有后续轮次资格时会安全留空", () => {
+  it("没有后续轮次资格时第一轮照常发放且扣包保持未应用", () => {
     const rows: ScoreRow[] = [{
       userId: 999,
       username: "test",
@@ -112,8 +119,9 @@ describe("初始组织数据", () => {
     }];
     const plan = generatePackagePlan(rows, "2026-08-08");
 
-    expect(plan.assignments).toHaveLength(0);
-    expect(plan.unfilledSlots).toBe(40);
-    expect(plan.deductionRanking[0]).toMatchObject({ applied: 1 });
+    expect(plan.assignments).toHaveLength(1);
+    expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "测试成员" } });
+    expect(plan.unfilledSlots).toBe(39);
+    expect(plan.deductionRanking[0]).toMatchObject({ applied: 0 });
   });
 });

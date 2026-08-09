@@ -52,7 +52,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <span><i>02</i>第一轮仅限 40 分及以上</span>
           <span><i>03</i>第二轮起仅限 60 分及以上</span>
           <span><i>04</i>每轮结束后从榜首重新开始</span>
-          <span><i>05</i>每扣 1 次，跳过该成员下一次发包资格</span>
+          <span><i>05</i>第一轮不扣包，第二轮起按记录逐次跳过</span>
         </div>
       </section>
 
