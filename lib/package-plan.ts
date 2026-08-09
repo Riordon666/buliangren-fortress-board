@@ -23,6 +23,7 @@ export type PackageDay = {
 export type PackageDeductionRank = {
   rank: number;
   count: number;
+  scheduled: number;
   applied: number;
   member: ScoreRow;
 };
@@ -50,7 +51,7 @@ function weekdayLabel(date: string) {
   ];
 }
 
-export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
+export function generatePackagePlan(rows: ScoreRow[], startDate: string, deductionRows = rows) {
   const firstRoundMembers = rows.filter((row) => row.score >= FIRST_ROUND_MIN_SCORE);
   const laterRoundMembers = rows.filter((row) => row.score >= LATER_ROUND_MIN_SCORE);
   const totalSlots = PACKAGE_DAYS * PACKAGES_PER_DAY;
@@ -91,21 +92,22 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
     });
   }
 
-  const deductionMembers = rows
-    .filter((row) => row.packageDeductions > 0)
+  const deductionMembers = deductionRows
+    .filter((row) => row.packageDeductionTotal > 0)
     .sort((left, right) =>
-      right.packageDeductions - left.packageDeductions
+      right.packageDeductionTotal - left.packageDeductionTotal
       || right.score - left.score
       || left.displayName.localeCompare(right.displayName, "zh-CN")
     );
   let previousCount: number | null = null;
   let previousRank = 0;
   const deductionRanking: PackageDeductionRank[] = deductionMembers.map((member, index) => {
-    if (member.packageDeductions !== previousCount) previousRank = index + 1;
-    previousCount = member.packageDeductions;
+    if (member.packageDeductionTotal !== previousCount) previousRank = index + 1;
+    previousCount = member.packageDeductionTotal;
     return {
       rank: previousRank,
-      count: member.packageDeductions,
+      count: member.packageDeductionTotal,
+      scheduled: member.packageDeductions,
       applied: appliedDeductions.get(member.userId) || 0,
       member
     };
@@ -128,6 +130,7 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string) {
     laterRoundEligible: laterRoundMembers.length,
     deductionRanking,
     totalDeductions: deductionRanking.reduce((sum, item) => sum + item.count, 0),
+    scheduledDeductionCount: deductionRanking.reduce((sum, item) => sum + item.scheduled, 0),
     appliedDeductionCount: deductionRanking.reduce((sum, item) => sum + item.applied, 0),
     totalSlots,
     unfilledSlots: totalSlots - assignments.length,

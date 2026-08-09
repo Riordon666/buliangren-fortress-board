@@ -2414,6 +2414,44 @@ button:disabled {
   font-weight: 800;
 }
 
+.deduction-add-control {
+  display: flex;
+  min-width: 265px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.deduction-add-control > span > strong,
+.deduction-add-control > span > small {
+  display: block;
+}
+
+.deduction-add-control > span > strong {
+  margin-bottom: 3px;
+  color: #984b38;
+  font-size: 11px;
+}
+
+.deduction-add-control > span > small {
+  color: var(--ink-soft);
+  font-size: 9px;
+}
+
+.deduction-add-control label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: 9px;
+}
+
+.deduction-add-control .deduction-input {
+  width: 64px;
+  min-height: 34px;
+  padding: 0 7px;
+}
+
 .editor-actions {
   display: flex;
   align-items: center;

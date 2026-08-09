@@ -27,6 +27,8 @@ export type ScoreRow = {
   score: number;
   packageRound: number | null;
   packageDeductions: number;
+  packageDeductionTotal: number;
+  packageDeductionPending: number;
   rank: number;
 };
 

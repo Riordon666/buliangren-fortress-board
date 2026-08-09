@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalendarDays, CalendarPlus, CheckCircle2, Download, Eye, EyeOff, FileSpreadsheet, LoaderCircle, PencilLine, Plus, RotateCcw, Search, Trash2, Upload, UserMinus, UserRoundCheck } from "lucide-react";
 import {
@@ -18,6 +19,15 @@ import { INITIAL_PASSWORD, ONLINE_WINDOW_MS } from "@/lib/constants";
 import type { MemberRow, ScoreWeek } from "@/lib/types";
 
 const initialState: AdminFormState = {};
+
+export function SaveScoresButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button className="primary-button" type="submit" disabled={pending}>
+      {pending ? <><LoaderCircle className="spin" size={17} /> 保存中</> : "保存战绩与新增扣包"}
+    </button>
+  );
+}
 
 export function AddMemberForm() {
   const [state, action, pending] = useActionState(addMemberAction, initialState);
@@ -80,7 +90,7 @@ export function WeekManagementList({ weeks, currentWeekId }: { weeks: ScoreWeek[
           <form
             action={deleteWeekAction}
             onSubmit={(event) => {
-              if (!confirm(`确定删除“${week.title}”吗？\n该周全部积分、扣包记录和发包安排都会删除，成员账号不受影响。`)) {
+              if (!confirm(`确定删除“${week.title}”吗？\n该周积分和发包安排会删除，永久累计扣包记录会保留；若该周尚未开始，待执行次数会自动顺延。`)) {
                 event.preventDefault();
               }
             }}

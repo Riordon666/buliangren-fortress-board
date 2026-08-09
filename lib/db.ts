@@ -10,6 +10,57 @@ type GlobalDatabase = typeof globalThis & {
 
 const globalDatabase = globalThis as GlobalDatabase;
 
+export const PERMANENT_DEDUCTION_MIGRATION = "permanent-package-deductions-v1";
+
+export function migratePermanentPackageDeductions(database: Database.Database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      name TEXT PRIMARY KEY,
+      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  const findNextWeek = database.prepare(`
+    SELECT id FROM weeks
+    WHERE event_date > ?
+    ORDER BY event_date ASC, id ASC
+    LIMIT 1
+  `);
+  const addScheduled = database.prepare(`
+    INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
+    VALUES (?, ?, 0, ?)
+    ON CONFLICT(week_id, user_id) DO UPDATE SET
+      package_deductions = weekly_scores.package_deductions + excluded.package_deductions,
+      updated_at = CURRENT_TIMESTAMP
+  `);
+  const addTotal = database.prepare(`
+    UPDATE users SET package_deduction_total = package_deduction_total + ? WHERE id = ?
+  `);
+  const addPending = database.prepare(`
+    UPDATE users SET package_deduction_pending = package_deduction_pending + ? WHERE id = ?
+  `);
+
+  database.transaction(() => {
+    if (database.prepare("SELECT name FROM schema_migrations WHERE name = ?").get(PERMANENT_DEDUCTION_MIGRATION)) {
+      return;
+    }
+    const legacyDeductions = database.prepare(`
+      SELECT ws.user_id AS userId, ws.package_deductions AS amount, w.event_date AS sourceDate
+      FROM weekly_scores ws
+      JOIN weeks w ON w.id = ws.week_id
+      WHERE ws.package_deductions > 0
+      ORDER BY w.event_date ASC, w.id ASC, ws.user_id ASC
+    `).all() as Array<{ userId: number; amount: number; sourceDate: string }>;
+    database.prepare("UPDATE weekly_scores SET package_deductions = 0 WHERE package_deductions > 0").run();
+    for (const deduction of legacyDeductions) {
+      addTotal.run(deduction.amount, deduction.userId);
+      const nextWeek = findNextWeek.get(deduction.sourceDate) as { id: number } | undefined;
+      if (nextWeek) addScheduled.run(nextWeek.id, deduction.userId, deduction.amount);
+      else addPending.run(deduction.amount, deduction.userId);
+    }
+    database.prepare("INSERT INTO schema_migrations (name) VALUES (?)").run(PERMANENT_DEDUCTION_MIGRATION);
+  }).immediate();
+}
+
 const seedMembers = [
   { name: "是溅诗啊", score: 192 },
   { name: "抑郁的农村入", score: 153, note: "高层" },
@@ -79,6 +130,8 @@ function createDatabase() {
       roster_order INTEGER,
       is_active INTEGER NOT NULL DEFAULT 1,
       must_change_password INTEGER NOT NULL DEFAULT 1,
+      package_deduction_total INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_total >= 0),
+      package_deduction_pending INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_pending >= 0),
       last_seen_at TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -121,6 +174,18 @@ function createDatabase() {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS package_deduction_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      request_id TEXT NOT NULL,
+      source_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
+      effective_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      amount INTEGER NOT NULL CHECK (amount > 0),
+      created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (request_id, user_id)
+    );
+
     CREATE TABLE IF NOT EXISTS login_attempts (
       username TEXT PRIMARY KEY,
       failed_count INTEGER NOT NULL DEFAULT 0,
@@ -128,25 +193,47 @@ function createDatabase() {
       locked_until TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      name TEXT PRIMARY KEY,
+      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_scores_week ON weekly_scores(week_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
     CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_deduction_events_user ON package_deduction_events(user_id);
     CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE);
   `);
 
-  const userColumns = database.pragma("table_info(users)") as Array<{ name: string }>;
-  if (!userColumns.some((column) => column.name === "roster_order")) {
-    database.exec("ALTER TABLE users ADD COLUMN roster_order INTEGER");
-  }
+  database.transaction(() => {
+    const userColumns = database.pragma("table_info(users)") as Array<{ name: string }>;
+    if (!userColumns.some((column) => column.name === "roster_order")) {
+      database.exec("ALTER TABLE users ADD COLUMN roster_order INTEGER");
+    }
+    if (!userColumns.some((column) => column.name === "package_deduction_total")) {
+      database.exec(`
+        ALTER TABLE users
+        ADD COLUMN package_deduction_total INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_total >= 0)
+      `);
+    }
+    if (!userColumns.some((column) => column.name === "package_deduction_pending")) {
+      database.exec(`
+        ALTER TABLE users
+        ADD COLUMN package_deduction_pending INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_pending >= 0)
+      `);
+    }
 
-  const scoreColumns = database.pragma("table_info(weekly_scores)") as Array<{ name: string }>;
-  if (!scoreColumns.some((column) => column.name === "package_deductions")) {
-    database.exec(`
-      ALTER TABLE weekly_scores
-      ADD COLUMN package_deductions INTEGER NOT NULL DEFAULT 0 CHECK (package_deductions >= 0)
-    `);
-  }
+    const scoreColumns = database.pragma("table_info(weekly_scores)") as Array<{ name: string }>;
+    if (!scoreColumns.some((column) => column.name === "package_deductions")) {
+      database.exec(`
+        ALTER TABLE weekly_scores
+        ADD COLUMN package_deductions INTEGER NOT NULL DEFAULT 0 CHECK (package_deductions >= 0)
+      `);
+    }
+  }).immediate();
+
+  migratePermanentPackageDeductions(database);
 
   const existingUsers = database.prepare("SELECT COUNT(*) AS count FROM users").get() as { count: number };
   if (existingUsers.count === 0) {

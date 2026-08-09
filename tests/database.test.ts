@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import Database from "better-sqlite3";
 import { INITIAL_PASSWORD } from "@/lib/constants";
-import { getDb } from "@/lib/db";
-import { getLatestWeek, getMembers, getScoreRows, getShanghaiDate, selectCurrentWeek } from "@/lib/data";
+import { getDb, migratePermanentPackageDeductions, PERMANENT_DEDUCTION_MIGRATION } from "@/lib/db";
+import { getLatestWeek, getMembers, getPackageDeductionRows, getScoreRows, getShanghaiDate, selectCurrentWeek } from "@/lib/data";
+import { recordPackageDeduction } from "@/lib/package-deductions";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 import { verifyPassword } from "@/lib/password";
 import type { ScoreRow, ScoreWeek } from "@/lib/types";
@@ -41,6 +43,95 @@ describe("初始组织数据", () => {
     const version = getDb().prepare("SELECT sqlite_version() AS version").get() as { version: string };
     const [major, minor, patch] = version.version.split(".").map(Number);
     expect(major > 3 || (major === 3 && (minor > 51 || (minor === 51 && patch >= 3)))).toBe(true);
+  });
+
+  it("把旧扣包记录迁移为永久累计并只投递到下一统计周，且迁移可重复运行", () => {
+    const db = new Database(":memory:");
+    db.exec(`
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY,
+        package_deduction_total INTEGER NOT NULL DEFAULT 0,
+        package_deduction_pending INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE TABLE weeks (
+        id INTEGER PRIMARY KEY,
+        event_date TEXT NOT NULL UNIQUE
+      );
+      CREATE TABLE weekly_scores (
+        id INTEGER PRIMARY KEY,
+        week_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        score INTEGER NOT NULL DEFAULT 0,
+        package_deductions INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (week_id, user_id)
+      );
+      INSERT INTO users (id) VALUES (1), (2);
+      INSERT INTO weeks (id, event_date) VALUES (10, '2026-08-08'), (11, '2026-08-15');
+      INSERT INTO weekly_scores (week_id, user_id, package_deductions) VALUES
+        (10, 1, 2), (11, 1, 0), (11, 2, 3);
+    `);
+
+    migratePermanentPackageDeductions(db);
+    migratePermanentPackageDeductions(db);
+
+    expect(db.prepare("SELECT package_deduction_total AS total, package_deduction_pending AS pending FROM users WHERE id = 1").get())
+      .toEqual({ total: 2, pending: 0 });
+    expect(db.prepare("SELECT package_deduction_total AS total, package_deduction_pending AS pending FROM users WHERE id = 2").get())
+      .toEqual({ total: 3, pending: 3 });
+    expect(db.prepare("SELECT package_deductions AS amount FROM weekly_scores WHERE week_id = 10 AND user_id = 1").get())
+      .toEqual({ amount: 0 });
+    expect(db.prepare("SELECT package_deductions AS amount FROM weekly_scores WHERE week_id = 11 AND user_id = 1").get())
+      .toEqual({ amount: 2 });
+    expect(db.prepare("SELECT COUNT(*) AS count FROM schema_migrations WHERE name = ?").get(PERMANENT_DEDUCTION_MIGRATION))
+      .toEqual({ count: 1 });
+    db.close();
+  });
+
+  it("同一次扣包提交即使重试也只累计并投递一次", () => {
+    const db = getDb();
+    const sourceWeek = db.prepare("SELECT id FROM weeks ORDER BY event_date ASC, id ASC LIMIT 1").get() as { id: number };
+    const member = db.prepare("SELECT id, package_deduction_total AS total FROM users ORDER BY id LIMIT 1")
+      .get() as { id: number; total: number };
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      const targetWeekId = Number(db.prepare("INSERT INTO weeks (title, event_date) VALUES (?, ?)")
+        .run("扣包幂等测试周", "2199-12-07").lastInsertRowid);
+      const event = {
+        requestId: "11111111-1111-4111-8111-111111111111",
+        sourceWeekId: sourceWeek.id,
+        effectiveWeekId: targetWeekId,
+        userId: member.id,
+        amount: 2,
+        createdBy: member.id
+      };
+
+      expect(recordPackageDeduction(db, event)).toBe(true);
+      expect(recordPackageDeduction(db, event)).toBe(false);
+      expect(db.prepare("SELECT package_deduction_total AS total FROM users WHERE id = ?").get(member.id))
+        .toEqual({ total: member.total + 2 });
+      expect(db.prepare("SELECT package_deductions AS amount FROM weekly_scores WHERE week_id = ? AND user_id = ?")
+        .get(targetWeekId, member.id)).toEqual({ amount: 2 });
+      expect(db.prepare("SELECT COUNT(*) AS count FROM package_deduction_events WHERE request_id = ?")
+        .get(event.requestId)).toEqual({ count: 1 });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("永久扣包总榜不因成员缺少所选周积分记录而消失", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const member = db.prepare("SELECT id FROM users ORDER BY id DESC LIMIT 1").get() as { id: number };
+    db.exec("BEGIN");
+    try {
+      db.prepare("UPDATE users SET package_deduction_total = 7 WHERE id = ?").run(member.id);
+      db.prepare("DELETE FROM weekly_scores WHERE week_id = ? AND user_id = ?").run(week.id, member.id);
+      expect(getPackageDeductionRows(week.id).find((row) => row.userId === member.id))
+        .toMatchObject({ packageDeductionTotal: 7, packageDeductions: 0, score: 0 });
+    } finally {
+      db.exec("ROLLBACK");
+    }
   });
 
   it("按北京时间选择已经开始的当前统计周，不会提前跳到未来周", () => {
@@ -112,7 +203,8 @@ describe("初始组织数据", () => {
     const week = getLatestWeek()!;
     const rows = getScoreRows(week.id).map((row) => ({
       ...row,
-      packageDeductions: row.displayName === "是溅诗啊" ? 1 : 0
+      packageDeductions: row.displayName === "是溅诗啊" ? 1 : 0,
+      packageDeductionTotal: row.displayName === "是溅诗啊" ? 1 : 0
     }));
     const plan = generatePackagePlan(rows, week.eventDate);
 
@@ -121,38 +213,41 @@ describe("初始组织数据", () => {
     expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "是溅诗啊" } });
     expect(plan.assignments.some((item) => item.round >= 2 && item.member.displayName === "是溅诗啊")).toBe(false);
     expect(getPackageRoundsByMember(plan.assignments).get(rows[0].userId)).toEqual([1]);
-    expect(plan.deductionRanking[0]).toMatchObject({ count: 1, applied: 1, member: { displayName: "是溅诗啊" } });
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 1, scheduled: 1, applied: 1, member: { displayName: "是溅诗啊" } });
   });
 
   it("40至59分成员无视扣包记录正常获得第一轮包", () => {
     const week = getLatestWeek()!;
     const rows = getScoreRows(week.id).map((row) => ({
       ...row,
-      packageDeductions: row.displayName === "无压力之人" ? 1 : 0
+      packageDeductions: row.displayName === "无压力之人" ? 1 : 0,
+      packageDeductionTotal: row.displayName === "无压力之人" ? 1 : 0
     }));
     const plan = generatePackagePlan(rows, week.eventDate);
 
     expect(plan.assignments.filter((item) => item.member.displayName === "无压力之人")).toEqual([
       expect.objectContaining({ round: 1 })
     ]);
-    expect(plan.deductionRanking[0]).toMatchObject({ count: 1, applied: 0 });
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 1, scheduled: 1, applied: 0 });
   });
 
   it("多次扣包从第二轮开始跨轮次依次生效", () => {
     const rows: ScoreRow[] = [
       {
         userId: 998, username: "first", displayName: "第一名", avatarUrl: null, note: null,
-        score: 100, packageRound: null, packageDeductions: 2, rank: 1
+        score: 100, packageRound: null, packageDeductions: 2,
+        packageDeductionTotal: 5, packageDeductionPending: 0, rank: 1
       },
       {
         userId: 999, username: "second", displayName: "第二名", avatarUrl: null, note: null,
-        score: 90, packageRound: null, packageDeductions: 0, rank: 2
+        score: 90, packageRound: null, packageDeductions: 0,
+        packageDeductionTotal: 1, packageDeductionPending: 1, rank: 2
       }
     ];
     const plan = generatePackagePlan(rows, "2026-08-08");
 
     expect(plan.assignments.filter((item) => item.member.displayName === "第一名").slice(0, 2).map((item) => item.round)).toEqual([1, 4]);
-    expect(plan.deductionRanking[0]).toMatchObject({ count: 2, applied: 2 });
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 5, scheduled: 2, applied: 2 });
   });
 
   it("没有后续轮次资格时第一轮照常发放且扣包保持未应用", () => {
@@ -165,6 +260,8 @@ describe("初始组织数据", () => {
       score: 50,
       packageRound: null,
       packageDeductions: 1,
+      packageDeductionTotal: 4,
+      packageDeductionPending: 0,
       rank: 1
     }];
     const plan = generatePackagePlan(rows, "2026-08-08");
@@ -172,6 +269,6 @@ describe("初始组织数据", () => {
     expect(plan.assignments).toHaveLength(1);
     expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "测试成员" } });
     expect(plan.unfilledSlots).toBe(39);
-    expect(plan.deductionRanking[0]).toMatchObject({ applied: 0 });
+    expect(plan.deductionRanking[0]).toMatchObject({ count: 4, scheduled: 1, applied: 0 });
   });
 });

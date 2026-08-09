@@ -1,7 +1,7 @@
 import { CalendarDays, CheckCircle2, CircleMinus, Gift, Layers3, ListOrdered, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { WeekPicker } from "@/components/week-picker";
-import { getCurrentWeek, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { getCurrentWeek, getPackageDeductionRows, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
 import {
   FIRST_ROUND_MIN_SCORE,
   LATER_ROUND_MIN_SCORE,
@@ -19,7 +19,8 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
   if (!selectedWeek) return <div className="empty-state">还没有可以生成发包安排的统计周。</div>;
 
   const rows = getScoreRows(selectedWeek.id);
-  const plan = generatePackagePlan(rows, selectedWeek.eventDate);
+  const deductionRows = getPackageDeductionRows(selectedWeek.id);
+  const plan = generatePackagePlan(rows, selectedWeek.eventDate, deductionRows);
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
@@ -60,9 +61,9 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         <header className="deduction-board-heading">
           <div className="package-rule-title">
             <span className="section-icon deduction-icon"><CircleMinus size={19} /></span>
-            <div><span className="eyebrow">PACKAGE DEDUCTIONS</span><h2>本期扣包次数排行</h2></div>
+            <div><span className="eyebrow">PACKAGE DEDUCTIONS</span><h2>累计扣包次数排行</h2></div>
           </div>
-          <span className="deduction-summary"><ListOrdered size={15} />共设置 {plan.totalDeductions} 次 · 安排已应用 {plan.appliedDeductionCount} 次</span>
+          <span className="deduction-summary"><ListOrdered size={15} />累计 {plan.totalDeductions} 次 · 本期承接 {plan.scheduledDeductionCount} 次 · 已应用 {plan.appliedDeductionCount} 次</span>
         </header>
         {plan.deductionRanking.length ? (
           <div className="deduction-ranking">
@@ -72,14 +73,14 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
                 <Avatar name={item.member.displayName} src={item.member.avatarUrl} size={40} />
                 <div>
                   <strong>{item.member.displayName}</strong>
-                  <small>{item.member.score} 分 · 安排已跳过 {item.applied} 次{item.applied < item.count ? ` · 尚余 ${item.count - item.applied} 次` : ""}</small>
+                  <small>{item.member.score} 分 · 本期承接 {item.scheduled} 次 · 安排已跳过 {item.applied} 次{item.applied < item.scheduled ? ` · 本期未触发 ${item.scheduled - item.applied} 次` : ""}</small>
                 </div>
-                <b>扣 {item.count} 次</b>
+                <b>累计扣 {item.count} 次</b>
               </article>
             ))}
           </div>
         ) : (
-          <div className="deduction-empty"><ShieldCheck size={18} />本期暂无扣包记录，所有符合条件的成员按正常顺序轮转。</div>
+          <div className="deduction-empty"><ShieldCheck size={18} />暂无累计扣包记录，所有符合条件的成员按正常顺序轮转。</div>
         )}
       </section>
 

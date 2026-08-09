@@ -14,11 +14,19 @@ const browser = await chromium.launch({ executablePath: edgePath, headless: true
 
 const visualUsername = "__visual_check__";
 const setupDb = new Database(path.join(root, "data", "naruto-fortress.db"));
+setupDb.prepare("DELETE FROM weekly_scores WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
+setupDb.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
 setupDb.prepare("DELETE FROM users WHERE username = ?").run(visualUsername);
-setupDb.prepare(`
+const visualUser = setupDb.prepare(`
   INSERT INTO users (username, display_name, password_hash, role, must_change_password)
   VALUES (?, '视觉测试账号', ?, 'member', 1)
 `).run(visualUsername, hashSync("7891666", { memoryCost: 19_456, timeCost: 2, outputLen: 32, parallelism: 1 }));
+setupDb.prepare("UPDATE users SET package_deduction_total = 2, package_deduction_pending = 1 WHERE id = ?")
+  .run(Number(visualUser.lastInsertRowid));
+setupDb.prepare(`
+  INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
+  SELECT id, ?, 0, 1 FROM weeks
+`).run(Number(visualUser.lastInsertRowid));
 setupDb.close();
 
 const publicContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
@@ -90,7 +98,9 @@ await page.locator(".visualization-panel").screenshot({ path: path.join(output, 
 
 await page.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
 if (!(await page.getByText("发包安排", { exact: true }).first().isVisible())) throw new Error("发包安排页未显示");
-if (!(await page.getByText("本期扣包次数排行", { exact: true }).isVisible())) throw new Error("扣包排行榜未显示");
+if (!(await page.getByText("累计扣包次数排行", { exact: true }).isVisible())) throw new Error("累计扣包排行榜未显示");
+if (!(await page.getByText("累计扣 2 次", { exact: true }).isVisible())) throw new Error("永久累计扣包次数未显示");
+if (!(await page.getByText(/本期承接 1 次/).first().isVisible())) throw new Error("本期执行扣包次数未显示");
 if ((await page.locator(".package-day-card").count()) !== 8) throw new Error("发包周期不是8天");
 if ((await page.locator(".package-member:not(.empty-slot)").count()) !== 40) throw new Error("发包名额不是40个");
 if ((await page.getByText("第 2 轮", { exact: true }).count()) !== 13) throw new Error("第二轮发包数量不正确");
@@ -105,7 +115,8 @@ if (!(await page.getByRole("button", { name: "删除" }).first().isVisible())) t
 if (!(await page.getByRole("button", { name: "保存名称" }).first().isVisible())) throw new Error("重命名统计周入口未显示");
 if (!(await page.getByText("表格导入积分").isVisible())) throw new Error("积分导入区域未显示");
 if (!(await page.getByRole("link", { name: "下载标准模板" }).isVisible())) throw new Error("标准模板下载入口未显示");
-if (!(await page.getByRole("columnheader", { name: "扣包次数" }).isVisible())) throw new Error("管理员扣包设置入口未显示");
+if (!(await page.getByRole("columnheader", { name: "累计 / 新增扣包" }).isVisible())) throw new Error("管理员永久扣包设置入口未显示");
+if (!(await page.locator('input[name^="deduction_add_"]').first().isVisible())) throw new Error("管理员新增扣包输入框未显示");
 const addMemberBox = await page.locator(".add-member-card").boundingBox();
 const scoreImportBox = await page.locator(".compact-score-import-panel").boundingBox();
 const weekAdminBox = await page.locator(".week-admin-card").boundingBox();
@@ -113,6 +124,7 @@ if (!addMemberBox || !scoreImportBox || Math.abs(addMemberBox.width - scoreImpor
 if (!weekAdminBox || weekAdminBox.height <= addMemberBox.height) throw new Error("统计周管理卡片高度不足");
 if ((await page.locator(".week-management-list").evaluate((element) => getComputedStyle(element).overflowY)) !== "auto") throw new Error("统计周列表未启用内部滚动");
 await page.screenshot({ path: path.join(output, "admin-desktop.png"), fullPage: false });
+await page.locator(".score-editor-panel").screenshot({ path: path.join(output, "admin-score-editor.png") });
 
 await page.goto("http://localhost:3000/profile", { waitUntil: "networkidle" });
 if (!(await page.getByText("个人信息", { exact: true }).first().isVisible())) throw new Error("个人页未显示");
@@ -139,6 +151,8 @@ if (loginSessionToken) {
   cleanupDb.prepare("DELETE FROM sessions WHERE token_hash = ?")
     .run(createHash("sha256").update(loginSessionToken).digest("hex"));
 }
+cleanupDb.prepare("DELETE FROM weekly_scores WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
+cleanupDb.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
 cleanupDb.prepare("DELETE FROM users WHERE username = ?").run(visualUsername);
 cleanupDb.close();
 console.log(`Visual checks passed. Screenshots: ${output}`);

@@ -9,6 +9,7 @@ import { INITIAL_PASSWORD } from "@/lib/constants";
 import { requireAdmin, revokeUserSessions, writeAuditLog } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getShanghaiDate } from "@/lib/data";
+import { recordPackageDeduction } from "@/lib/package-deductions";
 import { hashPassword } from "@/lib/password";
 
 export type AdminFormState = { error?: string; success?: string };
@@ -103,26 +104,61 @@ export async function toggleMemberAction(formData: FormData) {
 export async function saveScoresAction(formData: FormData) {
   const admin = await requireAdmin();
   const weekId = Number(formData.get("weekId"));
-  if (!Number.isInteger(weekId) || weekId <= 0) return;
+  const requestId = String(formData.get("deductionRequestId") || "").trim();
+  if (!Number.isInteger(weekId) || weekId <= 0 || !/^[0-9a-f-]{36}$/i.test(requestId)) return;
 
   const db = getDb();
-  const rows = db.prepare("SELECT user_id AS userId FROM weekly_scores WHERE week_id = ?")
-    .all(weekId) as { userId: number }[];
+  const getWeek = db.prepare("SELECT id, event_date AS eventDate FROM weeks WHERE id = ?");
+  const getNextWeek = db.prepare(`
+    SELECT id, title FROM weeks
+    WHERE event_date > ?
+    ORDER BY event_date ASC, id ASC
+    LIMIT 1
+  `);
+  const getRows = db.prepare("SELECT user_id AS userId FROM weekly_scores WHERE week_id = ?");
   const update = db.prepare(`
-    UPDATE weekly_scores SET score = ?, package_deductions = ?, updated_at = CURRENT_TIMESTAMP
+    UPDATE weekly_scores SET score = ?, updated_at = CURRENT_TIMESTAMP
     WHERE week_id = ? AND user_id = ?
   `);
-
   db.transaction(() => {
+    const week = getWeek.get(weekId) as { id: number; eventDate: string } | undefined;
+    if (!week) return;
+    const nextWeek = getNextWeek.get(week.eventDate) as { id: number; title: string } | undefined;
+    const rows = getRows.all(weekId) as { userId: number }[];
+    let totalAddedDeductions = 0;
+    const deductionDetails: Array<{ userId: number; amount: number }> = [];
+
     for (const row of rows) {
       const scoreValue = Number(formData.get(`score_${row.userId}`));
-      const packageDeductions = Number(formData.get(`deductions_${row.userId}`));
       if (!Number.isInteger(scoreValue) || scoreValue < 0) continue;
-      if (!Number.isInteger(packageDeductions) || packageDeductions < 0 || packageDeductions > 99) continue;
-      update.run(scoreValue, packageDeductions, weekId, row.userId);
+      update.run(scoreValue, weekId, row.userId);
+
+      const addition = Number(formData.get(`deduction_add_${row.userId}`));
+      if (!Number.isInteger(addition) || addition <= 0 || addition > 99) continue;
+      const recorded = recordPackageDeduction(db, {
+        requestId,
+        sourceWeekId: weekId,
+        effectiveWeekId: nextWeek?.id || null,
+        userId: row.userId,
+        amount: addition,
+        createdBy: admin.id
+      });
+      if (!recorded) continue;
+      totalAddedDeductions += addition;
+      deductionDetails.push({ userId: row.userId, amount: addition });
     }
-  })();
-  writeAuditLog(admin.id, "批量更新要塞分数", undefined, { weekId, memberCount: rows.length });
+
+    writeAuditLog(admin.id, "批量更新要塞分数", undefined, { weekId, memberCount: rows.length });
+    if (totalAddedDeductions > 0) {
+      writeAuditLog(admin.id, "新增扣包记录", undefined, {
+        requestId,
+        sourceWeekId: weekId,
+        effectiveWeekId: nextWeek?.id || null,
+        amount: totalAddedDeductions,
+        members: deductionDetails
+      });
+    }
+  }).immediate();
   revalidatePath("/scores");
   revalidatePath("/packages");
   revalidatePath("/profile");
@@ -238,22 +274,39 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
     return { error: "发包周期必须从周六开始，请重新选择日期。" };
   }
   const db = getDb();
-  if (db.prepare("SELECT id FROM weeks WHERE event_date = ?").get(parsed.data.eventDate)) {
-    return { error: "这个日期已经存在统计周。" };
-  }
-
   let weekId = 0;
+  let creationError = "";
   db.transaction(() => {
+    if (db.prepare("SELECT id FROM weeks WHERE event_date = ?").get(parsed.data.eventDate)) {
+      creationError = "这个日期已经存在统计周。";
+      return;
+    }
+    const latestWeek = db.prepare(`
+      SELECT event_date AS eventDate FROM weeks
+      ORDER BY event_date DESC, id DESC
+      LIMIT 1
+    `).get() as { eventDate: string } | undefined;
+    if (latestWeek && parsed.data.eventDate <= latestWeek.eventDate) {
+      creationError = `新统计周必须晚于现有最后一周（${latestWeek.eventDate}），这样待扣次数才能准确顺延。`;
+      return;
+    }
+
     const result = db.prepare("INSERT INTO weeks (title, event_date) VALUES (?, ?)")
       .run(parsed.data.title, parsed.data.eventDate);
     weekId = Number(result.lastInsertRowid);
     db.prepare(`
-      INSERT INTO weekly_scores (week_id, user_id, score)
-      SELECT ?, id, 0 FROM users WHERE is_active = 1
+      INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
+      SELECT ?, id, 0, package_deduction_pending FROM users WHERE is_active = 1
     `).run(weekId);
-  })();
+    db.prepare(`
+      UPDATE users SET package_deduction_pending = 0, updated_at = CURRENT_TIMESTAMP
+      WHERE is_active = 1 AND package_deduction_pending > 0
+    `).run();
+  }).immediate();
+  if (creationError) return { error: creationError };
   writeAuditLog(admin.id, "创建统计周", undefined, { weekId, ...parsed.data });
   revalidatePath("/scores");
+  revalidatePath("/packages");
   revalidatePath("/admin");
   return { success: "新一周已经创建。" };
 }
@@ -295,11 +348,55 @@ export async function deleteWeekAction(formData: FormData) {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   await db.backup(path.join(backupDir, `naruto-fortress-before-delete-week-${week.id}-${stamp}.db`));
 
-  db.prepare("DELETE FROM weeks WHERE id = ?").run(week.id);
+  let transferredDeductions = 0;
+  let deleted = false;
+  db.transaction(() => {
+    const lockedWeek = db.prepare("SELECT id, title, event_date AS eventDate FROM weeks WHERE id = ?")
+      .get(weekId) as { id: number; title: string; eventDate: string } | undefined;
+    if (!lockedWeek) return;
+
+    if (lockedWeek.eventDate > getShanghaiDate()) {
+      const deductions = db.prepare(`
+        SELECT user_id AS userId, package_deductions AS amount
+        FROM weekly_scores
+        WHERE week_id = ? AND package_deductions > 0
+      `).all(lockedWeek.id) as Array<{ userId: number; amount: number }>;
+      const nextWeek = db.prepare(`
+        SELECT id FROM weeks
+        WHERE event_date > ? AND id != ?
+        ORDER BY event_date ASC, id ASC
+        LIMIT 1
+      `).get(lockedWeek.eventDate, lockedWeek.id) as { id: number } | undefined;
+      const addScheduled = db.prepare(`
+        INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
+        VALUES (?, ?, 0, ?)
+        ON CONFLICT(week_id, user_id) DO UPDATE SET
+          package_deductions = weekly_scores.package_deductions + excluded.package_deductions,
+          updated_at = CURRENT_TIMESTAMP
+      `);
+      const addPending = db.prepare(`
+        UPDATE users SET package_deduction_pending = package_deduction_pending + ?,
+          updated_at = CURRENT_TIMESTAMP WHERE id = ?
+      `);
+      for (const deduction of deductions) {
+        if (nextWeek) addScheduled.run(nextWeek.id, deduction.userId, deduction.amount);
+        else addPending.run(deduction.amount, deduction.userId);
+        transferredDeductions += deduction.amount;
+      }
+      if (nextWeek) {
+        db.prepare("UPDATE package_deduction_events SET effective_week_id = ? WHERE effective_week_id = ?")
+          .run(nextWeek.id, lockedWeek.id);
+      }
+    }
+    db.prepare("DELETE FROM weeks WHERE id = ?").run(lockedWeek.id);
+    deleted = true;
+  }).immediate();
+  if (!deleted) return;
   writeAuditLog(admin.id, "删除统计周", undefined, {
     weekId: week.id,
     title: week.title,
-    eventDate: week.eventDate
+    eventDate: week.eventDate,
+    transferredDeductions
   });
   revalidatePath("/scores");
   revalidatePath("/packages");

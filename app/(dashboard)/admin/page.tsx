@@ -1,6 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { Activity, Clock3, FileSpreadsheet, KeyRound, ListChecks, ShieldCheck, UserPlus, UsersRound } from "lucide-react";
 import { saveScoresAction } from "@/app/admin/actions";
-import { AddMemberForm, AdminMemberList, CreateWeekForm, ScoreImportForm, WeekManagementList } from "@/components/admin-forms";
+import { AddMemberForm, AdminMemberList, CreateWeekForm, SaveScoresButton, ScoreImportForm, WeekManagementList } from "@/components/admin-forms";
 import { Avatar } from "@/components/avatar";
 import { ONLINE_WINDOW_MS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/auth";
@@ -15,6 +16,7 @@ const actionLabels: Record<string, string> = {
   "停用组员": "停用了一名组员",
   "恢复组员": "恢复了一名组员",
   "批量更新要塞分数": "更新了本周战绩",
+  "新增扣包记录": "新增了扣包记录",
   "导入要塞积分": "导入了本周战绩",
   "创建统计周": "创建了新的统计周",
   "重命名统计周": "修改了统计周名称",
@@ -39,6 +41,14 @@ export default async function AdminPage() {
   const weeks = getWeeks();
   const week = getCurrentWeek();
   const scores = week ? getScoreRows(week.id) : [];
+  const deductionRequestId = randomUUID();
+  const nextWeek = week
+    ? weeks.filter((item) => item.eventDate > week.eventDate)
+      .sort((left, right) => left.eventDate.localeCompare(right.eventDate) || left.id - right.id)[0] || null
+    : null;
+  const nextWeekDeductions = new Map(
+    nextWeek ? getScoreRows(nextWeek.id).map((row) => [row.userId, row.packageDeductions]) : []
+  );
   const packageRounds = week
     ? getPackageRoundsByMember(generatePackagePlan(scores, week.eventDate).assignments)
     : new Map<number, number[]>();
@@ -83,7 +93,7 @@ export default async function AdminPage() {
 
         <div className="panel admin-tool-card week-admin-card">
           <div className="panel-heading">
-            <div><span className="eyebrow"><Clock3 size={13} /> NEW CYCLE</span><h2>新建统计周</h2><p>为所有当前有效组员生成 0 分记录。</p></div>
+            <div><span className="eyebrow"><Clock3 size={13} /> NEW CYCLE</span><h2>新建统计周</h2><p>按日期向后创建，并为有效组员承接待执行扣包。</p></div>
           </div>
           <CreateWeekForm />
           <div className="week-list-heading"><strong>已有统计周</strong><span>删除前会自动备份数据库</span></div>
@@ -102,13 +112,14 @@ export default async function AdminPage() {
       {week && (
         <section className="panel score-editor-panel">
           <div className="panel-heading">
-            <div><span className="eyebrow">SCORE CONTROL</span><h2>本期分数、自动轮次与扣包</h2><p>{week.title} · 发包轮次由同一套排包算法自动同步。</p></div>
+            <div><span className="eyebrow">SCORE CONTROL</span><h2>本期分数、自动轮次与扣包</h2><p>{week.title} · 扣包永久累计，本周新增次数自动投递到下一统计周。</p></div>
           </div>
           <form action={saveScoresAction}>
             <input type="hidden" name="weekId" value={week.id} />
+            <input type="hidden" name="deductionRequestId" value={deductionRequestId} />
             <div className="table-scroll">
               <table className="score-table editable-table">
-                <thead><tr><th>排名</th><th>组员</th><th>分数</th><th>自动发包轮次</th><th>扣包次数</th></tr></thead>
+                <thead><tr><th>排名</th><th>组员</th><th>分数</th><th>自动发包轮次</th><th>累计 / 新增扣包</th></tr></thead>
                 <tbody>
                   {scores.map((row) => {
                     const rounds = packageRounds.get(row.userId) || [];
@@ -118,14 +129,19 @@ export default async function AdminPage() {
                       <td><span className="member-cell"><Avatar name={row.displayName} src={row.avatarUrl} size={32} /><strong>{row.displayName}</strong></span></td>
                       <td><input className="table-input score-input" type="number" min="0" name={`score_${row.userId}`} defaultValue={row.score} aria-label={`${row.displayName}分数`} /></td>
                       <td>{rounds.length ? <span className="round-badge-list">{rounds.map((round) => <span key={round} className={`round-badge round-badge-${round}`}>第 {round} 轮</span>)}</span> : <span className="muted">本期未排到</span>}</td>
-                      <td><input className="table-input deduction-input" type="number" min="0" max="99" name={`deductions_${row.userId}`} defaultValue={row.packageDeductions} aria-label={`${row.displayName}扣包次数`} /></td>
+                      <td>
+                        <div className="deduction-add-control">
+                          <span><strong>累计 {row.packageDeductionTotal} 次</strong><small>{row.packageDeductions > 0 ? `本期执行 ${row.packageDeductions} 次 · ` : ""}{nextWeek ? `${nextWeek.title} 已登记 ${nextWeekDeductions.get(row.userId) || 0} 次` : `待创建下一周 ${row.packageDeductionPending} 次`}</small></span>
+                          <label><small>新增</small><input key={`${row.userId}-${row.packageDeductionTotal}`} className="table-input deduction-input" type="number" min="0" max="99" name={`deduction_add_${row.userId}`} defaultValue="0" aria-label={`${row.displayName}新增扣包次数`} /></label>
+                        </div>
+                      </td>
                     </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-            <div className="editor-actions"><span>第一轮不扣包；第二轮起，扣 1 次会跳过一次发包资格且不占每日名额。</span><button className="primary-button" type="submit">保存本期战绩</button></div>
+            <div className="editor-actions"><span>这里只新增、不覆盖历史；新增扣包会在下一周第二轮起逐次生效。</span><SaveScoresButton /></div>
           </form>
         </section>
       )}
