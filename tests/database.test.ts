@@ -73,6 +73,22 @@ describe("初始组织数据", () => {
     }
   });
 
+  it("统计周可以重命名且不会改变发包起始日", () => {
+    const db = getDb();
+    db.exec("BEGIN");
+    try {
+      const result = db.prepare("INSERT INTO weeks (title, event_date) VALUES (?, ?)")
+        .run("重命名前", "2099-12-26");
+      const weekId = Number(result.lastInsertRowid);
+      db.prepare("UPDATE weeks SET title = ? WHERE id = ?").run("重命名后", weekId);
+
+      expect(db.prepare("SELECT title, event_date AS eventDate FROM weeks WHERE id = ?").get(weekId))
+        .toEqual({ title: "重命名后", eventDate: "2099-12-26" });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
   it("按40分首轮、60分后续轮次生成连续8天发包安排", () => {
     const week = getLatestWeek()!;
     const plan = generatePackagePlan(getScoreRows(week.id), week.eventDate);

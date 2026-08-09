@@ -17,6 +17,7 @@ const actionLabels: Record<string, string> = {
   "批量更新要塞分数": "更新了本周战绩",
   "导入要塞积分": "导入了本周战绩",
   "创建统计周": "创建了新的统计周",
+  "重命名统计周": "修改了统计周名称",
   "删除统计周": "删除了一个统计周",
   "修改本人密码": "修改了自己的密码",
   "更新头像": "更新了个人头像"
@@ -62,13 +63,25 @@ export default async function AdminPage() {
       </section>
 
       <section className="admin-tools-grid">
-        <div className="panel admin-tool-card add-member-card">
-          <div className="panel-heading">
-            <div><span className="eyebrow"><UserPlus size={13} /> NEW MEMBER</span><h2>添加组员</h2><p>游戏昵称同时作为登录账号，初始密码由你设置。</p></div>
+        <div className="admin-tools-column">
+          <div className="panel admin-tool-card add-member-card">
+            <div className="panel-heading">
+              <div><span className="eyebrow"><UserPlus size={13} /> NEW MEMBER</span><h2>添加组员</h2><p>游戏昵称同时作为登录账号，初始密码由你设置。</p></div>
+            </div>
+            <AddMemberForm />
           </div>
-          <AddMemberForm />
+
+          {week && (
+            <section className="panel score-import-panel compact-score-import-panel">
+              <div className="panel-heading">
+                <div><span className="eyebrow"><FileSpreadsheet size={13} /> SCORE IMPORT</span><h2>表格导入积分</h2><p>先下载标准模板填写，整份校验通过后才会更新数据库。</p></div>
+              </div>
+              <ScoreImportForm weekId={week.id} weekTitle={week.title} />
+            </section>
+          )}
         </div>
-        <div className="panel admin-tool-card">
+
+        <div className="panel admin-tool-card week-admin-card">
           <div className="panel-heading">
             <div><span className="eyebrow"><Clock3 size={13} /> NEW CYCLE</span><h2>新建统计周</h2><p>为所有当前有效组员生成 0 分记录。</p></div>
           </div>
@@ -77,15 +90,6 @@ export default async function AdminPage() {
           <WeekManagementList weeks={weeks} currentWeekId={week?.id || null} />
         </div>
       </section>
-
-      {week && (
-        <section className="panel score-import-panel">
-          <div className="panel-heading">
-            <div><span className="eyebrow"><FileSpreadsheet size={13} /> SCORE IMPORT</span><h2>表格导入积分</h2><p>先下载标准模板填写，整份校验通过后才会更新数据库。</p></div>
-          </div>
-          <ScoreImportForm weekId={week.id} weekTitle={week.title} />
-        </section>
-      )}
 
       <section className="panel member-management">
         <div className="panel-heading">

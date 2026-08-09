@@ -102,9 +102,16 @@ if (!(await page.getByLabel("游戏昵称 / 登录账号").isVisible())) throw n
 if (!(await page.locator('input[name="initialPassword"]').isVisible())) throw new Error("自定义初始密码输入框未显示");
 if (!(await page.getByText("已有统计周", { exact: true }).isVisible())) throw new Error("统计周管理列表未显示");
 if (!(await page.getByRole("button", { name: "删除" }).first().isVisible())) throw new Error("删除统计周入口未显示");
+if (!(await page.getByRole("button", { name: "保存名称" }).first().isVisible())) throw new Error("重命名统计周入口未显示");
 if (!(await page.getByText("表格导入积分").isVisible())) throw new Error("积分导入区域未显示");
 if (!(await page.getByRole("link", { name: "下载标准模板" }).isVisible())) throw new Error("标准模板下载入口未显示");
 if (!(await page.getByRole("columnheader", { name: "扣包次数" }).isVisible())) throw new Error("管理员扣包设置入口未显示");
+const addMemberBox = await page.locator(".add-member-card").boundingBox();
+const scoreImportBox = await page.locator(".compact-score-import-panel").boundingBox();
+const weekAdminBox = await page.locator(".week-admin-card").boundingBox();
+if (!addMemberBox || !scoreImportBox || Math.abs(addMemberBox.width - scoreImportBox.width) > 2) throw new Error("添加组员与表格导入积分宽度不一致");
+if (!weekAdminBox || weekAdminBox.height <= addMemberBox.height) throw new Error("统计周管理卡片高度不足");
+if ((await page.locator(".week-management-list").evaluate((element) => getComputedStyle(element).overflowY)) !== "auto") throw new Error("统计周列表未启用内部滚动");
 await page.screenshot({ path: path.join(output, "admin-desktop.png"), fullPage: false });
 
 await page.goto("http://localhost:3000/profile", { waitUntil: "networkidle" });

@@ -2,12 +2,13 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, CalendarPlus, CheckCircle2, Download, Eye, EyeOff, FileSpreadsheet, LoaderCircle, Plus, RotateCcw, Search, Trash2, Upload, UserMinus, UserRoundCheck } from "lucide-react";
+import { CalendarDays, CalendarPlus, CheckCircle2, Download, Eye, EyeOff, FileSpreadsheet, LoaderCircle, PencilLine, Plus, RotateCcw, Search, Trash2, Upload, UserMinus, UserRoundCheck } from "lucide-react";
 import {
   addMemberAction,
   createWeekAction,
   deleteWeekAction,
   importScoresAction,
+  renameWeekAction,
   resetPasswordAction,
   toggleMemberAction,
   type AdminFormState
@@ -68,10 +69,14 @@ export function WeekManagementList({ weeks, currentWeekId }: { weeks: ScoreWeek[
       {weeks.map((week) => (
         <article key={week.id} className={week.id === currentWeekId ? "current" : ""}>
           <span className="week-list-icon"><CalendarDays size={16} /></span>
-          <div>
-            <strong>{week.title}</strong>
-            <small>{week.eventDate}{week.id === currentWeekId ? " · 当前默认周" : ""}</small>
-          </div>
+          <form action={renameWeekAction} className="week-rename-form">
+            <input type="hidden" name="weekId" value={week.id} />
+            <input name="title" className="week-title-input" defaultValue={week.title} maxLength={50} aria-label={`${week.title}的统计周名称`} required />
+            <span className="week-rename-meta">
+              <small>{week.eventDate}{week.id === currentWeekId ? " · 当前默认周" : ""}</small>
+              <button type="submit" className="text-button week-rename-button"><PencilLine size={13} />保存名称</button>
+            </span>
+          </form>
           <form
             action={deleteWeekAction}
             onSubmit={(event) => {

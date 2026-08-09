@@ -258,6 +258,28 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
   return { success: "新一周已经创建。" };
 }
 
+export async function renameWeekAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const weekId = Number(formData.get("weekId"));
+  const parsedTitle = z.string().trim().min(1).max(50).safeParse(formData.get("title"));
+  if (!Number.isInteger(weekId) || weekId <= 0 || !parsedTitle.success) return;
+
+  const db = getDb();
+  const week = db.prepare("SELECT title FROM weeks WHERE id = ?").get(weekId) as { title: string } | undefined;
+  if (!week || week.title === parsedTitle.data) return;
+
+  db.prepare("UPDATE weeks SET title = ? WHERE id = ?").run(parsedTitle.data, weekId);
+  writeAuditLog(admin.id, "重命名统计周", undefined, {
+    weekId,
+    previousTitle: week.title,
+    title: parsedTitle.data
+  });
+  revalidatePath("/scores");
+  revalidatePath("/packages");
+  revalidatePath("/profile");
+  revalidatePath("/admin");
+}
+
 export async function deleteWeekAction(formData: FormData) {
   const admin = await requireAdmin();
   const weekId = Number(formData.get("weekId"));
