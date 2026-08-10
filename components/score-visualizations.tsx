@@ -7,6 +7,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Line,
   LineChart,
   Pie,
@@ -128,13 +129,14 @@ export function ScoreVisualizations({
       <div className={`chart-stage chart-${view}`}>
         {view === "bar" && (
           <ResponsiveContainer width="100%" height={Math.max(560, rows.length * 31)}>
-            <BarChart data={data.barData} layout="vertical" margin={{ top: 6, right: 38, bottom: 6, left: 18 }}>
+            <BarChart data={data.barData} layout="vertical" margin={{ top: 6, right: 56, bottom: 6, left: 18 }}>
               <CartesianGrid strokeDasharray="3 5" horizontal={false} stroke="rgba(86,76,58,.13)" />
               <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 12 }} />
               <YAxis type="category" dataKey="name" width={92} axisLine={false} tickLine={false} tick={{ fill: "#332f29", fontSize: 12 }} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(230,119,50,.06)" }} />
-              <Bar dataKey="score" name="分数" radius={[0, 8, 8, 0]} maxBarSize={17}>
+              <Bar dataKey="score" name="分数" radius={[0, 8, 8, 0]} maxBarSize={17} minPointSize={2}>
                 {data.barData.map((entry, index) => <Cell key={entry.name} fill={index < 3 ? colors[index] : "#52735b"} />)}
+                <LabelList className="bar-score-label" dataKey="score" position="right" offset={8} fill="#9f482b" fontSize={11} fontWeight={800} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

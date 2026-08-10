@@ -84,8 +84,15 @@ if (!(await firstMemberRow.getByText("第 1 轮", { exact: true }).isVisible()))
 if (!(await firstMemberRow.getByText("第 2 轮", { exact: true }).isVisible())) throw new Error("第二轮标签未同步到战绩表");
 if ((await page.locator(".stat-card > .stat-icon").first().evaluate((element) => getComputedStyle(element).display)) !== "grid") throw new Error("统计图标未居中");
 if ((await page.locator(".chart-bar").evaluate((element) => getComputedStyle(element).overflowY)) !== "visible") throw new Error("柱状图仍有内置滚动");
+await page.waitForTimeout(900);
+const barScoreLabels = page.locator(".chart-bar .bar-score-label");
+const barScoreLabelCount = await barScoreLabels.count();
+const scoreRowCount = await page.locator(".score-table tbody tr").count();
+if (barScoreLabelCount !== scoreRowCount) throw new Error(`横向柱状图未给每名成员显示分数（标签 ${barScoreLabelCount} / 成员 ${scoreRowCount}）`);
+if ((await barScoreLabels.first().textContent())?.trim() !== "192") throw new Error("横向柱状图柱尾分数不正确");
 await page.screenshot({ path: path.join(output, "scores-desktop.png"), fullPage: false });
 await page.locator(".score-table-panel").screenshot({ path: path.join(output, "scores-rounds-table.png") });
+await page.locator(".visualization-panel").screenshot({ path: path.join(output, "scores-bar-values.png") });
 
 await page.getByRole("button", { name: "选择统计周" }).click();
 if (!(await page.getByText("战绩卷轴", { exact: true }).isVisible())) throw new Error("主题周次菜单未显示");
@@ -136,6 +143,13 @@ await mobileContext.addCookies([{ name: "fortress_session", value: token, url: "
 const mobilePage = await mobileContext.newPage();
 await mobilePage.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
 await mobilePage.screenshot({ path: path.join(output, "scores-mobile.png"), fullPage: false });
+await mobilePage.waitForTimeout(900);
+const mobileBarLabels = mobilePage.locator(".chart-bar .bar-score-label");
+if ((await mobileBarLabels.count()) !== scoreRowCount) throw new Error("手机端横向柱状图分数标签不完整");
+const mobileChartBox = await mobilePage.locator(".visualization-panel").boundingBox();
+const mobileLabelRight = await mobileBarLabels.evaluateAll((labels) => Math.max(...labels.map((label) => label.getBoundingClientRect().right)));
+if (!mobileChartBox || mobileLabelRight > mobileChartBox.x + mobileChartBox.width) throw new Error("手机端柱尾分数被右侧裁切");
+await mobilePage.locator(".visualization-panel").screenshot({ path: path.join(output, "scores-bar-values-mobile.png") });
 await mobilePage.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
 if ((await mobilePage.locator(".package-day-card").count()) !== 8) throw new Error("手机端发包周期不是8天");
 await mobilePage.screenshot({ path: path.join(output, "packages-mobile.png"), fullPage: true });
