@@ -74,7 +74,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         <header className="deduction-board-heading">
           <div className="package-rule-title">
             <span className="section-icon deduction-icon"><CircleMinus size={19} /></span>
-            <div><span className="eyebrow">PACKAGE DEDUCTIONS</span><h2>累计扣包次数排行</h2></div>
+            <div><span className="eyebrow">PACKAGE DEDUCTIONS</span><h2>累计扣包次数排行</h2><p className="deduction-note">这里仅记录扣包次数，不代表成员已经获得发包名额。</p></div>
           </div>
           <span className="deduction-summary"><ListOrdered size={15} />累计 {plan.totalDeductions} 次 · 本期承接 {plan.scheduledDeductionCount} 次 · 已应用 {plan.appliedDeductionCount} 次</span>
         </header>
@@ -86,7 +86,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
                 <Avatar name={item.member.displayName} src={item.member.avatarUrl} size={40} />
                 <div>
                   <strong>{item.member.displayName}</strong>
-                  <small>{item.member.score} 分 · 本期承接 {item.scheduled} 次 · 安排已跳过 {item.applied} 次{item.applied < item.scheduled ? ` · 本期未触发 ${item.scheduled - item.applied} 次` : ""}</small>
+                  <small>{item.member.score} 分 · {item.member.score < FIRST_ROUND_MIN_SCORE ? "当前无发包资格" : item.member.score < LATER_ROUND_MIN_SCORE ? "仅有第一轮资格" : `本期承接 ${item.scheduled} 次 · 安排已跳过 ${item.applied} 次`}{item.applied < item.scheduled ? ` · 扣包未触发 ${item.scheduled - item.applied} 次` : ""}</small>
                 </div>
                 <b>累计扣 {item.count} 次</b>
               </article>

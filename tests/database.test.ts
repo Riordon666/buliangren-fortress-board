@@ -194,6 +194,7 @@ describe("初始组织数据", () => {
     expect(plan.assignments[26]).toMatchObject({ round: 1, member: { displayName: "村子来个青年", score: 40 } });
     expect(plan.assignments[27]).toMatchObject({ round: 2, member: { displayName: "是溅诗啊" } });
     expect(plan.assignments.some((item) => item.round > 1 && item.member.score < 60)).toBe(false);
+    expect(plan.assignments.every((item) => item.member.score >= (item.round === 1 ? 40 : 60))).toBe(true);
     const rounds = getPackageRoundsByMember(plan.assignments);
     expect(rounds.get(plan.assignments[0].member.userId)).toEqual([1, 2]);
     expect(rounds.get(plan.assignments[26].member.userId)).toEqual([1]);

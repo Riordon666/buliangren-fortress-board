@@ -2841,6 +2841,7 @@ button:disabled {
 .package-today.sent { border-left-color: #477458; }
 .package-today h2 { margin: 6px 0; font-family: "STKaiti", "KaiTi", serif; font-size: 23px; }
 .package-today p { margin: 0; color: var(--muted); font-size: 11px; }
+.deduction-note { margin: 4px 0 0; color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: 0; }
 .package-today-action { display: flex; align-items: center; gap: 10px; }
 .package-today-action form { margin: 0; }
 .package-day-meta { display: flex; align-items: center; gap: 7px; }
