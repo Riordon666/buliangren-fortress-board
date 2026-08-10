@@ -186,6 +186,29 @@ function createDatabase() {
       UNIQUE (request_id, user_id)
     );
 
+    CREATE TABLE IF NOT EXISTS package_day_statuses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+      day_index INTEGER NOT NULL CHECK (day_index BETWEEN 0 AND 7),
+      marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (week_id, day_index)
+    );
+
+    CREATE TABLE IF NOT EXISTS score_change_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      request_id TEXT NOT NULL,
+      week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      previous_score INTEGER NOT NULL CHECK (previous_score >= 0),
+      new_score INTEGER NOT NULL CHECK (new_score >= 0),
+      delta INTEGER NOT NULL,
+      source TEXT NOT NULL CHECK (source IN ('manual', 'import')),
+      actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (request_id, user_id, source)
+    );
+
     CREATE TABLE IF NOT EXISTS login_attempts (
       username TEXT PRIMARY KEY,
       failed_count INTEGER NOT NULL DEFAULT 0,
@@ -202,6 +225,9 @@ function createDatabase() {
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
     CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
     CREATE INDEX IF NOT EXISTS idx_deduction_events_user ON package_deduction_events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_package_day_status_week ON package_day_statuses(week_id, day_index);
+    CREATE INDEX IF NOT EXISTS idx_score_change_user ON score_change_events(user_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_score_change_week ON score_change_events(week_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_nocase ON users(username COLLATE NOCASE);
   `);

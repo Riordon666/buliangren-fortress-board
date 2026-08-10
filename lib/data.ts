@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import type { MemberRow, ScoreRow, ScoreWeek, TrendPoint } from "@/lib/types";
+import type { MemberRow, PackageDayStatus, ScoreChangeEvent, ScoreRow, ScoreWeek, TrendPoint } from "@/lib/types";
 
 export function getWeeks(): ScoreWeek[] {
   return getDb().prepare(`
@@ -107,6 +107,47 @@ export function getMemberTrend(userId: number): TrendPoint[] {
     WHERE ranked.user_id = ?
     ORDER BY w.event_date ASC, w.id ASC
   `).all(userId) as TrendPoint[];
+}
+
+export function getAllMemberTrends(): Array<TrendPoint & { userId: number; displayName: string; avatarUrl: string | null }> {
+  return getDb().prepare(`
+    WITH ranked AS (
+      SELECT ws.user_id, ws.week_id, ws.score,
+        RANK() OVER (PARTITION BY ws.week_id ORDER BY ws.score DESC) AS rank
+      FROM weekly_scores ws
+    )
+    SELECT u.id AS userId, u.display_name AS displayName, u.avatar_url AS avatarUrl,
+      w.id AS weekId, w.title AS weekTitle, w.event_date AS eventDate,
+      ranked.score, ranked.rank
+    FROM ranked
+    JOIN weeks w ON w.id = ranked.week_id
+    JOIN users u ON u.id = ranked.user_id
+    WHERE u.is_active = 1
+    ORDER BY w.event_date ASC, w.id ASC, COALESCE(u.roster_order, 999999), u.id
+  `).all() as Array<TrendPoint & { userId: number; displayName: string; avatarUrl: string | null }>;
+}
+
+export function getPackageDayStatuses(weekId: number): PackageDayStatus[] {
+  return getDb().prepare(`
+    SELECT p.week_id AS weekId, p.day_index AS dayIndex, p.marked_by AS markedBy,
+      u.display_name AS markedByName, p.sent_at AS sentAt
+    FROM package_day_statuses p
+    LEFT JOIN users u ON u.id = p.marked_by
+    WHERE p.week_id = ? ORDER BY p.day_index ASC
+  `).all(weekId) as PackageDayStatus[];
+}
+
+export function getScoreChangeEvents(userId: number, limit = 12): ScoreChangeEvent[] {
+  return getDb().prepare(`
+    SELECT e.id, e.week_id AS weekId, w.title AS weekTitle,
+      e.previous_score AS previousScore, e.new_score AS newScore, e.delta,
+      e.source, actor.display_name AS actorName, e.created_at AS createdAt
+    FROM score_change_events e
+    JOIN weeks w ON w.id = e.week_id
+    LEFT JOIN users actor ON actor.id = e.actor_user_id
+    WHERE e.user_id = ?
+    ORDER BY e.id DESC LIMIT ?
+  `).all(userId, limit) as ScoreChangeEvent[];
 }
 
 export function getMembers(includeInactive = true): MemberRow[] {

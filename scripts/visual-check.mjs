@@ -75,6 +75,11 @@ db.close();
 const appContext = await browser.newContext({ viewport: { width: 1600, height: 1100 }, deviceScaleFactor: 1 });
 await appContext.addCookies([{ name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" }]);
 const page = await appContext.newPage();
+await page.goto("http://localhost:3000/home", { waitUntil: "networkidle" });
+if (!(await page.getByText("今日发包提醒", { exact: true }).isVisible())) throw new Error("我的作战室未显示今日发包提醒");
+if (!(await page.getByText("下一目标", { exact: true }).isVisible())) throw new Error("我的作战室未显示下一目标");
+await page.screenshot({ path: path.join(output, "home-desktop.png"), fullPage: false });
+
 await page.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
 if (!(await page.getByText("要塞分数统计", { exact: true }).first().isVisible())) throw new Error("分数页未显示");
 if (!(await page.getByText("2,287", { exact: true }).isVisible())) throw new Error("总分校验失败");
@@ -111,7 +116,24 @@ if (!(await page.getByText(/本期承接 1 次/).first().isVisible())) throw new
 if ((await page.locator(".package-day-card").count()) !== 8) throw new Error("发包周期不是8天");
 if ((await page.locator(".package-member:not(.empty-slot)").count()) !== 40) throw new Error("发包名额不是40个");
 if ((await page.getByText("第 2 轮", { exact: true }).count()) !== 13) throw new Error("第二轮发包数量不正确");
+if (!(await page.getByText("今日发包状态", { exact: true }).isVisible())) throw new Error("今日发包状态未显示");
+if (!(await page.getByText(/暂未发包|已发包/).first().isVisible())) throw new Error("今日发包状态内容未显示");
 await page.screenshot({ path: path.join(output, "packages-desktop.png"), fullPage: true });
+
+await page.goto("http://localhost:3000/reports", { waitUntil: "networkidle" });
+if (!(await page.getByText("本周亮点", { exact: true }).isVisible())) throw new Error("每周战报亮点未显示");
+const reportDownload = page.getByRole("link", { name: "下载本周战报图" });
+const reportHref = await reportDownload.getAttribute("href");
+if (!reportHref) throw new Error("周报分享图下载地址不存在");
+const reportResponse = await appContext.request.get(`http://localhost:3000${reportHref}`);
+if (!reportResponse.ok() || reportResponse.headers()["content-type"] !== "image/png") throw new Error("周报PNG生成失败");
+await fs.writeFile(path.join(output, "weekly-report-share.png"), await reportResponse.body());
+await page.screenshot({ path: path.join(output, "reports-desktop.png"), fullPage: false });
+
+await page.goto("http://localhost:3000/compare", { waitUntil: "networkidle" });
+if ((await page.locator(".comparison-selects select").count()) !== 3) throw new Error("成员对比选择器数量不正确");
+if (!(await page.getByRole("button", { name: "排名趋势" }).isVisible())) throw new Error("排名趋势切换未显示");
+await page.screenshot({ path: path.join(output, "compare-desktop.png"), fullPage: false });
 
 await page.goto("http://localhost:3000/admin", { waitUntil: "networkidle" });
 if (!(await page.getByText("组员与在线状态").isVisible())) throw new Error("管理员页未显示");
@@ -135,12 +157,18 @@ await page.locator(".score-editor-panel").screenshot({ path: path.join(output, "
 
 await page.goto("http://localhost:3000/profile", { waitUntil: "networkidle" });
 if (!(await page.getByText("个人信息", { exact: true }).first().isVisible())) throw new Error("个人页未显示");
+if (!(await page.getByText("我的战绩轨迹", { exact: true }).isVisible())) throw new Error("个人战绩轨迹未显示");
+if (!(await page.getByText("最近分数变动", { exact: true }).isVisible())) throw new Error("个人分数变动记录未显示");
 await page.screenshot({ path: path.join(output, "profile-desktop.png"), fullPage: false });
 await appContext.close();
 
 const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
 await mobileContext.addCookies([{ name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" }]);
 const mobilePage = await mobileContext.newPage();
+await mobilePage.goto("http://localhost:3000/home", { waitUntil: "networkidle" });
+if ((await mobilePage.locator(".mobile-nav .sidebar-nav a").count()) !== 7) throw new Error("手机端导航入口数量不正确");
+if ((await mobilePage.locator(".mobile-nav .sidebar-nav").evaluate((element) => getComputedStyle(element).overflowX)) !== "auto") throw new Error("手机端导航没有横向滚动，入口会过度拥挤");
+await mobilePage.screenshot({ path: path.join(output, "home-mobile.png"), fullPage: true });
 await mobilePage.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
 await mobilePage.screenshot({ path: path.join(output, "scores-mobile.png"), fullPage: false });
 await mobilePage.waitForTimeout(900);
@@ -153,6 +181,10 @@ await mobilePage.locator(".visualization-panel").screenshot({ path: path.join(ou
 await mobilePage.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
 if ((await mobilePage.locator(".package-day-card").count()) !== 8) throw new Error("手机端发包周期不是8天");
 await mobilePage.screenshot({ path: path.join(output, "packages-mobile.png"), fullPage: true });
+await mobilePage.goto("http://localhost:3000/reports", { waitUntil: "networkidle" });
+await mobilePage.screenshot({ path: path.join(output, "reports-mobile.png"), fullPage: true });
+await mobilePage.goto("http://localhost:3000/compare", { waitUntil: "networkidle" });
+await mobilePage.screenshot({ path: path.join(output, "compare-mobile.png"), fullPage: true });
 await mobilePage.goto("http://localhost:3000/admin", { waitUntil: "networkidle" });
 if (!(await mobilePage.getByText("已有统计周", { exact: true }).isVisible())) throw new Error("手机端统计周管理未显示");
 await mobilePage.screenshot({ path: path.join(output, "admin-mobile.png"), fullPage: false });

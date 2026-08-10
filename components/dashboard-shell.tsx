@@ -5,7 +5,7 @@ import { Avatar } from "@/components/avatar";
 import { Heartbeat } from "@/components/heartbeat";
 import { SidebarNav } from "@/components/sidebar-nav";
 
-export function DashboardShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {
+export function DashboardShell({ user, packageAlert, children }: { user: SessionUser; packageAlert: boolean; children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <Heartbeat />
@@ -26,7 +26,7 @@ export function DashboardShell({ user, children }: { user: SessionUser; children
           <small><Sparkles size={12} /> 每周战绩作战室</small>
         </div>
 
-        <SidebarNav isAdmin={user.role === "admin"} />
+        <SidebarNav isAdmin={user.role === "admin"} packageAlert={packageAlert} />
 
         <div className="sidebar-user">
           <Avatar name={user.displayName} src={user.avatarUrl} size={42} />
@@ -55,7 +55,7 @@ export function DashboardShell({ user, children }: { user: SessionUser; children
       </main>
 
       <div className="mobile-nav">
-        <SidebarNav isAdmin={user.role === "admin"} />
+        <SidebarNav isAdmin={user.role === "admin"} packageAlert={packageAlert} />
       </div>
     </div>
   );

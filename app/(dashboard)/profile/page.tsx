@@ -1,8 +1,11 @@
-import { AlertTriangle, Award, CalendarRange, Fingerprint, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import { AlertTriangle, Award, CalendarRange, Fingerprint, History, ShieldCheck, Sparkles, TrendingUp, UserRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
+import { MemberHistoryChart } from "@/components/member-history-chart";
 import { AvatarForm, PasswordForm } from "@/components/profile-forms";
 import { requireUser } from "@/lib/auth";
-import { getMemberTrend } from "@/lib/data";
+import { getAchievements } from "@/lib/insights";
+import { getCurrentWeek, getMemberTrend, getScoreChangeEvents, getScoreRows } from "@/lib/data";
+import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 
 export const metadata = { title: "个人信息" };
 
@@ -14,6 +17,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const total = trend.reduce((sum, point) => sum + point.score, 0);
   const peak = trend.reduce((max, point) => Math.max(max, point.score), 0);
   const bestRank = trend.length ? Math.min(...trend.map((point) => point.rank)) : 0;
+  const currentWeek = getCurrentWeek();
+  const currentRows = currentWeek ? getScoreRows(currentWeek.id) : [];
+  const current = currentRows.find((row) => row.userId === user.id);
+  const plan = currentWeek ? generatePackagePlan(currentRows, currentWeek.eventDate) : null;
+  const rounds = plan ? getPackageRoundsByMember(plan.assignments).get(user.id) || [] : [];
+  const achievements = getAchievements(current, trend, rounds);
+  const changes = getScoreChangeEvents(user.id, 6);
 
   return (
     <div className="page-stack profile-page">
@@ -49,6 +59,23 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
+      <section className="profile-history-grid">
+        <article className="panel profile-trend-panel">
+          <div className="panel-heading"><div><span className="eyebrow"><TrendingUp size={13} /> PERFORMANCE</span><h2>我的战绩轨迹</h2><p>橙色为分数，绿色虚线为排名。</p></div></div>
+          <MemberHistoryChart trend={trend} />
+        </article>
+        <div className="profile-side-stack">
+          <article className="panel mini-achievements">
+            <div className="panel-heading"><div><span className="eyebrow"><Award size={13} /> BADGES</span><h2>我的徽章</h2></div></div>
+            {achievements.length ? <div>{achievements.map((item) => <span key={item.id} className={`achievement-tag ${item.tone}`}><Award size={15} /><b>{item.label}</b><small>{item.description}</small></span>)}</div> : <div className="compact-empty">本期暂无徽章，达到 40 分即可解锁。</div>}
+          </article>
+          <article className="panel score-change-panel">
+            <div className="panel-heading"><div><span className="eyebrow"><History size={13} /> SCORE LOG</span><h2>最近分数变动</h2></div></div>
+            {changes.length ? <div className="score-change-list">{changes.map((event) => <div key={event.id}><span className={event.delta >= 0 ? "positive" : "negative"}>{event.delta >= 0 ? "+" : ""}{event.delta}</span><div><strong>{event.previousScore} → {event.newScore}</strong><small>{event.weekTitle} · {event.source === "import" ? "表格导入" : "管理员更新"}</small></div></div>)}</div> : <div className="compact-empty">以后每次分数变化都会记录在这里。</div>}
+          </article>
+        </div>
+      </section>
+
       <section className="profile-settings-grid">
         <div className="panel settings-panel">
           <div className="panel-heading"><div><span className="eyebrow">PORTRAIT</span><h2>头像设置</h2></div></div>
@@ -62,4 +89,3 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     </div>
   );
 }
-

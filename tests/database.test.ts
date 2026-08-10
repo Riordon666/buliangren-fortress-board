@@ -6,6 +6,8 @@ import { getLatestWeek, getMembers, getPackageDeductionRows, getScoreRows, getSh
 import { recordPackageDeduction } from "@/lib/package-deductions";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 import { verifyPassword } from "@/lib/password";
+import { recordScoreChange } from "@/lib/score-changes";
+import { buildWeeklyReportSvg } from "@/lib/report-image";
 import type { ScoreRow, ScoreWeek } from "@/lib/types";
 
 describe("初始组织数据", () => {
@@ -270,5 +272,57 @@ describe("初始组织数据", () => {
     expect(plan.assignments[0]).toMatchObject({ round: 1, member: { displayName: "测试成员" } });
     expect(plan.unfilledSlots).toBe(39);
     expect(plan.deductionRanking[0]).toMatchObject({ count: 4, scheduled: 1, applied: 0 });
+  });
+
+  it("分数变化会保存前后值，并对同一次提交保持幂等", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const row = getScoreRows(week.id)[0];
+    db.exec("BEGIN");
+    try {
+      const input = {
+        requestId: "22222222-2222-4222-8222-222222222222",
+        weekId: week.id,
+        userId: row.userId,
+        previousScore: row.score,
+        newScore: row.score + 8,
+        source: "manual" as const,
+        actorUserId: row.userId
+      };
+      expect(recordScoreChange(db, input)).toBe(true);
+      expect(recordScoreChange(db, input)).toBe(false);
+      expect(db.prepare(`
+        SELECT previous_score AS previousScore, new_score AS newScore, delta
+        FROM score_change_events WHERE request_id = ?
+      `).get(input.requestId)).toEqual({ previousScore: row.score, newScore: row.score + 8, delta: 8 });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("同一天只能确认一次已发包，状态会永久保存在SQLite", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const admin = getMembers().find((member) => member.role === "admin")!;
+    db.exec("BEGIN");
+    try {
+      expect(db.prepare("INSERT OR IGNORE INTO package_day_statuses (week_id, day_index, marked_by) VALUES (?, 0, ?)")
+        .run(week.id, admin.id).changes).toBe(1);
+      expect(db.prepare("INSERT OR IGNORE INTO package_day_statuses (week_id, day_index, marked_by) VALUES (?, 0, ?)")
+        .run(week.id, admin.id).changes).toBe(0);
+      expect(db.prepare("SELECT week_id AS weekId, day_index AS dayIndex FROM package_day_statuses WHERE week_id = ?")
+        .get(week.id)).toEqual({ weekId: week.id, dayIndex: 0 });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("周报分享图包含本周汇总和前五名", () => {
+    const week = getLatestWeek()!;
+    const svg = buildWeeklyReportSvg({ week, rows: getScoreRows(week.id), sentDays: 3 });
+    expect(svg).toContain("不良人 · 每周要塞战报");
+    expect(svg).toContain("是溅诗啊");
+    expect(svg).toContain("3/8");
+    expect(svg).toContain("1200");
   });
 });

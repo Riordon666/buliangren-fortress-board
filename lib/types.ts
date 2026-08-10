@@ -44,3 +44,23 @@ export type TrendPoint = {
   score: number;
   rank: number;
 };
+
+export type PackageDayStatus = {
+  weekId: number;
+  dayIndex: number;
+  markedBy: number | null;
+  markedByName: string | null;
+  sentAt: string;
+};
+
+export type ScoreChangeEvent = {
+  id: number;
+  weekId: number;
+  weekTitle: string;
+  previousScore: number;
+  newScore: number;
+  delta: number;
+  source: "manual" | "import";
+  actorName: string | null;
+  createdAt: string;
+};

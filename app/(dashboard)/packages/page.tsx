@@ -1,7 +1,9 @@
 import { CalendarDays, CheckCircle2, CircleMinus, Gift, Layers3, ListOrdered, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { WeekPicker } from "@/components/week-picker";
-import { getCurrentWeek, getPackageDeductionRows, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { markPackageSentAction } from "@/app/packages/actions";
+import { requireUser } from "@/lib/auth";
+import { getCurrentWeek, getPackageDayStatuses, getPackageDeductionRows, getScoreRows, getShanghaiDate, getWeekById, getWeeks } from "@/lib/data";
 import {
   FIRST_ROUND_MIN_SCORE,
   LATER_ROUND_MIN_SCORE,
@@ -12,6 +14,7 @@ import {
 export const metadata = { title: "发包安排" };
 
 export default async function PackagesPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
+  const user = await requireUser();
   const params = await searchParams;
   const weeks = getWeeks();
   const requestedId = Number(params.week);
@@ -21,12 +24,10 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
   const rows = getScoreRows(selectedWeek.id);
   const deductionRows = getPackageDeductionRows(selectedWeek.id);
   const plan = generatePackagePlan(rows, selectedWeek.eventDate, deductionRows);
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).format(new Date());
+  const today = getShanghaiDate();
+  const statuses = new Map(getPackageDayStatuses(selectedWeek.id).map((status) => [status.dayIndex, status]));
+  const todayPlan = plan.days.find((day) => day.date === today);
+  const todayStatus = todayPlan ? statuses.get(todayPlan.dayIndex) : undefined;
 
   return (
     <div className="page-stack packages-page">
@@ -44,6 +45,18 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         <article className="stat-card green"><span className="stat-icon"><Gift size={20} /></span><div><small>每日名额</small><strong>{PACKAGES_PER_DAY}<em> 人</em></strong><span>共 {plan.totalSlots} 个位置</span></div></article>
         <article className="stat-card gold"><span className="stat-icon"><UsersRound size={20} /></span><div><small>第一轮资格</small><strong>{plan.firstRoundEligible}</strong><span>分数 ≥ {FIRST_ROUND_MIN_SCORE}</span></div></article>
         <article className="stat-card ink"><span className="stat-icon"><Layers3 size={20} /></span><div><small>第二轮资格</small><strong>{plan.laterRoundEligible}</strong><span>分数 ≥ {LATER_ROUND_MIN_SCORE}</span></div></article>
+      </section>
+
+      <section className={`panel package-today ${todayStatus ? "sent" : "pending"}`}>
+        <div>
+          <span className="eyebrow">TODAY DELIVERY</span>
+          <h2>今日发包状态</h2>
+          {!todayPlan ? <p>今天不在当前所选统计周的发包周期内。</p> : <p>{todayStatus ? `${todayStatus.markedByName || "管理员"}已确认今天的包已发放。` : "今天的包暂未确认发放，确认后所有组员都能在这里看到。"}</p>}
+        </div>
+        <div className="package-today-action">
+          <span className={`send-status ${todayStatus ? "sent" : "pending"}`}>{todayStatus ? <><CheckCircle2 size={15} />已发包</> : "暂未发包"}</span>
+          {todayPlan && !todayStatus && user.role === "admin" && <form action={markPackageSentAction}><input type="hidden" name="weekId" value={selectedWeek.id} /><input type="hidden" name="dayIndex" value={todayPlan.dayIndex} /><button className="primary-button" type="submit"><Gift size={16} />标记今日已发包</button></form>}
+        </div>
       </section>
 
       <section className="panel package-rules">
@@ -89,7 +102,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <article key={day.date} className={`panel package-day-card ${day.date === today ? "today" : ""}`}>
             <header>
               <div><span>第 {day.dayIndex + 1} 天</span><h2>{day.weekday}</h2><small>{day.date}</small></div>
-              {day.date === today ? <b><Sparkles size={13} /> 今天</b> : <b>{day.assignments.length}/{PACKAGES_PER_DAY}</b>}
+              <div className="package-day-meta">{day.date === today ? <b><Sparkles size={13} /> 今天</b> : <b>{day.assignments.length}/{PACKAGES_PER_DAY}</b>}<span className={`send-status mini ${statuses.has(day.dayIndex) ? "sent" : "pending"}`}>{statuses.has(day.dayIndex) ? "已发包" : "暂未发包"}</span></div>
             </header>
             <div className="package-member-list">
               {Array.from({ length: PACKAGES_PER_DAY }, (_, index) => {

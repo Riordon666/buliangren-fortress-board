@@ -2,6 +2,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import readExcelFile from "read-excel-file/node";
 import { z } from "zod";
@@ -11,6 +12,7 @@ import { getDb } from "@/lib/db";
 import { getShanghaiDate } from "@/lib/data";
 import { recordPackageDeduction } from "@/lib/package-deductions";
 import { hashPassword } from "@/lib/password";
+import { recordScoreChange } from "@/lib/score-changes";
 
 export type AdminFormState = { error?: string; success?: string };
 
@@ -71,6 +73,9 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
   revalidatePath("/admin");
   revalidatePath("/scores");
   revalidatePath("/packages");
+  revalidatePath("/home");
+  revalidatePath("/reports");
+  revalidatePath("/compare");
   return { success: `已添加 ${parsed.data.displayName}，初始密码已加密保存。` };
 }
 
@@ -99,6 +104,9 @@ export async function toggleMemberAction(formData: FormData) {
   writeAuditLog(admin.id, activate ? "恢复组员" : "停用组员", userId);
   revalidatePath("/admin");
   revalidatePath("/scores");
+  revalidatePath("/home");
+  revalidatePath("/reports");
+  revalidatePath("/compare");
 }
 
 export async function saveScoresAction(formData: FormData) {
@@ -115,7 +123,7 @@ export async function saveScoresAction(formData: FormData) {
     ORDER BY event_date ASC, id ASC
     LIMIT 1
   `);
-  const getRows = db.prepare("SELECT user_id AS userId FROM weekly_scores WHERE week_id = ?");
+  const getRows = db.prepare("SELECT user_id AS userId, score FROM weekly_scores WHERE week_id = ?");
   const update = db.prepare(`
     UPDATE weekly_scores SET score = ?, updated_at = CURRENT_TIMESTAMP
     WHERE week_id = ? AND user_id = ?
@@ -124,13 +132,22 @@ export async function saveScoresAction(formData: FormData) {
     const week = getWeek.get(weekId) as { id: number; eventDate: string } | undefined;
     if (!week) return;
     const nextWeek = getNextWeek.get(week.eventDate) as { id: number; title: string } | undefined;
-    const rows = getRows.all(weekId) as { userId: number }[];
+    const rows = getRows.all(weekId) as Array<{ userId: number; score: number }>;
     let totalAddedDeductions = 0;
     const deductionDetails: Array<{ userId: number; amount: number }> = [];
 
     for (const row of rows) {
       const scoreValue = Number(formData.get(`score_${row.userId}`));
       if (!Number.isInteger(scoreValue) || scoreValue < 0) continue;
+      recordScoreChange(db, {
+        requestId,
+        weekId,
+        userId: row.userId,
+        previousScore: row.score,
+        newScore: scoreValue,
+        source: "manual",
+        actorUserId: admin.id
+      });
       update.run(scoreValue, weekId, row.userId);
 
       const addition = Number(formData.get(`deduction_add_${row.userId}`));
@@ -162,6 +179,9 @@ export async function saveScoresAction(formData: FormData) {
   revalidatePath("/scores");
   revalidatePath("/packages");
   revalidatePath("/profile");
+  revalidatePath("/home");
+  revalidatePath("/reports");
+  revalidatePath("/compare");
   revalidatePath("/admin");
 }
 
@@ -231,6 +251,10 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     await db.backup(path.join(backupDir, `naruto-fortress-before-import-${stamp}.db`));
 
+    const importRequestId = randomUUID();
+    const existingScores = new Map((db.prepare(`
+      SELECT user_id AS userId, score FROM weekly_scores WHERE week_id = ?
+    `).all(weekId) as Array<{ userId: number; score: number }>).map((row) => [row.userId, row.score]));
     const upsert = db.prepare(`
       INSERT INTO weekly_scores (week_id, user_id, score, updated_at)
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
@@ -242,6 +266,15 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
       for (const row of importedRows) {
         const member = memberMap.get(normalizedMemberName(row.name))!;
         const score = typeof row.rawScore === "number" ? row.rawScore : Number(cellText(row.rawScore));
+        recordScoreChange(db, {
+          requestId: importRequestId,
+          weekId,
+          userId: member.id,
+          previousScore: existingScores.get(member.id) || 0,
+          newScore: score,
+          source: "import",
+          actorUserId: admin.id
+        });
         upsert.run(weekId, member.id, score);
       }
     })();
@@ -252,6 +285,10 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
     });
     revalidatePath("/scores");
     revalidatePath("/packages");
+    revalidatePath("/profile");
+    revalidatePath("/home");
+    revalidatePath("/reports");
+    revalidatePath("/compare");
     revalidatePath("/admin");
     return { success: `已将 ${importedRows.length} 名组员的积分导入“${week.title}”，发包安排已自动更新。` };
   } catch (error) {
@@ -307,6 +344,9 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
   writeAuditLog(admin.id, "创建统计周", undefined, { weekId, ...parsed.data });
   revalidatePath("/scores");
   revalidatePath("/packages");
+  revalidatePath("/home");
+  revalidatePath("/reports");
+  revalidatePath("/compare");
   revalidatePath("/admin");
   return { success: "新一周已经创建。" };
 }
@@ -330,6 +370,9 @@ export async function renameWeekAction(formData: FormData) {
   revalidatePath("/scores");
   revalidatePath("/packages");
   revalidatePath("/profile");
+  revalidatePath("/home");
+  revalidatePath("/reports");
+  revalidatePath("/compare");
   revalidatePath("/admin");
 }
 
@@ -401,5 +444,8 @@ export async function deleteWeekAction(formData: FormData) {
   revalidatePath("/scores");
   revalidatePath("/packages");
   revalidatePath("/profile");
+  revalidatePath("/home");
+  revalidatePath("/reports");
+  revalidatePath("/compare");
   revalidatePath("/admin");
 }
