@@ -34,7 +34,7 @@ export function MemberComparison({ members, trends, initialIds }: { members: Mem
           {selected.map((value, index) => (
             <label key={index}><span>对比成员 {index + 1}</span>
               <select value={value} onChange={(event) => setSelected((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}>
-                {members.map((member) => <option key={member.id} value={member.id}>{member.displayName}</option>)}
+                {members.map((member) => <option key={member.id} value={member.id} disabled={selected.some((item, itemIndex) => itemIndex !== index && item === String(member.id))}>{member.displayName}</option>)}
               </select>
             </label>
           ))}

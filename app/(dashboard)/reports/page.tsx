@@ -1,20 +1,23 @@
 import { ArrowUpRight, CalendarCheck2, Download, Medal, ScrollText, Target, TrendingUp, Trophy, UsersRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { WeekPicker } from "@/components/week-picker";
-import { getCurrentWeek, getPackageDayStatuses, getScoreOverview, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { getCurrentWeek, getLeaderboardRows, getPackageDayStatuses, getScoreOverview, getWeekById, getWeeks } from "@/lib/data";
 import { getWeeklyHighlights } from "@/lib/insights";
+import { requireReadyUser } from "@/lib/auth";
 
 export const metadata = { title: "每周战报" };
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
+  const user = await requireReadyUser();
   const params = await searchParams;
-  const weeks = getWeeks();
+  const weeks = getWeeks(user.role === "admin");
   const requestedId = Number(params.week);
-  const week = Number.isInteger(requestedId) ? getWeekById(requestedId) : getCurrentWeek();
+  const requestedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : undefined;
+  const week = requestedWeek && (user.role === "admin" || requestedWeek.status !== "draft") ? requestedWeek : getCurrentWeek();
   if (!week) return <div className="empty-state">还没有可生成的战报。</div>;
-  const rows = getScoreRows(week.id);
+  const rows = getLeaderboardRows(week);
   const previousWeek = [...weeks].filter((item) => item.eventDate < week.eventDate).sort((a, b) => b.eventDate.localeCompare(a.eventDate))[0];
-  const previousRows = previousWeek ? getScoreRows(previousWeek.id) : [];
+  const previousRows = previousWeek ? getLeaderboardRows(previousWeek) : [];
   const overview = getScoreOverview(rows);
   const highlights = getWeeklyHighlights(rows, previousRows);
   const sentDays = getPackageDayStatuses(week.id).length;

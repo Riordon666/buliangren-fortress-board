@@ -6,13 +6,13 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import readExcelFile from "read-excel-file/node";
 import { z } from "zod";
-import { INITIAL_PASSWORD } from "@/lib/constants";
 import { requireAdmin, revokeUserSessions, writeAuditLog } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getShanghaiDate } from "@/lib/data";
 import { recordPackageDeduction } from "@/lib/package-deductions";
 import { hashPassword } from "@/lib/password";
 import { recordScoreChange } from "@/lib/score-changes";
+import { backupDirectory } from "@/lib/storage-paths";
 
 export type AdminFormState = { error?: string; success?: string };
 
@@ -32,9 +32,15 @@ function listNames(names: string[]) {
   return names.length > 6 ? `${visible} 等 ${names.length} 人` : visible;
 }
 
+async function pruneAutomaticBackups(directory: string, keep = 30) {
+  const entries = await fs.readdir(directory, { withFileTypes: true });
+  const backups = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".db")).map((entry) => entry.name).sort().reverse();
+  await Promise.all(backups.slice(keep).map((filename) => fs.unlink(path.join(directory, filename)).catch(() => undefined)));
+}
+
 const memberSchema = z.object({
   displayName: z.string().trim().min(1, "请输入游戏昵称。").max(40),
-  initialPassword: z.string().min(7, "初始密码至少需要7位。").max(128, "初始密码不能超过128位。"),
+  initialPassword: z.string().min(8, "初始密码至少需要8位。").max(128, "初始密码不能超过128位。"),
   note: z.string().trim().max(30).optional()
 });
 
@@ -68,7 +74,7 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
         (SELECT MIN(event_date) FROM weeks)
       )
     `).run(userId, currentDate);
-  })();
+  }).immediate();
   writeAuditLog(admin.id, "添加组员", userId, { username: parsed.data.displayName });
   revalidatePath("/admin");
   revalidatePath("/scores");
@@ -82,8 +88,9 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
 export async function resetPasswordAction(formData: FormData) {
   const admin = await requireAdmin();
   const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId <= 0) return;
-  const passwordHash = await hashPassword(INITIAL_PASSWORD);
+  const parsedPassword = z.string().min(8).max(128).safeParse(formData.get("temporaryPassword"));
+  if (!Number.isInteger(userId) || userId <= 0 || !parsedPassword.success) return;
+  const passwordHash = await hashPassword(parsedPassword.data);
   getDb().prepare(`
     UPDATE users SET password_hash = ?, must_change_password = 1,
       updated_at = CURRENT_TIMESTAMP WHERE id = ?
@@ -98,12 +105,50 @@ export async function toggleMemberAction(formData: FormData) {
   const userId = Number(formData.get("userId"));
   const activate = formData.get("activate") === "1";
   if (!Number.isInteger(userId) || userId <= 0 || userId === admin.id) return;
-  getDb().prepare("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-    .run(activate ? 1 : 0, userId);
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+      .run(activate ? 1 : 0, userId);
+    if (activate) {
+      const today = getShanghaiDate();
+      db.prepare(`
+        INSERT OR IGNORE INTO weekly_scores (week_id, user_id, score)
+        SELECT id, ?, 0 FROM weeks
+        WHERE event_date >= COALESCE(
+          (SELECT MAX(event_date) FROM weeks WHERE event_date <= ?),
+          (SELECT MIN(event_date) FROM weeks)
+        )
+      `).run(userId, today);
+      const nextWeek = db.prepare(`
+        SELECT id FROM weeks
+        WHERE event_date > COALESCE(
+          (SELECT MAX(event_date) FROM weeks WHERE event_date <= ?),
+          ''
+        )
+        ORDER BY event_date ASC, id ASC
+        LIMIT 1
+      `).get(today) as { id: number } | undefined;
+      if (nextWeek) {
+        db.prepare(`
+          UPDATE weekly_scores
+          SET package_deductions = package_deductions +
+            (SELECT package_deduction_pending FROM users WHERE id = ?),
+            updated_at = CURRENT_TIMESTAMP
+          WHERE week_id = ? AND user_id = ?
+        `).run(userId, nextWeek.id, userId);
+        db.prepare(`
+          UPDATE users SET package_deduction_pending = 0, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ? AND package_deduction_pending > 0
+        `).run(userId);
+      }
+    }
+  }).immediate();
   if (!activate) revokeUserSessions(userId);
   writeAuditLog(admin.id, activate ? "恢复组员" : "停用组员", userId);
   revalidatePath("/admin");
   revalidatePath("/scores");
+  revalidatePath("/packages");
+  revalidatePath("/profile");
   revalidatePath("/home");
   revalidatePath("/reports");
   revalidatePath("/compare");
@@ -116,7 +161,7 @@ export async function saveScoresAction(formData: FormData) {
   if (!Number.isInteger(weekId) || weekId <= 0 || !/^[0-9a-f-]{36}$/i.test(requestId)) return;
 
   const db = getDb();
-  const getWeek = db.prepare("SELECT id, event_date AS eventDate FROM weeks WHERE id = ?");
+  const getWeek = db.prepare("SELECT id, event_date AS eventDate, status FROM weeks WHERE id = ?");
   const getNextWeek = db.prepare(`
     SELECT id, title FROM weeks
     WHERE event_date > ?
@@ -129,14 +174,15 @@ export async function saveScoresAction(formData: FormData) {
     WHERE week_id = ? AND user_id = ?
   `);
   db.transaction(() => {
-    const week = getWeek.get(weekId) as { id: number; eventDate: string } | undefined;
-    if (!week) return;
+    const week = getWeek.get(weekId) as { id: number; eventDate: string; status: string } | undefined;
+    if (!week || week.status === "locked") return;
     const nextWeek = getNextWeek.get(week.eventDate) as { id: number; title: string } | undefined;
     const rows = getRows.all(weekId) as Array<{ userId: number; score: number }>;
     let totalAddedDeductions = 0;
     const deductionDetails: Array<{ userId: number; amount: number }> = [];
 
     for (const row of rows) {
+      if (!formData.has(`score_${row.userId}`)) continue;
       const scoreValue = Number(formData.get(`score_${row.userId}`));
       if (!Number.isInteger(scoreValue) || scoreValue < 0) continue;
       recordScoreChange(db, {
@@ -232,13 +278,22 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
     }
 
     const db = getDb();
-    const week = db.prepare("SELECT id, title FROM weeks WHERE id = ?").get(weekId) as { id: number; title: string } | undefined;
+    const week = db.prepare("SELECT id, title, event_date AS eventDate, status FROM weeks WHERE id = ?").get(weekId) as { id: number; title: string; eventDate: string; status: string } | undefined;
     if (!week) return { error: "目标统计周不存在。" };
+    if (week.status === "locked") return { error: "这个统计周已经锁定，不能继续导入积分。" };
+    const currentWeek = db.prepare(`
+      SELECT event_date AS eventDate FROM weeks
+      WHERE event_date <= ?
+      ORDER BY event_date DESC, id DESC LIMIT 1
+    `).get(getShanghaiDate()) as { eventDate: string } | undefined;
+    const historical = Boolean(currentWeek && week.eventDate < currentWeek.eventDate);
     const members = db.prepare(`
-      SELECT id, display_name AS displayName
-      FROM users WHERE is_active = 1
-      ORDER BY COALESCE(roster_order, 999999), id
-    `).all() as Array<{ id: number; displayName: string }>;
+      SELECT u.id, u.display_name AS displayName
+      FROM users u
+      JOIN weekly_scores ws ON ws.user_id = u.id AND ws.week_id = ?
+      WHERE ? = 1 OR u.is_active = 1
+      ORDER BY COALESCE(u.roster_order, 999999), u.id
+    `).all(weekId, historical ? 1 : 0) as Array<{ id: number; displayName: string }>;
     const memberMap = new Map(members.map((member) => [normalizedMemberName(member.displayName), member]));
     const unknownNames = importedRows.filter((row) => !memberMap.has(normalizedMemberName(row.name))).map((row) => row.name);
     if (unknownNames.length) return { error: `找不到这些有效组员：${listNames(unknownNames)}。请检查名字是否完全一致。` };
@@ -246,10 +301,11 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
     const missingNames = members.filter((member) => !importedKeys.has(normalizedMemberName(member.displayName))).map((member) => member.displayName);
     if (missingNames.length) return { error: `表格缺少有效组员：${listNames(missingNames)}。` };
 
-    const backupDir = path.join(process.cwd(), "data", "backups");
+    const backupDir = backupDirectory();
     await fs.mkdir(backupDir, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     await db.backup(path.join(backupDir, `naruto-fortress-before-import-${stamp}.db`));
+    await pruneAutomaticBackups(backupDir);
 
     const importRequestId = randomUUID();
     const existingScores = new Map((db.prepare(`
@@ -277,7 +333,7 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
         });
         upsert.run(weekId, member.id, score);
       }
-    })();
+    }).immediate();
     writeAuditLog(admin.id, "导入要塞积分", undefined, {
       weekId,
       memberCount: importedRows.length,
@@ -328,7 +384,7 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
       return;
     }
 
-    const result = db.prepare("INSERT INTO weeks (title, event_date) VALUES (?, ?)")
+    const result = db.prepare("INSERT INTO weeks (title, event_date, status) VALUES (?, ?, 'draft')")
       .run(parsed.data.title, parsed.data.eventDate);
     weekId = Number(result.lastInsertRowid);
     db.prepare(`
@@ -376,6 +432,19 @@ export async function renameWeekAction(formData: FormData) {
   revalidatePath("/admin");
 }
 
+export async function setWeekStatusAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const weekId = Number(formData.get("weekId"));
+  const parsedStatus = z.enum(["draft", "published", "locked"]).safeParse(formData.get("status"));
+  if (!Number.isInteger(weekId) || weekId <= 0 || !parsedStatus.success) return;
+  const db = getDb();
+  const week = db.prepare("SELECT status FROM weeks WHERE id = ?").get(weekId) as { status: string } | undefined;
+  if (!week || week.status === parsedStatus.data) return;
+  db.prepare("UPDATE weeks SET status = ? WHERE id = ?").run(parsedStatus.data, weekId);
+  writeAuditLog(admin.id, "修改统计周状态", undefined, { weekId, previousStatus: week.status, status: parsedStatus.data });
+  for (const path of ["/scores", "/packages", "/reports", "/home", "/profile", "/compare", "/admin"]) revalidatePath(path);
+}
+
 export async function deleteWeekAction(formData: FormData) {
   const admin = await requireAdmin();
   const weekId = Number(formData.get("weekId"));
@@ -385,11 +454,13 @@ export async function deleteWeekAction(formData: FormData) {
   const week = db.prepare("SELECT id, title, event_date AS eventDate FROM weeks WHERE id = ?")
     .get(weekId) as { id: number; title: string; eventDate: string } | undefined;
   if (!week) return;
+  if (week.eventDate <= getShanghaiDate()) return;
 
-  const backupDir = path.join(process.cwd(), "data", "backups");
+  const backupDir = backupDirectory();
   await fs.mkdir(backupDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   await db.backup(path.join(backupDir, `naruto-fortress-before-delete-week-${week.id}-${stamp}.db`));
+  await pruneAutomaticBackups(backupDir);
 
   let transferredDeductions = 0;
   let deleted = false;
@@ -397,6 +468,7 @@ export async function deleteWeekAction(formData: FormData) {
     const lockedWeek = db.prepare("SELECT id, title, event_date AS eventDate FROM weeks WHERE id = ?")
       .get(weekId) as { id: number; title: string; eventDate: string } | undefined;
     if (!lockedWeek) return;
+    if (lockedWeek.eventDate <= getShanghaiDate()) return;
 
     if (lockedWeek.eventDate > getShanghaiDate()) {
       const deductions = db.prepare(`

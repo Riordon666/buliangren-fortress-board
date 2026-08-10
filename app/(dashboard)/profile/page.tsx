@@ -4,8 +4,9 @@ import { MemberHistoryChart } from "@/components/member-history-chart";
 import { AvatarForm, PasswordForm } from "@/components/profile-forms";
 import { requireUser } from "@/lib/auth";
 import { getAchievements } from "@/lib/insights";
-import { getCurrentWeek, getMemberTrend, getScoreChangeEvents, getScoreRows } from "@/lib/data";
+import { getCurrentWeek, getMemberTrend, getPackageAssignmentSnapshots, getPackageDayStatuses, getPackagePlanRows, getScoreChangeEvents } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
+import { mergePackagePlanDays } from "@/lib/package-snapshots";
 
 export const metadata = { title: "个人信息" };
 
@@ -18,10 +19,15 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const peak = trend.reduce((max, point) => Math.max(max, point.score), 0);
   const bestRank = trend.length ? Math.min(...trend.map((point) => point.rank)) : 0;
   const currentWeek = getCurrentWeek();
-  const currentRows = currentWeek ? getScoreRows(currentWeek.id) : [];
+  const currentRows = currentWeek ? getPackagePlanRows(currentWeek.id) : [];
   const current = currentRows.find((row) => row.userId === user.id);
   const plan = currentWeek ? generatePackagePlan(currentRows, currentWeek.eventDate) : null;
-  const rounds = plan ? getPackageRoundsByMember(plan.assignments).get(user.id) || [] : [];
+  const planAssignments = plan && currentWeek ? mergePackagePlanDays(
+    plan.days,
+    getPackageAssignmentSnapshots(currentWeek.id),
+    getPackageDayStatuses(currentWeek.id).map((status) => status.dayIndex)
+  ).flatMap((day) => day.assignments) : [];
+  const rounds = getPackageRoundsByMember(planAssignments).get(user.id) || [];
   const achievements = getAchievements(current, trend, rounds);
   const changes = getScoreChangeEvents(user.id, 6);
 

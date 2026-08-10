@@ -10,7 +10,7 @@ export function Heartbeat() {
       }
     };
     ping();
-    const timer = window.setInterval(ping, 30_000);
+    const timer = window.setInterval(ping, 60_000);
     window.addEventListener("focus", ping);
     document.addEventListener("visibilitychange", ping);
     return () => {
@@ -22,4 +22,3 @@ export function Heartbeat() {
 
   return null;
 }
-

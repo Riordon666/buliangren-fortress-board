@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { uploadDirectory } from "@/lib/storage-paths";
 
 const avatarFilename = /^\d+-[a-f0-9]{16}\.webp$/;
 
@@ -18,7 +19,7 @@ export async function GET(
   }
 
   try {
-    const file = await fs.readFile(path.join(process.cwd(), "public", "uploads", filename));
+    const file = await fs.readFile(path.join(uploadDirectory(), filename));
     return new Response(new Uint8Array(file), {
       headers: {
         "Content-Type": "image/webp",

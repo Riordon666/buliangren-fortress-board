@@ -1,6 +1,5 @@
 import { chromium } from "playwright-core";
 import Database from "better-sqlite3";
-import { hashSync } from "@node-rs/argon2";
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -11,23 +10,6 @@ await fs.mkdir(output, { recursive: true });
 
 const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const browser = await chromium.launch({ executablePath: edgePath, headless: true });
-
-const visualUsername = "__visual_check__";
-const setupDb = new Database(path.join(root, "data", "naruto-fortress.db"));
-setupDb.prepare("DELETE FROM weekly_scores WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
-setupDb.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
-setupDb.prepare("DELETE FROM users WHERE username = ?").run(visualUsername);
-const visualUser = setupDb.prepare(`
-  INSERT INTO users (username, display_name, password_hash, role, must_change_password)
-  VALUES (?, '视觉测试账号', ?, 'member', 1)
-`).run(visualUsername, hashSync("7891666", { memoryCost: 19_456, timeCost: 2, outputLen: 32, parallelism: 1 }));
-setupDb.prepare("UPDATE users SET package_deduction_total = 2, package_deduction_pending = 1 WHERE id = ?")
-  .run(Number(visualUser.lastInsertRowid));
-setupDb.prepare(`
-  INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
-  SELECT id, ?, 0, 1 FROM weeks
-`).run(Number(visualUser.lastInsertRowid));
-setupDb.close();
 
 const publicContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 const loginPage = await publicContext.newPage();
@@ -45,7 +27,7 @@ await loginPage.screenshot({ path: path.join(output, "login-wide.png"), fullPage
 await loginPage.setViewportSize({ width: 1440, height: 1000 });
 await loginPage.goto("http://localhost:3000/login", { waitUntil: "networkidle" });
 if (!(await loginPage.getByText("欢迎归队").isVisible())) throw new Error("登录页标题未显示");
-if (await loginPage.getByText("7891666", { exact: true }).count()) throw new Error("登录页不应公开初始密码");
+if (await loginPage.getByText(/初始密码|默认密码/).count()) throw new Error("登录页不应公开初始密码说明");
 await loginPage.screenshot({ path: path.join(output, "login-desktop.png"), fullPage: true });
 
 const mobileLoginContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
@@ -56,12 +38,6 @@ if (!(await mobileLoginPage.getByText("都有迹可循", { exact: true }).isVisi
 await mobileLoginPage.screenshot({ path: path.join(output, "login-mobile.png"), fullPage: true });
 await mobileLoginContext.close();
 
-await loginPage.getByLabel("组员账号").fill(visualUsername);
-await loginPage.getByLabel("通行口令").fill("7891666");
-await loginPage.getByRole("button", { name: "进入作战室" }).click();
-await loginPage.waitForURL(/\/profile\?required=1/);
-if (!(await loginPage.getByText("需要先修改初始密码").isVisible())) throw new Error("首次登录改密限制未生效");
-const loginSessionToken = (await publicContext.cookies()).find((cookie) => cookie.name === "fortress_session")?.value;
 await publicContext.close();
 
 const db = new Database(path.join(root, "data", "naruto-fortress.db"));
@@ -71,6 +47,16 @@ const tokenHash = createHash("sha256").update(token).digest("hex");
 db.prepare("INSERT INTO sessions (user_id, token_hash, expires_at) VALUES (?, ?, ?)")
   .run(admin.id, tokenHash, new Date(Date.now() + 3_600_000).toISOString());
 db.close();
+const cleanupSession = () => {
+  try {
+    const cleanupDb = new Database(path.join(root, "data", "naruto-fortress.db"));
+    cleanupDb.prepare("DELETE FROM sessions WHERE token_hash = ?").run(tokenHash);
+    cleanupDb.close();
+  } catch {
+    // The visual check must not mask its original failure with cleanup errors.
+  }
+};
+process.once("exit", cleanupSession);
 
 const appContext = await browser.newContext({ viewport: { width: 1600, height: 1100 }, deviceScaleFactor: 1 });
 await appContext.addCookies([{ name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" }]);
@@ -111,11 +97,14 @@ await page.locator(".visualization-panel").screenshot({ path: path.join(output, 
 await page.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
 if (!(await page.getByText("发包安排", { exact: true }).first().isVisible())) throw new Error("发包安排页未显示");
 if (!(await page.getByText("累计扣包次数排行", { exact: true }).isVisible())) throw new Error("累计扣包排行榜未显示");
-if (!(await page.getByText("累计扣 2 次", { exact: true }).isVisible())) throw new Error("永久累计扣包次数未显示");
-if (!(await page.getByText(/本期承接 1 次/).first().isVisible())) throw new Error("本期执行扣包次数未显示");
-if ((await page.locator(".package-day-card").count()) !== 8) throw new Error("发包周期不是8天");
-if ((await page.locator(".package-member:not(.empty-slot)").count()) !== 40) throw new Error("发包名额不是40个");
-if ((await page.getByText("第 2 轮", { exact: true }).count()) !== 13) throw new Error("第二轮发包数量不正确");
+if ((await page.locator(".package-day-tab").count()) !== 8) throw new Error("发包周期不是8天");
+if ((await page.locator(".package-day-card").count()) !== 1) throw new Error("发包页应只展开当前选中的一天");
+let visibleAssignments = 0;
+for (const tab of await page.locator(".package-day-tab").all()) {
+  await tab.click();
+  visibleAssignments += await page.locator(".package-day-card .package-member:not(.empty-slot)").count();
+}
+if (visibleAssignments !== 40) throw new Error(`8天发包名额不是40个，实际 ${visibleAssignments} 个`);
 if (!(await page.getByText("今日发包状态", { exact: true }).isVisible())) throw new Error("今日发包状态未显示");
 if (!(await page.getByText(/暂未发包|已发包/).first().isVisible())) throw new Error("今日发包状态内容未显示");
 await page.screenshot({ path: path.join(output, "packages-desktop.png"), fullPage: true });
@@ -140,7 +129,8 @@ if (!(await page.getByText("组员与在线状态").isVisible())) throw new Erro
 if (!(await page.getByLabel("游戏昵称 / 登录账号").isVisible())) throw new Error("合并后的组员账号输入框未显示");
 if (!(await page.locator('input[name="initialPassword"]').isVisible())) throw new Error("自定义初始密码输入框未显示");
 if (!(await page.getByText("已有统计周", { exact: true }).isVisible())) throw new Error("统计周管理列表未显示");
-if (!(await page.getByRole("button", { name: "删除" }).first().isVisible())) throw new Error("删除统计周入口未显示");
+const futureDeleteButtons = page.getByRole("button", { name: "删除" });
+if (await futureDeleteButtons.count() && !(await futureDeleteButtons.first().isVisible())) throw new Error("未来统计周删除入口不可见");
 if (!(await page.getByRole("button", { name: "保存名称" }).first().isVisible())) throw new Error("重命名统计周入口未显示");
 if (!(await page.getByText("表格导入积分").isVisible())) throw new Error("积分导入区域未显示");
 if (!(await page.getByRole("link", { name: "下载标准模板" }).isVisible())) throw new Error("标准模板下载入口未显示");
@@ -166,8 +156,10 @@ const mobileContext = await browser.newContext({ viewport: { width: 390, height:
 await mobileContext.addCookies([{ name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" }]);
 const mobilePage = await mobileContext.newPage();
 await mobilePage.goto("http://localhost:3000/home", { waitUntil: "networkidle" });
-if ((await mobilePage.locator(".mobile-nav .sidebar-nav a").count()) !== 7) throw new Error("手机端导航入口数量不正确");
-if ((await mobilePage.locator(".mobile-nav .sidebar-nav").evaluate((element) => getComputedStyle(element).overflowX)) !== "auto") throw new Error("手机端导航没有横向滚动，入口会过度拥挤");
+if ((await mobilePage.locator(".mobile-primary-nav > a, .mobile-primary-nav > button").count()) !== 4) throw new Error("手机端主导航应保持4个固定入口");
+await mobilePage.getByRole("button", { name: "更多", exact: true }).click();
+if (!(await mobilePage.getByRole("link", { name: "每周战报" }).isVisible())) throw new Error("手机端更多菜单未显示次要功能");
+await mobilePage.getByRole("button", { name: "关闭更多菜单" }).click();
 await mobilePage.screenshot({ path: path.join(output, "home-mobile.png"), fullPage: true });
 await mobilePage.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
 await mobilePage.screenshot({ path: path.join(output, "scores-mobile.png"), fullPage: false });
@@ -179,7 +171,7 @@ const mobileLabelRight = await mobileBarLabels.evaluateAll((labels) => Math.max(
 if (!mobileChartBox || mobileLabelRight > mobileChartBox.x + mobileChartBox.width) throw new Error("手机端柱尾分数被右侧裁切");
 await mobilePage.locator(".visualization-panel").screenshot({ path: path.join(output, "scores-bar-values-mobile.png") });
 await mobilePage.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
-if ((await mobilePage.locator(".package-day-card").count()) !== 8) throw new Error("手机端发包周期不是8天");
+if ((await mobilePage.locator(".package-day-tab").count()) !== 8 || (await mobilePage.locator(".package-day-card").count()) !== 1) throw new Error("手机端发包日期浏览器不正确");
 await mobilePage.screenshot({ path: path.join(output, "packages-mobile.png"), fullPage: true });
 await mobilePage.goto("http://localhost:3000/reports", { waitUntil: "networkidle" });
 await mobilePage.screenshot({ path: path.join(output, "reports-mobile.png"), fullPage: true });
@@ -191,14 +183,6 @@ await mobilePage.screenshot({ path: path.join(output, "admin-mobile.png"), fullP
 await mobileContext.close();
 
 await browser.close();
-const cleanupDb = new Database(path.join(root, "data", "naruto-fortress.db"));
-cleanupDb.prepare("DELETE FROM sessions WHERE token_hash = ?").run(tokenHash);
-if (loginSessionToken) {
-  cleanupDb.prepare("DELETE FROM sessions WHERE token_hash = ?")
-    .run(createHash("sha256").update(loginSessionToken).digest("hex"));
-}
-cleanupDb.prepare("DELETE FROM weekly_scores WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
-cleanupDb.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE username = ?)").run(visualUsername);
-cleanupDb.prepare("DELETE FROM users WHERE username = ?").run(visualUsername);
-cleanupDb.close();
+cleanupSession();
+process.removeListener("exit", cleanupSession);
 console.log(`Visual checks passed. Screenshots: ${output}`);

@@ -64,3 +64,16 @@ export type ScoreChangeEvent = {
   actorName: string | null;
   createdAt: string;
 };
+
+export type PackageAssignmentSnapshot = {
+  weekId: number;
+  dayIndex: number;
+  position: number;
+  round: number;
+  userId: number;
+  displayName: string;
+  avatarUrl: string | null;
+  note: string | null;
+  score: number;
+  rank: number;
+};

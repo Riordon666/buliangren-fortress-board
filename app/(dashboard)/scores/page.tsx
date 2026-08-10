@@ -2,22 +2,32 @@ import { Award, Flame, Gauge, ScrollText, Target, Trophy } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { ScoreVisualizations } from "@/components/score-visualizations";
 import { WeekPicker } from "@/components/week-picker";
-import { getCurrentWeek, getScoreOverview, getScoreRows, getWeekById, getWeeks } from "@/lib/data";
+import { getCurrentWeek, getLeaderboardRows, getPackageAssignmentSnapshots, getPackageDayStatuses, getPackagePlanRows, getScoreOverview, getWeekById, getWeeks } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
+import { requireReadyUser } from "@/lib/auth";
+import { mergePackagePlanDays } from "@/lib/package-snapshots";
 
 export const metadata = { title: "要塞分数统计" };
 
 export default async function ScoresPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
+  const user = await requireReadyUser();
   const params = await searchParams;
-  const weeks = getWeeks();
+  const weeks = getWeeks(user.role === "admin");
   const requestedId = Number(params.week);
-  const selectedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : getCurrentWeek();
+  const requestedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : undefined;
+  const selectedWeek = requestedWeek && (user.role === "admin" || requestedWeek.status !== "draft") ? requestedWeek : getCurrentWeek();
   if (!selectedWeek) {
     return <div className="empty-state">还没有创建统计周。</div>;
   }
-  const rows = getScoreRows(selectedWeek.id);
-  const packagePlan = generatePackagePlan(rows, selectedWeek.eventDate);
-  const packageRounds = getPackageRoundsByMember(packagePlan.assignments);
+  const rows = getLeaderboardRows(selectedWeek);
+  const packagePlan = generatePackagePlan(getPackagePlanRows(selectedWeek.id), selectedWeek.eventDate);
+  const sentDays = new Set(getPackageDayStatuses(selectedWeek.id).map((status) => status.dayIndex));
+  const displayedAssignments = mergePackagePlanDays(
+    packagePlan.days,
+    getPackageAssignmentSnapshots(selectedWeek.id),
+    sentDays
+  ).flatMap((day) => day.assignments);
+  const packageRounds = getPackageRoundsByMember(displayedAssignments);
   const packageRoundsByUser = Object.fromEntries(packageRounds);
   const overview = getScoreOverview(rows);
   const topThree = rows.slice(0, 3);

@@ -1,15 +1,15 @@
 import { GitCompareArrows } from "lucide-react";
 import { MemberComparison } from "@/components/member-comparison";
-import { requireUser } from "@/lib/auth";
-import { getAllMemberTrends, getCurrentWeek, getMembers, getScoreRows } from "@/lib/data";
+import { requireReadyUser } from "@/lib/auth";
+import { getAllMemberTrends, getCurrentWeek, getLeaderboardRows, getMembers } from "@/lib/data";
 
 export const metadata = { title: "成员对比" };
 
 export default async function ComparePage() {
-  const user = await requireUser();
+  const user = await requireReadyUser();
   const members = getMembers(false).map((member) => ({ id: member.id, displayName: member.displayName }));
   const currentWeek = getCurrentWeek();
-  const leaders = currentWeek ? getScoreRows(currentWeek.id).slice(0, 3).map((row) => row.userId) : [];
+  const leaders = currentWeek ? getLeaderboardRows(currentWeek).slice(0, 3).map((row) => row.userId) : [];
   const initialIds = [user.id, ...leaders.filter((id) => id !== user.id)].slice(0, 3);
   const trends = getAllMemberTrends().map(({ userId, displayName, eventDate, weekTitle, score, rank }) => ({ userId, displayName, eventDate, weekTitle, score, rank }));
   return (

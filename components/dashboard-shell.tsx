@@ -4,6 +4,7 @@ import type { SessionUser } from "@/lib/types";
 import { Avatar } from "@/components/avatar";
 import { Heartbeat } from "@/components/heartbeat";
 import { SidebarNav } from "@/components/sidebar-nav";
+import { MobileNavigation } from "@/components/mobile-navigation";
 
 export function DashboardShell({ user, packageAlert, children }: { user: SessionUser; packageAlert: boolean; children: React.ReactNode }) {
   return (
@@ -55,7 +56,7 @@ export function DashboardShell({ user, packageAlert, children }: { user: Session
       </main>
 
       <div className="mobile-nav">
-        <SidebarNav isAdmin={user.role === "admin"} packageAlert={packageAlert} />
+        <MobileNavigation isAdmin={user.role === "admin"} packageAlert={packageAlert} />
       </div>
     </div>
   );

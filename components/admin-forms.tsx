@@ -11,11 +11,12 @@ import {
   importScoresAction,
   renameWeekAction,
   resetPasswordAction,
+  setWeekStatusAction,
   toggleMemberAction,
   type AdminFormState
 } from "@/app/admin/actions";
 import { Avatar } from "@/components/avatar";
-import { INITIAL_PASSWORD, ONLINE_WINDOW_MS } from "@/lib/constants";
+import { ONLINE_WINDOW_MS } from "@/lib/constants";
 import type { MemberRow, ScoreWeek } from "@/lib/types";
 
 const initialState: AdminFormState = {};
@@ -39,7 +40,7 @@ export function AddMemberForm() {
         <label>
           <span>初始密码</span>
           <span className="password-control">
-            <input name="initialPassword" type={showInitialPassword ? "text" : "password"} minLength={7} maxLength={128} defaultValue={INITIAL_PASSWORD} autoComplete="new-password" required />
+            <input name="initialPassword" type={showInitialPassword ? "text" : "password"} minLength={8} maxLength={128} placeholder="设置至少8位临时密码" autoComplete="new-password" required />
             <button type="button" onClick={() => setShowInitialPassword((value) => !value)} aria-label="显示或隐藏初始密码">
               {showInitialPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
@@ -73,7 +74,7 @@ export function CreateWeekForm() {
   );
 }
 
-export function WeekManagementList({ weeks, currentWeekId }: { weeks: ScoreWeek[]; currentWeekId: number | null }) {
+export function WeekManagementList({ weeks, currentWeekId, today }: { weeks: ScoreWeek[]; currentWeekId: number | null; today: string }) {
   return (
     <div className="week-management-list">
       {weeks.map((week) => (
@@ -87,7 +88,14 @@ export function WeekManagementList({ weeks, currentWeekId }: { weeks: ScoreWeek[
               <button type="submit" className="text-button week-rename-button"><PencilLine size={13} />保存名称</button>
             </span>
           </form>
-          <form
+          <form action={setWeekStatusAction} className="week-status-form">
+            <input type="hidden" name="weekId" value={week.id} />
+            <input type="hidden" name="status" value={week.status === "draft" ? "published" : week.status === "published" ? "locked" : "published"} />
+            <button type="submit" className={`text-button week-status-button status-${week.status}`}>
+              {week.status === "draft" ? "发布" : week.status === "published" ? "锁定" : "解除锁定"}
+            </button>
+          </form>
+          {week.eventDate > today && <form
             action={deleteWeekAction}
             onSubmit={(event) => {
               if (!confirm(`确定删除“${week.title}”吗？\n该周积分和发包安排会删除，永久累计扣包记录会保留；若该周尚未开始，待执行次数会自动顺延。`)) {
@@ -97,7 +105,7 @@ export function WeekManagementList({ weeks, currentWeekId }: { weeks: ScoreWeek[
           >
             <input type="hidden" name="weekId" value={week.id} />
             <button type="submit" className="text-button danger week-delete-button"><Trash2 size={14} />删除</button>
-          </form>
+          </form>}
         </article>
       ))}
       {!weeks.length && <div className="empty-inline">还没有统计周。</div>}
@@ -160,7 +168,7 @@ export function AdminMemberList({ members, currentUserId }: { members: MemberRow
     const timer = window.setInterval(() => {
       setTick((value) => value + 1);
       router.refresh();
-    }, 30_000);
+    }, 60_000);
     return () => window.clearInterval(timer);
   }, [router]);
 
@@ -196,8 +204,19 @@ export function AdminMemberList({ members, currentUserId }: { members: MemberRow
                 <small>{online ? "刚刚活跃" : formatLastSeen(member.lastSeenAt)}</small>
               </div>
               <div className="member-actions">
-                <form action={resetPasswordAction} onSubmit={(event) => { if (!confirm(`确定将 ${member.displayName} 的密码重置为 7891666？`)) event.preventDefault(); }}>
+                <form action={resetPasswordAction} onSubmit={(event) => {
+                  const temporaryPassword = prompt(`为 ${member.displayName} 设置至少8位的临时密码：`);
+                  if (!temporaryPassword || temporaryPassword.length < 8) {
+                    event.preventDefault();
+                    if (temporaryPassword !== null) alert("临时密码至少需要8位。");
+                    return;
+                  }
+                  const input = event.currentTarget.elements.namedItem("temporaryPassword") as HTMLInputElement;
+                  input.value = temporaryPassword;
+                  if (!confirm(`确定重置 ${member.displayName} 的密码并注销其全部会话？`)) event.preventDefault();
+                }}>
                   <input type="hidden" name="userId" value={member.id} />
+                  <input type="hidden" name="temporaryPassword" value="" />
                   <button type="submit" className="text-button"><RotateCcw size={15} />重置密码</button>
                 </form>
                 {member.id !== currentUserId && (

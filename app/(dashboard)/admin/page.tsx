@@ -3,10 +3,12 @@ import { Activity, Clock3, FileSpreadsheet, KeyRound, ListChecks, ShieldCheck, U
 import { saveScoresAction } from "@/app/admin/actions";
 import { AddMemberForm, AdminMemberList, CreateWeekForm, SaveScoresButton, ScoreImportForm, WeekManagementList } from "@/components/admin-forms";
 import { Avatar } from "@/components/avatar";
+import { WeekPicker } from "@/components/week-picker";
 import { ONLINE_WINDOW_MS } from "@/lib/constants";
 import { requireAdmin } from "@/lib/auth";
-import { getAuditLogs, getCurrentWeek, getMembers, getScoreRows, getWeeks } from "@/lib/data";
+import { getAuditLogs, getCurrentWeek, getLeaderboardRows, getMembers, getPackageAssignmentSnapshots, getPackageDayStatuses, getPackagePlanRows, getScoreRows, getShanghaiDate, getWeekById, getWeeks } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
+import { mergePackagePlanDays } from "@/lib/package-snapshots";
 
 export const metadata = { title: "管理员页面" };
 
@@ -22,7 +24,8 @@ const actionLabels: Record<string, string> = {
   "重命名统计周": "修改了统计周名称",
   "删除统计周": "删除了一个统计周",
   "修改本人密码": "修改了自己的密码",
-  "更新头像": "更新了个人头像"
+  "更新头像": "更新了个人头像",
+  "修改统计周状态": "修改了统计周状态"
 };
 
 function parseSqliteDate(value: string | null) {
@@ -30,17 +33,22 @@ function parseSqliteDate(value: string | null) {
   return new Date(value.includes("T") ? value : `${value.replace(" ", "T")}Z`);
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
   const admin = await requireAdmin();
+  const params = await searchParams;
   const members = getMembers(true);
   const activeMembers = members.filter((member) => member.isActive);
   const onlineCount = activeMembers.filter((member) => {
     const date = parseSqliteDate(member.lastSeenAt);
     return date && Date.now() - date.getTime() <= ONLINE_WINDOW_MS;
   }).length;
-  const weeks = getWeeks();
-  const week = getCurrentWeek();
-  const scores = week ? getScoreRows(week.id) : [];
+  const weeks = getWeeks(true);
+  const requestedWeekId = Number(params.week);
+  const week = (Number.isInteger(requestedWeekId) ? getWeekById(requestedWeekId) : undefined)
+    || getCurrentWeek()
+    || weeks[0]
+    || null;
+  const scores = week ? getLeaderboardRows(week) : [];
   const deductionRequestId = randomUUID();
   const nextWeek = week
     ? weeks.filter((item) => item.eventDate > week.eventDate)
@@ -50,7 +58,11 @@ export default async function AdminPage() {
     nextWeek ? getScoreRows(nextWeek.id).map((row) => [row.userId, row.packageDeductions]) : []
   );
   const packageRounds = week
-    ? getPackageRoundsByMember(generatePackagePlan(scores, week.eventDate).assignments)
+    ? getPackageRoundsByMember(mergePackagePlanDays(
+      generatePackagePlan(getPackagePlanRows(week.id), week.eventDate).days,
+      getPackageAssignmentSnapshots(week.id),
+      getPackageDayStatuses(week.id).map((status) => status.dayIndex)
+    ).flatMap((day) => day.assignments))
     : new Map<number, number[]>();
   const audits = getAuditLogs();
 
@@ -62,7 +74,7 @@ export default async function AdminPage() {
           <h1>管理员页面</h1>
           <p>维护不良人成员与周度战绩，掌握网站在线状态。</p>
         </div>
-        <span className="admin-auth-badge"><ShieldCheck size={17} /> 首领权限已验证</span>
+        <div className="admin-hero-tools"><span className="admin-auth-badge"><ShieldCheck size={17} /> 首领权限已验证</span>{week && <WeekPicker weeks={weeks} selectedId={week.id} basePath="/admin" />}</div>
       </header>
 
       <section className="stat-grid admin-stats">
@@ -81,7 +93,7 @@ export default async function AdminPage() {
             <AddMemberForm />
           </div>
 
-          {week && (
+          {week && week.status !== "locked" && (
             <section className="panel score-import-panel compact-score-import-panel">
               <div className="panel-heading">
                 <div><span className="eyebrow"><FileSpreadsheet size={13} /> SCORE IMPORT</span><h2>表格导入积分</h2><p>先下载标准模板填写，整份校验通过后才会更新数据库。</p></div>
@@ -97,7 +109,7 @@ export default async function AdminPage() {
           </div>
           <CreateWeekForm />
           <div className="week-list-heading"><strong>已有统计周</strong><span>删除前会自动备份数据库</span></div>
-          <WeekManagementList weeks={weeks} currentWeekId={week?.id || null} />
+          <WeekManagementList weeks={weeks} currentWeekId={week?.id || null} today={getShanghaiDate()} />
         </div>
       </section>
 
@@ -114,7 +126,7 @@ export default async function AdminPage() {
           <div className="panel-heading">
             <div><span className="eyebrow">SCORE CONTROL</span><h2>本期分数、自动轮次与扣包</h2><p>{week.title} · 扣包永久累计，本周新增次数自动投递到下一统计周。</p></div>
           </div>
-          <form action={saveScoresAction}>
+          {week.status === "locked" ? <div className="compact-empty">这个统计周已经锁定。如需修正，请先在统计周管理中解除锁定。</div> : <form action={saveScoresAction}>
             <input type="hidden" name="weekId" value={week.id} />
             <input type="hidden" name="deductionRequestId" value={deductionRequestId} />
             <div className="table-scroll">
@@ -142,7 +154,7 @@ export default async function AdminPage() {
               </table>
             </div>
             <div className="editor-actions"><span>这里只新增、不覆盖历史；新增扣包会在下一周第二轮起逐次生效。</span><SaveScoresButton /></div>
-          </form>
+          </form>}
         </section>
       )}
 

@@ -1,10 +1,11 @@
 import { getDb } from "@/lib/db";
-import type { MemberRow, PackageDayStatus, ScoreChangeEvent, ScoreRow, ScoreWeek, TrendPoint } from "@/lib/types";
+import type { MemberRow, PackageAssignmentSnapshot, PackageDayStatus, ScoreChangeEvent, ScoreRow, ScoreWeek, TrendPoint } from "@/lib/types";
 
-export function getWeeks(): ScoreWeek[] {
+export function getWeeks(includeDrafts = true): ScoreWeek[] {
   return getDb().prepare(`
     SELECT id, title, event_date AS eventDate, status
-    FROM weeks ORDER BY event_date DESC, id DESC
+    FROM weeks ${includeDrafts ? "" : "WHERE status != 'draft'"}
+    ORDER BY event_date DESC, id DESC
   `).all() as ScoreWeek[];
 }
 
@@ -30,8 +31,19 @@ export function selectCurrentWeek(weeks: ScoreWeek[], today: string) {
   return orderedWeeks.find((week) => week.eventDate <= today) || orderedWeeks.at(-1) || null;
 }
 
-export function getCurrentWeek(today = getShanghaiDate()) {
-  return selectCurrentWeek(getWeeks(), today);
+export function getCurrentWeek(today = getShanghaiDate(), includeDrafts = false) {
+  return selectCurrentWeek(getWeeks(includeDrafts), today);
+}
+
+function addDateDays(date: string, offset: number) {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + offset)).toISOString().slice(0, 10);
+}
+
+export function getActivePackageWeeks(today = getShanghaiDate(), includeDrafts = false) {
+  return getWeeks(includeDrafts)
+    .filter((week) => week.eventDate <= today && addDateDays(week.eventDate, 7) >= today)
+    .sort((left, right) => left.eventDate.localeCompare(right.eventDate) || left.id - right.id);
 }
 
 export function getWeekById(weekId: number) {
@@ -41,7 +53,7 @@ export function getWeekById(weekId: number) {
   `).get(weekId) as ScoreWeek | undefined;
 }
 
-export function getScoreRows(weekId: number): ScoreRow[] {
+export function getScoreRows(weekId: number, activeOnly = false): ScoreRow[] {
   return getDb().prepare(`
     SELECT
       u.id AS userId,
@@ -57,9 +69,34 @@ export function getScoreRows(weekId: number): ScoreRow[] {
       RANK() OVER (ORDER BY ws.score DESC) AS rank
     FROM weekly_scores ws
     JOIN users u ON u.id = ws.user_id
-    WHERE ws.week_id = ?
+    WHERE ws.week_id = ? ${activeOnly ? "AND u.is_active = 1" : ""}
     ORDER BY ws.score DESC, COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
   `).all(weekId) as ScoreRow[];
+}
+
+export function getPackagePlanRows(weekId: number, activeOnly = true): ScoreRow[] {
+  const applied = new Map(getPackageDeductionApplications(weekId).map((item) => [item.userId, item.amount]));
+  return getScoreRows(weekId, activeOnly).map((row) => ({
+    ...row,
+    packageDeductions: Math.max(0, row.packageDeductions - (applied.get(row.userId) || 0))
+  }));
+}
+
+export function getLeaderboardRows(week: ScoreWeek): ScoreRow[] {
+  const currentWeek = getCurrentWeek();
+  return getScoreRows(week.id, Boolean(currentWeek && week.eventDate >= currentWeek.eventDate));
+}
+
+export function getPackageAssignmentSnapshots(weekId: number): PackageAssignmentSnapshot[] {
+  return getDb().prepare(`
+    SELECT a.week_id AS weekId, a.day_index AS dayIndex, a.position, a.round,
+      a.user_id AS userId, u.display_name AS displayName, u.avatar_url AS avatarUrl,
+      u.note, a.score_snapshot AS score, a.rank_snapshot AS rank
+    FROM package_assignments a
+    JOIN users u ON u.id = a.user_id
+    WHERE a.week_id = ?
+    ORDER BY a.day_index ASC, a.position ASC
+  `).all(weekId) as PackageAssignmentSnapshot[];
 }
 
 export function getPackageDeductionRows(weekId: number): ScoreRow[] {
@@ -104,7 +141,7 @@ export function getMemberTrend(userId: number): TrendPoint[] {
       ranked.score, ranked.rank
     FROM ranked
     JOIN weeks w ON w.id = ranked.week_id
-    WHERE ranked.user_id = ?
+    WHERE ranked.user_id = ? AND w.status != 'draft'
     ORDER BY w.event_date ASC, w.id ASC
   `).all(userId) as TrendPoint[];
 }
@@ -122,7 +159,7 @@ export function getAllMemberTrends(): Array<TrendPoint & { userId: number; displ
     FROM ranked
     JOIN weeks w ON w.id = ranked.week_id
     JOIN users u ON u.id = ranked.user_id
-    WHERE u.is_active = 1
+    WHERE u.is_active = 1 AND w.status != 'draft'
     ORDER BY w.event_date ASC, w.id ASC, COALESCE(u.roster_order, 999999), u.id
   `).all() as Array<TrendPoint & { userId: number; displayName: string; avatarUrl: string | null }>;
 }
@@ -135,6 +172,16 @@ export function getPackageDayStatuses(weekId: number): PackageDayStatus[] {
     LEFT JOIN users u ON u.id = p.marked_by
     WHERE p.week_id = ? ORDER BY p.day_index ASC
   `).all(weekId) as PackageDayStatus[];
+}
+
+export function getPackageDeductionApplications(weekId: number) {
+  return getDb().prepare(`
+    SELECT user_id AS userId, SUM(amount) AS amount
+    FROM package_deduction_applications
+    WHERE week_id = ?
+    GROUP BY user_id
+    ORDER BY user_id
+  `).all(weekId) as Array<{ userId: number; amount: number }>;
 }
 
 export function getScoreChangeEvents(userId: number, limit = 12): ScoreChangeEvent[] {

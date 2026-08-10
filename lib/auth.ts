@@ -39,13 +39,16 @@ function toSessionUser(record: Omit<UserRecord, "passwordHash" | "isActive">): S
   };
 }
 
-export async function authenticate(username: string, password: string) {
+export async function authenticate(username: string, password: string, clientKey = "unknown") {
   const db = getDb();
   const normalizedUsername = username.trim();
+  const attemptKey = `${normalizedUsername.normalize("NFKC").toLocaleLowerCase("zh-CN")}|${clientKey}`;
+  db.prepare("DELETE FROM sessions WHERE datetime(expires_at) <= CURRENT_TIMESTAMP").run();
+  db.prepare("DELETE FROM login_attempts WHERE datetime(last_failed_at) < datetime('now', '-30 days')").run();
   const attempts = db.prepare(`
     SELECT failed_count AS failedCount, locked_until AS lockedUntil
     FROM login_attempts WHERE username = ?
-  `).get(normalizedUsername) as { failedCount: number; lockedUntil: string | null } | undefined;
+  `).get(attemptKey) as { failedCount: number; lockedUntil: string | null } | undefined;
 
   if (attempts?.lockedUntil && new Date(attempts.lockedUntil).getTime() > Date.now()) {
     return { ok: false as const, reason: "尝试次数过多，请15分钟后再试。" };
@@ -71,11 +74,11 @@ export async function authenticate(username: string, password: string) {
         failed_count = excluded.failed_count,
         last_failed_at = CURRENT_TIMESTAMP,
         locked_until = excluded.locked_until
-    `).run(normalizedUsername, nextFailedCount, lockedUntil);
+    `).run(attemptKey, nextFailedCount, lockedUntil);
     return { ok: false as const, reason: "账号或密码不正确。" };
   }
 
-  db.prepare("DELETE FROM login_attempts WHERE username = ?").run(normalizedUsername);
+  db.prepare("DELETE FROM login_attempts WHERE username = ?").run(attemptKey);
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 86_400_000);
   db.prepare(`
@@ -121,7 +124,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token_hash = ?
-      AND s.expires_at > CURRENT_TIMESTAMP
+      AND datetime(s.expires_at) > CURRENT_TIMESTAMP
       AND u.is_active = 1
   `).get(tokenHash(token)) as Omit<UserRecord, "passwordHash" | "isActive"> | undefined;
 
@@ -134,8 +137,15 @@ export async function requireUser() {
   return user;
 }
 
+export async function requireReadyUser() {
+  const user = await requireUser();
+  if (user.mustChangePassword) redirect("/profile?required=1");
+  return user;
+}
+
 export async function requireAdmin() {
   const user = await requireUser();
+  if (user.mustChangePassword) redirect("/profile?required=1");
   if (user.role !== "admin") redirect("/scores");
   return user;
 }
@@ -158,14 +168,17 @@ export async function touchCurrentSession() {
   const db = getDb();
   const session = db.prepare(`
     SELECT user_id AS userId FROM sessions
-    WHERE token_hash = ? AND expires_at > CURRENT_TIMESTAMP
+    WHERE token_hash = ? AND datetime(expires_at) > CURRENT_TIMESTAMP
   `).get(tokenHash(token)) as { userId: number } | undefined;
   if (!session) return false;
 
-  db.prepare("UPDATE sessions SET last_seen_at = CURRENT_TIMESTAMP WHERE token_hash = ?")
-    .run(tokenHash(token));
-  db.prepare("UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?")
-    .run(session.userId);
+  const updated = db.prepare(`
+    UPDATE sessions SET last_seen_at = CURRENT_TIMESTAMP
+    WHERE token_hash = ? AND datetime(last_seen_at) < datetime('now', '-45 seconds')
+  `).run(tokenHash(token));
+  if (updated.changes) {
+    db.prepare("UPDATE users SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?").run(session.userId);
+  }
   return true;
 }
 

@@ -1,33 +1,43 @@
-import { CalendarDays, CheckCircle2, CircleMinus, Gift, Layers3, ListOrdered, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, CheckCircle2, CircleMinus, Gift, Layers3, ListOrdered, ShieldCheck, UsersRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
+import { PackageDayBrowser } from "@/components/package-day-browser";
 import { WeekPicker } from "@/components/week-picker";
-import { markPackageSentAction } from "@/app/packages/actions";
-import { requireUser } from "@/lib/auth";
-import { getCurrentWeek, getPackageDayStatuses, getPackageDeductionRows, getScoreRows, getShanghaiDate, getWeekById, getWeeks } from "@/lib/data";
+import { MarkPackageSentForm } from "@/components/mark-package-sent-form";
+import { requireReadyUser } from "@/lib/auth";
+import { getActivePackageWeeks, getCurrentWeek, getPackageAssignmentSnapshots, getPackageDayStatuses, getPackageDeductionApplications, getPackageDeductionRows, getPackagePlanRows, getShanghaiDate, getWeekById, getWeeks } from "@/lib/data";
 import {
   FIRST_ROUND_MIN_SCORE,
   LATER_ROUND_MIN_SCORE,
   PACKAGES_PER_DAY,
   generatePackagePlan
 } from "@/lib/package-plan";
+import { mergePackagePlanDays } from "@/lib/package-snapshots";
 
 export const metadata = { title: "发包安排" };
 
 export default async function PackagesPage({ searchParams }: { searchParams: Promise<{ week?: string }> }) {
-  const user = await requireUser();
+  const user = await requireReadyUser();
   const params = await searchParams;
-  const weeks = getWeeks();
+  const weeks = getWeeks(user.role === "admin");
   const requestedId = Number(params.week);
-  const selectedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : getCurrentWeek();
+  const requestedWeek = Number.isInteger(requestedId) ? getWeekById(requestedId) : undefined;
+  const selectedWeek = requestedWeek && (user.role === "admin" || requestedWeek.status !== "draft") ? requestedWeek : getCurrentWeek();
   if (!selectedWeek) return <div className="empty-state">还没有可以生成发包安排的统计周。</div>;
 
-  const rows = getScoreRows(selectedWeek.id);
+  const rows = getPackagePlanRows(selectedWeek.id);
   const deductionRows = getPackageDeductionRows(selectedWeek.id);
   const plan = generatePackagePlan(rows, selectedWeek.eventDate, deductionRows);
+  const appliedDeductions = new Map(getPackageDeductionApplications(selectedWeek.id).map((item) => [item.userId, item.amount]));
+  const actualAppliedDeductionCount = [...appliedDeductions.values()].reduce((sum, amount) => sum + amount, 0);
   const today = getShanghaiDate();
   const statuses = new Map(getPackageDayStatuses(selectedWeek.id).map((status) => [status.dayIndex, status]));
+  const snapshots = getPackageAssignmentSnapshots(selectedWeek.id);
+  const displayDays = mergePackagePlanDays(plan.days, snapshots, statuses.keys());
   const todayPlan = plan.days.find((day) => day.date === today);
+  const todayDisplayDay = displayDays.find((day) => day.date === today);
   const todayStatus = todayPlan ? statuses.get(todayPlan.dayIndex) : undefined;
+  const overlappingWeeks = getActivePackageWeeks(today, user.role === "admin").filter((week) => week.id !== selectedWeek.id);
 
   return (
     <div className="page-stack packages-page">
@@ -47,7 +57,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         <article className="stat-card ink"><span className="stat-icon"><Layers3 size={20} /></span><div><small>第二轮资格</small><strong>{plan.laterRoundEligible}</strong><span>分数 ≥ {LATER_ROUND_MIN_SCORE}</span></div></article>
       </section>
 
-      <section className={`panel package-today ${todayStatus ? "sent" : "pending"}`}>
+      <section id="today-package" className={`panel package-today ${todayStatus ? "sent" : "pending"}`}>
         <div>
           <span className="eyebrow">TODAY DELIVERY</span>
           <h2>今日发包状态</h2>
@@ -55,9 +65,12 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         </div>
         <div className="package-today-action">
           <span className={`send-status ${todayStatus ? "sent" : "pending"}`}>{todayStatus ? <><CheckCircle2 size={15} />已发包</> : "暂未发包"}</span>
-          {todayPlan && !todayStatus && user.role === "admin" && <form action={markPackageSentAction}><input type="hidden" name="weekId" value={selectedWeek.id} /><input type="hidden" name="dayIndex" value={todayPlan.dayIndex} /><button className="primary-button" type="submit"><Gift size={16} />标记今日已发包</button></form>}
+          {todayPlan && !todayStatus && user.role === "admin" && <MarkPackageSentForm weekId={selectedWeek.id} dayIndex={todayPlan.dayIndex} memberCount={todayPlan.assignments.length} />}
         </div>
+        {todayDisplayDay && <div className="today-package-names">{todayDisplayDay.assignments.map((assignment) => <span key={`${assignment.member.userId}-${assignment.position}`}>{assignment.position}. {assignment.member.displayName}</span>)}</div>}
       </section>
+
+      {overlappingWeeks.length > 0 && <aside className="overlap-notice"><strong>今天是跨期周六</strong><span>同一天还有另一统计周期的发包安排，请分别确认。</span>{overlappingWeeks.map((week) => <Link key={week.id} href={`/packages?week=${week.id}`}>查看“{week.title}”今日名单</Link>)}</aside>}
 
       <section className="panel package-rules">
         <div className="package-rule-title"><span className="section-icon"><ShieldCheck size={19} /></span><div><span className="eyebrow">ROTATION RULES</span><h2>本期排包规则</h2></div></div>
@@ -76,52 +89,32 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
             <span className="section-icon deduction-icon"><CircleMinus size={19} /></span>
             <div><span className="eyebrow">PACKAGE DEDUCTIONS</span><h2>累计扣包次数排行</h2><p className="deduction-note">这里仅记录扣包次数，不代表成员已经获得发包名额。</p></div>
           </div>
-          <span className="deduction-summary"><ListOrdered size={15} />累计 {plan.totalDeductions} 次 · 本期承接 {plan.scheduledDeductionCount} 次 · 已应用 {plan.appliedDeductionCount} 次</span>
+          <span className="deduction-summary"><ListOrdered size={15} />累计 {plan.totalDeductions} 次 · 本期承接 {plan.scheduledDeductionCount} 次 · 已实际扣 {actualAppliedDeductionCount} 次</span>
         </header>
         {plan.deductionRanking.length ? (
           <div className="deduction-ranking">
-            {plan.deductionRanking.map((item) => (
+            {plan.deductionRanking.map((item) => {
+              const actuallyApplied = appliedDeductions.get(item.member.userId) || 0;
+              const outstanding = Math.max(0, item.scheduled - actuallyApplied);
+              return (
               <article key={item.member.userId} className="deduction-rank-item">
                 <span className="deduction-rank">#{String(item.rank).padStart(2, "0")}</span>
                 <Avatar name={item.member.displayName} src={item.member.avatarUrl} size={40} />
                 <div>
                   <strong>{item.member.displayName}</strong>
-                  <small>{item.member.score} 分 · {item.member.score < FIRST_ROUND_MIN_SCORE ? "当前无发包资格" : item.member.score < LATER_ROUND_MIN_SCORE ? "仅有第一轮资格" : `本期承接 ${item.scheduled} 次 · 安排已跳过 ${item.applied} 次`}{item.applied < item.scheduled ? ` · 扣包未触发 ${item.scheduled - item.applied} 次` : ""}</small>
+                  <small>{item.member.score} 分 · {item.member.score < FIRST_ROUND_MIN_SCORE ? "当前无发包资格" : item.member.score < LATER_ROUND_MIN_SCORE ? "仅有第一轮资格" : `本期承接 ${item.scheduled} 次 · 已实际扣 ${actuallyApplied} 次 · 当前安排预计跳过 ${item.applied} 次`}{outstanding > 0 ? ` · 待执行 ${outstanding} 次` : ""}</small>
                 </div>
                 <b>累计扣 {item.count} 次</b>
               </article>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="deduction-empty"><ShieldCheck size={18} />暂无累计扣包记录，所有符合条件的成员按正常顺序轮转。</div>
         )}
       </section>
 
-      <section className="package-days-grid">
-        {plan.days.map((day) => (
-          <article key={day.date} className={`panel package-day-card ${day.date === today ? "today" : ""}`}>
-            <header>
-              <div><span>第 {day.dayIndex + 1} 天</span><h2>{day.weekday}</h2><small>{day.date}</small></div>
-              <div className="package-day-meta">{day.date === today ? <b><Sparkles size={13} /> 今天</b> : <b>{day.assignments.length}/{PACKAGES_PER_DAY}</b>}<span className={`send-status mini ${statuses.has(day.dayIndex) ? "sent" : "pending"}`}>{statuses.has(day.dayIndex) ? "已发包" : "暂未发包"}</span></div>
-            </header>
-            <div className="package-member-list">
-              {Array.from({ length: PACKAGES_PER_DAY }, (_, index) => {
-                const assignment = day.assignments[index];
-                return assignment ? (
-                  <div key={`${assignment.member.userId}-${assignment.round}`} className="package-member">
-                    <span className="package-position">{assignment.position}</span>
-                    <Avatar name={assignment.member.displayName} src={assignment.member.avatarUrl} size={38} />
-                    <div><strong>{assignment.member.displayName}</strong><small>排名 #{assignment.member.rank} · {assignment.member.score} 分</small></div>
-                    <span className={`round-chip round-${assignment.round}`}><CheckCircle2 size={12} />第 {assignment.round} 轮</span>
-                  </div>
-                ) : (
-                  <div key={`empty-${index}`} className="package-member empty-slot"><span className="package-position">{index + 1}</span><span>本位置暂无符合条件的成员</span></div>
-                );
-              })}
-            </div>
-          </article>
-        ))}
-      </section>
+      <PackageDayBrowser days={displayDays} sentDayIndexes={[...statuses.keys()]} today={today} />
 
       {plan.unfilledSlots > 0 && <div className="form-message error">本期有 {plan.unfilledSlots} 个位置因没有符合条件的成员而留空。</div>}
     </div>

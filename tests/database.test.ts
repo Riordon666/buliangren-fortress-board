@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import Database from "better-sqlite3";
-import { INITIAL_PASSWORD } from "@/lib/constants";
 import { getDb, migratePermanentPackageDeductions, PERMANENT_DEDUCTION_MIGRATION } from "@/lib/db";
-import { getLatestWeek, getMembers, getPackageDeductionRows, getScoreRows, getShanghaiDate, selectCurrentWeek } from "@/lib/data";
+import { getLatestWeek, getLeaderboardRows, getMembers, getPackageAssignmentSnapshots, getPackageDeductionRows, getPackagePlanRows, getScoreRows, getShanghaiDate, getWeeks, selectCurrentWeek } from "@/lib/data";
+import { recordDeductionApplications, rolloverExpiredPackageDeductions } from "@/lib/package-ledger";
 import { recordPackageDeduction } from "@/lib/package-deductions";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
+import { savePackageDaySnapshot } from "@/lib/package-snapshots";
 import { verifyPassword } from "@/lib/password";
 import { recordScoreChange } from "@/lib/score-changes";
 import { buildWeeklyReportSvg } from "@/lib/report-image";
@@ -38,7 +39,7 @@ describe("初始组织数据", () => {
     const rows = getDb().prepare("SELECT password_hash AS passwordHash FROM users ORDER BY id LIMIT 2").all() as { passwordHash: string }[];
     expect(rows[0].passwordHash).toMatch(/^\$argon2id\$/);
     expect(rows[0].passwordHash).not.toBe(rows[1].passwordHash);
-    expect(await verifyPassword(rows[0].passwordHash, INITIAL_PASSWORD)).toBe(true);
+    expect(await verifyPassword(rows[0].passwordHash, "test-only-password")).toBe(true);
   });
 
   it("SQLite运行时包含WAL并发修复版本", () => {
@@ -325,5 +326,139 @@ describe("初始组织数据", () => {
     expect(svg).toContain("是溅诗啊");
     expect(svg).toContain("3/8");
     expect(svg).toContain("1200");
+  });
+
+  it("已发包当天的名单在后续改分后仍保持冻结", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const plan = generatePackagePlan(getScoreRows(week.id, true), week.eventDate);
+    const first = plan.days[0].assignments[0];
+    db.exec("BEGIN");
+    try {
+      db.prepare("DELETE FROM package_assignments WHERE week_id = ? AND day_index = 0").run(week.id);
+      savePackageDaySnapshot(db, week.id, 0, plan.days[0].assignments);
+      db.prepare("UPDATE weekly_scores SET score = 0 WHERE week_id = ? AND user_id = ?")
+        .run(week.id, first.member.userId);
+
+      const frozen = getPackageAssignmentSnapshots(week.id).filter((item) => item.dayIndex === 0);
+      expect(frozen[0]).toMatchObject({
+        userId: first.member.userId,
+        score: first.member.score,
+        round: first.round,
+        position: 1
+      });
+      expect(getScoreRows(week.id, true).find((row) => row.userId === first.member.userId)?.score).toBe(0);
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("只把未实际执行的扣包顺延到下一期，且重复运行不会重复顺延", () => {
+    const db = new Database(":memory:");
+    db.exec(`
+      PRAGMA foreign_keys = ON;
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY,
+        package_deduction_pending INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE weeks (id INTEGER PRIMARY KEY, event_date TEXT NOT NULL UNIQUE);
+      CREATE TABLE weekly_scores (
+        week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        score INTEGER NOT NULL DEFAULT 0,
+        package_deductions INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (week_id, user_id)
+      );
+      CREATE TABLE package_deduction_applications (
+        week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+        day_index INTEGER NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        amount INTEGER NOT NULL,
+        UNIQUE (week_id, day_index, user_id)
+      );
+      CREATE TABLE package_deduction_rollovers (
+        source_week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+        target_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        amount INTEGER NOT NULL,
+        UNIQUE (source_week_id, user_id)
+      );
+      INSERT INTO users (id) VALUES (1);
+      INSERT INTO weeks (id, event_date) VALUES (1, '2098-01-01'), (2, '2098-01-08');
+      INSERT INTO weekly_scores (week_id, user_id, package_deductions) VALUES (1, 1, 3), (2, 1, 0);
+    `);
+    const skips = [
+      { userId: 1, dayIndex: 3, round: 2 },
+      { userId: 1, dayIndex: 4, round: 3 }
+    ];
+    recordDeductionApplications(db, 1, 3, skips);
+    recordDeductionApplications(db, 1, 4, skips);
+
+    rolloverExpiredPackageDeductions(db, "2098-01-09");
+    rolloverExpiredPackageDeductions(db, "2098-01-09");
+
+    expect(db.prepare("SELECT package_deductions AS amount FROM weekly_scores WHERE week_id = 2 AND user_id = 1").get())
+      .toEqual({ amount: 1 });
+    expect(db.prepare("SELECT amount FROM package_deduction_rollovers WHERE source_week_id = 1 AND user_id = 1").get())
+      .toEqual({ amount: 1 });
+    db.close();
+  });
+
+  it("已实际扣过的次数不会再次进入后续计划或超过本期登记数", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const member = getScoreRows(week.id, true)[0];
+    db.exec("BEGIN");
+    try {
+      db.prepare("DELETE FROM package_deduction_applications WHERE week_id = ? AND user_id = ?")
+        .run(week.id, member.userId);
+      db.prepare("UPDATE weekly_scores SET package_deductions = 1 WHERE week_id = ? AND user_id = ?")
+        .run(week.id, member.userId);
+      recordDeductionApplications(db, week.id, 0, [
+        { userId: member.userId, dayIndex: 0, round: 2 },
+        { userId: member.userId, dayIndex: 0, round: 3 }
+      ]);
+      recordDeductionApplications(db, week.id, 1, [
+        { userId: member.userId, dayIndex: 1, round: 4 }
+      ]);
+
+      expect(db.prepare(`
+        SELECT COALESCE(SUM(amount), 0) AS amount FROM package_deduction_applications
+        WHERE week_id = ? AND user_id = ?
+      `).get(week.id, member.userId)).toEqual({ amount: 1 });
+      expect(getPackagePlanRows(week.id).find((row) => row.userId === member.userId)?.packageDeductions).toBe(0);
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("停用成员保留历史成绩，但不会进入实时发包名单", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const member = getScoreRows(week.id)[0];
+    db.exec("BEGIN");
+    try {
+      db.prepare("UPDATE users SET is_active = 0 WHERE id = ?").run(member.userId);
+      expect(getScoreRows(week.id).some((row) => row.userId === member.userId)).toBe(true);
+      expect(getScoreRows(week.id, true).some((row) => row.userId === member.userId)).toBe(false);
+      expect(getLeaderboardRows(week).some((row) => row.userId === member.userId)).toBe(false);
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("草稿统计周只对管理员查询可见", () => {
+    const db = getDb();
+    db.exec("BEGIN");
+    try {
+      const draftId = Number(db.prepare("INSERT INTO weeks (title, event_date, status) VALUES (?, ?, 'draft')")
+        .run("草稿可见性测试", "2199-11-27").lastInsertRowid);
+      expect(getWeeks(true).some((week) => week.id === draftId)).toBe(true);
+      expect(getWeeks(false).some((week) => week.id === draftId)).toBe(false);
+    } finally {
+      db.exec("ROLLBACK");
+    }
   });
 });

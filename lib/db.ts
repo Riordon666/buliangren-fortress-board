@@ -2,10 +2,15 @@ import Database from "better-sqlite3";
 import { hashSync } from "@node-rs/argon2";
 import fs from "node:fs";
 import path from "node:path";
-import { ARGON_OPTIONS, INITIAL_PASSWORD } from "@/lib/constants";
+import { ARGON_OPTIONS } from "@/lib/constants";
+import { getSeedInitialPassword } from "@/lib/server-config";
+import { rolloverExpiredPackageDeductions } from "@/lib/package-ledger";
+import { databaseFilePath } from "@/lib/storage-paths";
+import { backfillMissingPackageSnapshots } from "@/lib/package-snapshots";
 
 type GlobalDatabase = typeof globalThis & {
   __fortressDatabase?: Database.Database;
+  __fortressRolloverDate?: string;
 };
 
 const globalDatabase = globalThis as GlobalDatabase;
@@ -106,11 +111,14 @@ const memberNameCorrections = [
 ] as const;
 
 function databasePath() {
-  return path.join(process.cwd(), "data", "naruto-fortress.db");
+  return databaseFilePath();
 }
 
 function createDatabase() {
   const filename = databasePath();
+  if (process.env.NODE_ENV === "production" && !fs.existsSync(filename) && process.env.ALLOW_DATABASE_INIT !== "1") {
+    throw new Error(`生产数据库不存在：${filename}。为防止误建空库，程序已停止启动。`);
+  }
   fs.mkdirSync(path.dirname(filename), { recursive: true });
 
   const database = new Database(filename);
@@ -195,6 +203,39 @@ function createDatabase() {
       UNIQUE (week_id, day_index)
     );
 
+    CREATE TABLE IF NOT EXISTS package_assignments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+      day_index INTEGER NOT NULL CHECK (day_index BETWEEN 0 AND 7),
+      position INTEGER NOT NULL CHECK (position BETWEEN 1 AND 5),
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      round INTEGER NOT NULL CHECK (round >= 1),
+      score_snapshot INTEGER NOT NULL CHECK (score_snapshot >= 0),
+      rank_snapshot INTEGER NOT NULL CHECK (rank_snapshot >= 1),
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (week_id, day_index, position)
+    );
+
+    CREATE TABLE IF NOT EXISTS package_deduction_applications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+      day_index INTEGER NOT NULL CHECK (day_index BETWEEN 0 AND 7),
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      amount INTEGER NOT NULL CHECK (amount > 0),
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (week_id, day_index, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS package_deduction_rollovers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      source_week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
+      target_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      amount INTEGER NOT NULL CHECK (amount > 0),
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (source_week_id, user_id)
+    );
+
     CREATE TABLE IF NOT EXISTS score_change_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       request_id TEXT NOT NULL,
@@ -226,6 +267,9 @@ function createDatabase() {
     CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
     CREATE INDEX IF NOT EXISTS idx_deduction_events_user ON package_deduction_events(user_id);
     CREATE INDEX IF NOT EXISTS idx_package_day_status_week ON package_day_statuses(week_id, day_index);
+    CREATE INDEX IF NOT EXISTS idx_package_assignments_week ON package_assignments(week_id, day_index);
+    CREATE INDEX IF NOT EXISTS idx_deduction_applications_week ON package_deduction_applications(week_id, day_index);
+    CREATE INDEX IF NOT EXISTS idx_deduction_rollovers_target ON package_deduction_rollovers(target_week_id);
     CREATE INDEX IF NOT EXISTS idx_score_change_user ON score_change_events(user_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_score_change_week ON score_change_events(week_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
@@ -278,7 +322,7 @@ function createDatabase() {
 
     database.transaction(() => {
       for (const [index, member] of seedMembers.entries()) {
-        const passwordHash = hashSync(INITIAL_PASSWORD, {
+        const passwordHash = hashSync(getSeedInitialPassword(), {
           ...ARGON_OPTIONS
         });
         const result = createUser.run({
@@ -319,6 +363,8 @@ function createDatabase() {
     }
   })();
 
+  backfillMissingPackageSnapshots(database);
+
   return database;
 }
 
@@ -328,5 +374,18 @@ export function getDb() {
   if (!globalDatabase.__fortressDatabase) {
     globalDatabase.__fortressDatabase = createDatabase();
   }
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(new Date());
+  if (globalDatabase.__fortressRolloverDate !== today) {
+    rolloverExpiredPackageDeductions(globalDatabase.__fortressDatabase, today);
+    globalDatabase.__fortressRolloverDate = today;
+  }
   return globalDatabase.__fortressDatabase;
+}
+
+export function closeDbForTests() {
+  globalDatabase.__fortressDatabase?.close();
+  delete globalDatabase.__fortressDatabase;
+  delete globalDatabase.__fortressRolloverDate;
 }

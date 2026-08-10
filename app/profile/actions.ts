@@ -7,10 +7,11 @@ import sharp from "sharp";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { destroyCurrentSession, requireUser, writeAuditLog } from "@/lib/auth";
+import { destroyCurrentSession, requireUser, revokeUserSessions, writeAuditLog } from "@/lib/auth";
 import { FORCE_PASSWORD_COOKIE } from "@/lib/constants";
 import { getDb } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { uploadDirectory } from "@/lib/storage-paths";
 
 export type FormState = { error?: string; success?: string };
 
@@ -47,6 +48,7 @@ export async function changePasswordAction(_state: FormState, formData: FormData
       updated_at = CURRENT_TIMESTAMP WHERE id = ?
   `).run(passwordHash, user.id);
   writeAuditLog(user.id, "修改本人密码", user.id);
+  revokeUserSessions(user.id);
 
   const cookieStore = await cookies();
   cookieStore.delete(FORCE_PASSWORD_COOKIE);
@@ -65,18 +67,26 @@ export async function updateAvatarAction(_state: FormState, formData: FormData):
 
   try {
     const filename = `${user.id}-${randomBytes(8).toString("hex")}.webp`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    const uploadDir = uploadDirectory();
     await fs.mkdir(uploadDir, { recursive: true });
+    const previous = getDb().prepare("SELECT avatar_url AS avatarUrl FROM users WHERE id = ?")
+      .get(user.id) as { avatarUrl: string | null };
     const buffer = Buffer.from(await file.arrayBuffer());
     await sharp(buffer, { limitInputPixels: 40_000_000, failOn: "error" })
       .rotate()
-      .resize(512, 512, { fit: "cover", position: "centre" })
-      .webp({ quality: 86 })
+      .resize(256, 256, { fit: "cover", position: "centre" })
+      .webp({ quality: 82 })
       .toFile(path.join(uploadDir, filename));
 
     const avatarUrl = `/api/avatars/${filename}`;
     getDb().prepare("UPDATE users SET avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
       .run(avatarUrl, user.id);
+    const previousFilename = previous.avatarUrl?.match(/^\/api\/avatars\/(\d+-[a-f0-9]{16}\.webp)$/)?.[1];
+    if (previousFilename && previousFilename !== filename) {
+      await fs.unlink(path.join(uploadDir, previousFilename)).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== "ENOENT") console.error("Failed to remove previous avatar", error);
+      });
+    }
     writeAuditLog(user.id, "更新头像", user.id);
     revalidatePath("/profile");
     revalidatePath("/scores");

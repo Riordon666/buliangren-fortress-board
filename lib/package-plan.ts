@@ -1,4 +1,5 @@
 import type { ScoreRow } from "@/lib/types";
+import type { DeductionSkip } from "@/lib/package-ledger";
 
 export const PACKAGE_DAYS = 8;
 export const PACKAGES_PER_DAY = 5;
@@ -60,6 +61,7 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string, deducti
     rows.map((row) => [row.userId, Math.max(0, Math.trunc(row.packageDeductions || 0))])
   );
   const appliedDeductions = new Map<number, number>();
+  const deductionSkips: DeductionSkip[] = [];
 
   let round = 1;
   let memberIndex = 0;
@@ -79,6 +81,11 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string, deducti
     if (round >= 2 && deductions > 0) {
       remainingDeductions.set(member.userId, deductions - 1);
       appliedDeductions.set(member.userId, (appliedDeductions.get(member.userId) || 0) + 1);
+      deductionSkips.push({
+        userId: member.userId,
+        dayIndex: Math.min(PACKAGE_DAYS - 1, Math.floor(assignments.length / PACKAGES_PER_DAY)),
+        round
+      });
       continue;
     }
 
@@ -129,6 +136,7 @@ export function generatePackagePlan(rows: ScoreRow[], startDate: string, deducti
     firstRoundEligible: firstRoundMembers.length,
     laterRoundEligible: laterRoundMembers.length,
     deductionRanking,
+    deductionSkips,
     totalDeductions: deductionRanking.reduce((sum, item) => sum + item.count, 0),
     scheduledDeductionCount: deductionRanking.reduce((sum, item) => sum + item.scheduled, 0),
     appliedDeductionCount: deductionRanking.reduce((sum, item) => sum + item.applied, 0),

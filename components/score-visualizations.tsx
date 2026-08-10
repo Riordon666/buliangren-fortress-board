@@ -31,7 +31,7 @@ const colors = ["#e77732", "#f0a64c", "#d3b169", "#638667", "#416955", "#2f5144"
 
 const tabs: Array<{ id: View; label: string; icon: typeof BarChart3 }> = [
   { id: "bar", label: "横向柱状", icon: BarChart3 },
-  { id: "line", label: "排名折线", icon: ChartNoAxesCombined },
+  { id: "line", label: "分数梯度", icon: ChartNoAxesCombined },
   { id: "pie", label: "贡献占比", icon: ChartPie },
   { id: "distribution", label: "分数分布", icon: Rows3 },
   { id: "radar", label: "组织雷达", icon: RadarIcon }
