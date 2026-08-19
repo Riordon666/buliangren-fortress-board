@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   const user = await getSessionUser();
-  if (user) redirect(user.mustChangePassword ? "/profile?required=1" : "/scores");
+  if (user) redirect(user.accountType !== "guest" && user.mustChangePassword ? "/profile?required=1" : "/scores");
 
   return (
     <main className="login-page">

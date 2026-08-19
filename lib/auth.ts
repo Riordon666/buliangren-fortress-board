@@ -36,7 +36,7 @@ function toSessionUser(record: Omit<UserRecord, "passwordHash" | "isActive">): S
     role: record.role,
     accountType: record.accountType,
     note: record.note,
-    mustChangePassword: Boolean(record.mustChangePassword),
+    mustChangePassword: record.accountType !== "guest" && Boolean(record.mustChangePassword),
     lastSeenAt: record.lastSeenAt
   };
 }
@@ -60,7 +60,7 @@ export async function authenticate(username: string, password: string, clientKey
     SELECT id, username, display_name AS displayName, password_hash AS passwordHash,
       avatar_url AS avatarUrl, role, account_type AS accountType, note, is_active AS isActive,
       must_change_password AS mustChangePassword, last_seen_at AS lastSeenAt
-    FROM users WHERE username = ? COLLATE NOCASE
+    FROM users WHERE username = ? COLLATE NOCASE AND deleted_at IS NULL
   `).get(normalizedUsername) as UserRecord | undefined;
 
   const valid = user && user.isActive ? await verifyPassword(user.passwordHash, password) : false;
@@ -97,7 +97,7 @@ export async function authenticate(username: string, password: string, clientKey
     path: "/",
     expires: expiresAt
   });
-  if (user.mustChangePassword) {
+  if (user.accountType !== "guest" && user.mustChangePassword) {
     cookieStore.set(FORCE_PASSWORD_COOKIE, "1", {
       httpOnly: true,
       secure: isProduction,
@@ -128,6 +128,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     WHERE s.token_hash = ?
       AND datetime(s.expires_at) > CURRENT_TIMESTAMP
       AND u.is_active = 1
+      AND u.deleted_at IS NULL
   `).get(tokenHash(token)) as Omit<UserRecord, "passwordHash" | "isActive"> | undefined;
 
   return user ? toSessionUser(user) : null;
@@ -141,13 +142,13 @@ export async function requireUser() {
 
 export async function requireReadyUser() {
   const user = await requireUser();
-  if (user.mustChangePassword) redirect("/profile?required=1");
+  if (user.accountType !== "guest" && user.mustChangePassword) redirect("/profile?required=1");
   return user;
 }
 
 export async function requireAdmin() {
   const user = await requireUser();
-  if (user.mustChangePassword) redirect("/profile?required=1");
+  if (user.accountType !== "guest" && user.mustChangePassword) redirect("/profile?required=1");
   if (user.role !== "admin") redirect("/scores");
   return user;
 }

@@ -42,6 +42,30 @@ await publicContext.close();
 
 const db = new Database(path.join(root, "data", "naruto-fortress.db"));
 const admin = db.prepare("SELECT id FROM users WHERE username = ?").get("九天惊落");
+const shanghaiToday = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit"
+}).format(new Date());
+const [todayYear, todayMonth, todayDay] = shanghaiToday.split("-").map(Number);
+const todayWeekday = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay)).getUTCDay();
+const daysSinceSaturday = (todayWeekday + 1) % 7;
+const visualCycleDate = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay - daysSinceSaturday)).toISOString().slice(0, 10);
+let visualWeekId = null;
+if (!db.prepare("SELECT id FROM weeks WHERE event_date = ?").get(visualCycleDate)) {
+  visualWeekId = Number(db.prepare(`
+    INSERT INTO weeks (title, event_date, status) VALUES ('视觉回归临时周', ?, 'published')
+  `).run(visualCycleDate).lastInsertRowid);
+  db.prepare(`
+    INSERT INTO weekly_scores (week_id, user_id, score)
+    SELECT ?, u.id, COALESCE((
+      SELECT history.score FROM weekly_scores history
+      JOIN weeks history_week ON history_week.id = history.week_id
+      WHERE history.user_id = u.id
+      ORDER BY history_week.event_date DESC, history_week.id DESC LIMIT 1
+    ), 0)
+    FROM users u
+    WHERE u.is_active = 1 AND u.account_type = 'member' AND u.deleted_at IS NULL
+  `).run(visualWeekId);
+}
 const token = randomBytes(32).toString("base64url");
 const tokenHash = createHash("sha256").update(token).digest("hex");
 db.prepare("INSERT INTO sessions (user_id, token_hash, expires_at) VALUES (?, ?, ?)")
@@ -51,6 +75,7 @@ const cleanupSession = () => {
   try {
     const cleanupDb = new Database(path.join(root, "data", "naruto-fortress.db"));
     cleanupDb.prepare("DELETE FROM sessions WHERE token_hash = ?").run(tokenHash);
+    if (visualWeekId) cleanupDb.prepare("DELETE FROM weeks WHERE id = ?").run(visualWeekId);
     cleanupDb.close();
   } catch {
     // The visual check must not mask its original failure with cleanup errors.
@@ -107,6 +132,11 @@ for (const tab of await page.locator(".package-day-tab").all()) {
 if (visibleAssignments !== 40) throw new Error(`8天发包名额不是40个，实际 ${visibleAssignments} 个`);
 if (!(await page.getByText("今日发包状态", { exact: true }).isVisible())) throw new Error("今日发包状态未显示");
 if (!(await page.getByText(/暂未发包|已发包/).first().isVisible())) throw new Error("今日发包状态内容未显示");
+if ((await page.locator(".today-package-seat").count()) !== 5) throw new Error("今日发包状态未居中显示5个席位");
+if (Number.parseFloat(await page.locator(".today-package-seat strong").first().evaluate((element) => getComputedStyle(element).fontSize)) < 18) throw new Error("今日发包成员名字字号过小");
+const todayBox = await page.locator(".package-today").boundingBox();
+const browserBox = await page.locator(".package-browser").boundingBox();
+if (!todayBox || !browserBox || todayBox.y >= browserBox.y) throw new Error("今日发包状态没有置于8天安排之前");
 await page.screenshot({ path: path.join(output, "packages-desktop.png"), fullPage: true });
 
 await page.goto("http://localhost:3000/reports", { waitUntil: "networkidle" });
@@ -140,6 +170,15 @@ if (!(await page.getByRole("columnheader", { name: "累计 / 调整扣包" }).is
 if (!(await page.locator('input[name^="deduction_add_"]').first().isVisible())) throw new Error("管理员新增扣包输入框未显示");
 if ((await page.locator('input[name^="deduction_add_"]').first().getAttribute("min")) !== "-99") throw new Error("扣包输入框不支持负数修正");
 if (!(await page.getByText("管理账号", { exact: true }).first().isVisible())) throw new Error("管理员改名入口未显示");
+const managedMember = page.locator(".admin-member").filter({ hasNotText: "管理员" }).first();
+const managedMemberBoxBefore = await managedMember.boundingBox();
+await managedMember.getByRole("button", { name: "管理账号" }).click();
+await page.locator(".member-actions-popover").waitFor({ state: "visible" });
+if (!(await page.getByRole("button", { name: "删除账号" }).isVisible())) throw new Error("删除账号入口未显示");
+const managedMemberBoxAfter = await managedMember.boundingBox();
+if (!managedMemberBoxBefore || !managedMemberBoxAfter || Math.abs(managedMemberBoxBefore.height - managedMemberBoxAfter.height) > 1) throw new Error("管理账号展开仍会撑高成员行");
+await page.screenshot({ path: path.join(output, "admin-account-popover.png"), fullPage: false });
+await page.keyboard.press("Escape");
 const addMemberBox = await page.locator(".add-member-card").boundingBox();
 const scoreImportBox = await page.locator(".compact-score-import-panel").boundingBox();
 const weekAdminBox = await page.locator(".week-admin-card").boundingBox();
@@ -176,6 +215,7 @@ if (!mobileChartBox || mobileLabelRight > mobileChartBox.x + mobileChartBox.widt
 await mobilePage.locator(".visualization-panel").screenshot({ path: path.join(output, "scores-bar-values-mobile.png") });
 await mobilePage.goto("http://localhost:3000/packages", { waitUntil: "networkidle" });
 if ((await mobilePage.locator(".package-day-tab").count()) !== 8 || (await mobilePage.locator(".package-day-card").count()) !== 1) throw new Error("手机端发包日期浏览器不正确");
+if ((await mobilePage.locator(".today-package-seat").count()) !== 5) throw new Error("手机端今日发包五人席位不完整");
 await mobilePage.screenshot({ path: path.join(output, "packages-mobile.png"), fullPage: true });
 await mobilePage.goto("http://localhost:3000/reports", { waitUntil: "networkidle" });
 await mobilePage.screenshot({ path: path.join(output, "reports-mobile.png"), fullPage: true });

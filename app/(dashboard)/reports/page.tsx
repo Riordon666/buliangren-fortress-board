@@ -28,7 +28,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         <article className="stat-card orange"><span className="stat-icon"><Trophy size={20} /></span><div><small>组织总分</small><strong>{overview.totalScore}</strong><span>{week.title}</span></div></article>
         <article className="stat-card green"><span className="stat-icon"><UsersRound size={20} /></span><div><small>参战成员</small><strong>{overview.participants}</strong><span>全员 {rows.length} 人</span></div></article>
         <article className="stat-card gold"><span className="stat-icon"><Target size={20} /></span><div><small>60分达标</small><strong>{highlights.laterRoundCount}</strong><span>40分达标 {highlights.firstRoundCount} 人</span></div></article>
-        <article className="stat-card ink"><span className="stat-icon"><CalendarCheck2 size={20} /></span><div><small>已发包天数</small><strong>{sentDays}<em> / 8</em></strong><span>状态由管理员确认</span></div></article>
+        <article className="stat-card ink"><span className="stat-icon"><CalendarCheck2 size={20} /></span><div><small>已发包天数</small><strong>{sentDays}<em> / 8</em></strong><span>管理员或系统自动确认</span></div></article>
       </section>
       <section className="report-main-grid">
         <article className="panel report-highlights"><div className="panel-heading"><div><span className="eyebrow">HIGHLIGHTS</span><h2>本周亮点</h2></div></div>

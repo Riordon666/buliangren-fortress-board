@@ -50,27 +50,51 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
         <WeekPicker weeks={weeks} selectedId={selectedWeek.id} basePath="/packages" />
       </header>
 
+      <section id="today-package" className={`panel package-today ${todayStatus ? "sent" : "pending"}`}>
+        <div className="package-today-heading">
+          <span className="eyebrow">TODAY DELIVERY</span>
+          <h2>今日发包状态</h2>
+          {!todayPlan ? <p>今天不在当前所选统计周的发包周期内。</p> : <p>{todayStatus
+            ? todayStatus.confirmationSource === "automatic"
+              ? "管理员未手动确认，系统已在 23:30 后自动确认今天的包已发放。"
+              : `${todayStatus.markedByName || "管理员"}已确认今天的包已发放。`
+            : "今天暂未发包；若 23:30 前仍未手动确认，系统会自动确认。"}</p>}
+        </div>
+        <div className="package-today-action">
+          <span className={`send-status ${todayStatus ? "sent" : "pending"}`}>{todayStatus ? <><CheckCircle2 size={15} />已发包</> : "暂未发包"}</span>
+          {todayPlan && !todayStatus && user.role === "admin" && <MarkPackageSentForm weekId={selectedWeek.id} dayIndex={todayPlan.dayIndex} memberCount={todayPlan.assignments.length} />}
+        </div>
+        {todayDisplayDay && <div className="today-package-lineup" aria-label="今日发包五人名单">
+          {Array.from({ length: PACKAGES_PER_DAY }, (_, index) => {
+            const assignment = todayDisplayDay.assignments[index];
+            return assignment ? (
+              <article key={`${assignment.member.userId}-${assignment.position}`} className="today-package-seat">
+                <span className="today-seat-number">{assignment.position}</span>
+                <Avatar name={assignment.member.displayName} src={assignment.member.avatarUrl} size={48} />
+                <strong>{assignment.member.displayName}</strong>
+                <small>第 {assignment.round} 轮 · {assignment.member.score} 分</small>
+              </article>
+            ) : (
+              <article key={`empty-${index}`} className="today-package-seat empty">
+                <span className="today-seat-number">{index + 1}</span>
+                <strong>暂无人选</strong>
+                <small>未达到发包条件</small>
+              </article>
+            );
+          })}
+        </div>}
+      </section>
+
+      {overlappingWeeks.length > 0 && <aside className="overlap-notice"><strong>今天是跨期周六</strong><span>同一天还有另一统计周期的发包安排，请分别确认。</span>{overlappingWeeks.map((week) => <Link key={week.id} href={`/packages?week=${week.id}`}>查看“{week.title}”今日名单</Link>)}</aside>}
+
+      <PackageDayBrowser days={displayDays} sentDayIndexes={[...statuses.keys()]} today={today} />
+
       <section className="stat-grid package-stats">
         <article className="stat-card orange"><span className="stat-icon"><CalendarDays size={20} /></span><div><small>发包周期</small><strong>8<em> 天</em></strong><span>周六至下周六</span></div></article>
         <article className="stat-card green"><span className="stat-icon"><Gift size={20} /></span><div><small>每日名额</small><strong>{PACKAGES_PER_DAY}<em> 人</em></strong><span>共 {plan.totalSlots} 个位置</span></div></article>
         <article className="stat-card gold"><span className="stat-icon"><UsersRound size={20} /></span><div><small>第一轮资格</small><strong>{plan.firstRoundEligible}</strong><span>分数 ≥ {FIRST_ROUND_MIN_SCORE}</span></div></article>
         <article className="stat-card ink"><span className="stat-icon"><Layers3 size={20} /></span><div><small>第二轮资格</small><strong>{plan.laterRoundEligible}</strong><span>分数 ≥ {LATER_ROUND_MIN_SCORE}</span></div></article>
       </section>
-
-      <section id="today-package" className={`panel package-today ${todayStatus ? "sent" : "pending"}`}>
-        <div>
-          <span className="eyebrow">TODAY DELIVERY</span>
-          <h2>今日发包状态</h2>
-          {!todayPlan ? <p>今天不在当前所选统计周的发包周期内。</p> : <p>{todayStatus ? `${todayStatus.markedByName || "管理员"}已确认今天的包已发放。` : "今天的包暂未确认发放，确认后所有组员都能在这里看到。"}</p>}
-        </div>
-        <div className="package-today-action">
-          <span className={`send-status ${todayStatus ? "sent" : "pending"}`}>{todayStatus ? <><CheckCircle2 size={15} />已发包</> : "暂未发包"}</span>
-          {todayPlan && !todayStatus && user.role === "admin" && <MarkPackageSentForm weekId={selectedWeek.id} dayIndex={todayPlan.dayIndex} memberCount={todayPlan.assignments.length} />}
-        </div>
-        {todayDisplayDay && <div className="today-package-names">{todayDisplayDay.assignments.map((assignment) => <span key={`${assignment.member.userId}-${assignment.position}`}>{assignment.position}. {assignment.member.displayName}</span>)}</div>}
-      </section>
-
-      {overlappingWeeks.length > 0 && <aside className="overlap-notice"><strong>今天是跨期周六</strong><span>同一天还有另一统计周期的发包安排，请分别确认。</span>{overlappingWeeks.map((week) => <Link key={week.id} href={`/packages?week=${week.id}`}>查看“{week.title}”今日名单</Link>)}</aside>}
 
       <section className="panel package-rules">
         <div className="package-rule-title"><span className="section-icon"><ShieldCheck size={19} /></span><div><span className="eyebrow">ROTATION RULES</span><h2>本期排包规则</h2></div></div>
@@ -80,6 +104,7 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <span><i>03</i>第二轮起仅限 60 分及以上</span>
           <span><i>04</i>每轮结束后从榜首重新开始</span>
           <span><i>05</i>第一轮不扣包，第二轮起按记录逐次跳过</span>
+          <span><i>06</i>每日 23:30 未手动确认时由系统自动确认</span>
         </div>
       </section>
 
@@ -113,8 +138,6 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <div className="deduction-empty"><ShieldCheck size={18} />暂无累计扣包记录，所有符合条件的成员按正常顺序轮转。</div>
         )}
       </section>
-
-      <PackageDayBrowser days={displayDays} sentDayIndexes={[...statuses.keys()]} today={today} />
 
       {plan.unfilledSlots > 0 && <div className="form-message error">本期有 {plan.unfilledSlots} 个位置因没有符合条件的成员而留空。</div>}
     </div>

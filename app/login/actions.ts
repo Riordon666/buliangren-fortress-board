@@ -27,5 +27,5 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     || "unknown";
   const result = await authenticate(parsed.data.username, parsed.data.password, clientKey);
   if (!result.ok) return { error: result.reason };
-  redirect(result.user.mustChangePassword ? "/profile?required=1" : "/home");
+  redirect(result.user.accountType !== "guest" && result.user.mustChangePassword ? "/profile?required=1" : "/home");
 }

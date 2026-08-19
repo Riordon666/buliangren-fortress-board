@@ -13,7 +13,7 @@ export const metadata = { title: "个人信息" };
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ required?: string }> }) {
   const user = await requireUser();
   const params = await searchParams;
-  const required = user.mustChangePassword || params.required === "1";
+  const required = user.accountType !== "guest" && (user.mustChangePassword || params.required === "1");
   const trend = getMemberTrend(user.id);
   const total = trend.reduce((sum, point) => sum + point.score, 0);
   const peak = trend.reduce((max, point) => Math.max(max, point.score), 0);
@@ -65,6 +65,19 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
+      <section className="profile-settings-grid">
+        <div className="panel settings-panel">
+          <div className="panel-heading"><div><span className="eyebrow">PORTRAIT</span><h2>头像设置</h2></div></div>
+          <AvatarForm name={user.displayName} avatarUrl={user.avatarUrl} />
+        </div>
+        <div className={`panel settings-panel ${required ? "required-panel" : ""}`}>
+          <div className="panel-heading"><div><span className="eyebrow">SECURITY</span><h2>账号安全</h2></div></div>
+          {user.accountType === "guest" ? (
+            <div className="guest-mode-note"><strong>共享游客账号</strong><span>游客只能浏览公开战绩和发包状态，不能修改共享密码。如需更换密码，请联系管理员统一设置。</span></div>
+          ) : <PasswordForm required={required} />}
+        </div>
+      </section>
+
       <section className="profile-history-grid">
         <article className="panel profile-trend-panel">
           <div className="panel-heading"><div><span className="eyebrow"><TrendingUp size={13} /> PERFORMANCE</span><h2>我的战绩轨迹</h2><p>橙色为分数，绿色虚线为排名。</p></div></div>
@@ -82,16 +95,6 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </div>
       </section>
 
-      <section className="profile-settings-grid">
-        <div className="panel settings-panel">
-          <div className="panel-heading"><div><span className="eyebrow">PORTRAIT</span><h2>头像设置</h2></div></div>
-          <AvatarForm name={user.displayName} avatarUrl={user.avatarUrl} />
-        </div>
-        <div className={`panel settings-panel ${required ? "required-panel" : ""}`}>
-          <div className="panel-heading"><div><span className="eyebrow">SECURITY</span><h2>账号安全</h2></div></div>
-          <PasswordForm required={required} />
-        </div>
-      </section>
     </div>
   );
 }

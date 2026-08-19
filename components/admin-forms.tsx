@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalendarDays, CalendarPlus, CheckCircle2, ChevronDown, Download, Eye, EyeOff, FileSpreadsheet, LoaderCircle, PencilLine, Plus, RotateCcw, Search, Trash2, Upload, UserMinus, UserRoundCheck } from "lucide-react";
 import {
   addMemberAction,
   createWeekAction,
+  deleteAccountAction,
   deleteWeekAction,
   importScoresAction,
   renameAccountAction,
@@ -167,10 +168,145 @@ function formatLastSeen(value: string | null) {
   return new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(normalized));
 }
 
+function AccountActionsMenu({ member, members, currentUserId, open, onToggle, onClose }: {
+  member: MemberRow;
+  members: MemberRow[];
+  currentUserId: number;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const updatePosition = () => {
+      const button = buttonRef.current;
+      if (!button) return;
+      const rect = button.getBoundingClientRect();
+      const width = Math.min(224, window.innerWidth - 16);
+      const menuHeight = menuRef.current?.offsetHeight || 250;
+      const openUpward = window.innerHeight - rect.bottom < menuHeight + 12;
+      setPosition({
+        top: openUpward ? Math.max(8, rect.top - menuHeight - 7) : rect.bottom + 7,
+        left: Math.min(window.innerWidth - width - 8, Math.max(8, rect.right - width))
+      });
+    };
+    const closeOnOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!buttonRef.current?.contains(target) && !menuRef.current?.contains(target)) onClose();
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      onClose();
+      window.requestAnimationFrame(() => buttonRef.current?.focus());
+    };
+    updatePosition();
+    const frame = window.requestAnimationFrame(() => {
+      updatePosition();
+      menuRef.current?.querySelector<HTMLElement>("button")?.focus();
+    });
+    document.addEventListener("pointerdown", closeOnOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("pointerdown", closeOnOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, onClose]);
+
+  const menu = open && typeof document !== "undefined" ? createPortal(
+    <div
+      ref={menuRef}
+      className="member-actions-popover"
+      role="dialog"
+      aria-label={`管理 ${member.displayName} 的账号`}
+      style={position ? { top: position.top, left: position.left } : { top: -1000, left: -1000 }}
+    >
+      <strong className="member-actions-title">管理 {member.displayName}</strong>
+      <form action={renameAccountAction} onSubmit={(event) => {
+        const displayName = prompt("输入新的游戏昵称（也会作为登录账号）：", member.displayName)?.trim();
+        if (!displayName || displayName === member.displayName) {
+          event.preventDefault();
+          return;
+        }
+        if (members.some((item) => item.id !== member.id && item.username.localeCompare(displayName, "zh-CN", { sensitivity: "accent" }) === 0)) {
+          event.preventDefault();
+          alert("这个登录账号已经存在，请换一个名字。");
+          return;
+        }
+        (event.currentTarget.elements.namedItem("displayName") as HTMLInputElement).value = displayName;
+      }}>
+        <input type="hidden" name="userId" value={member.id} />
+        <input type="hidden" name="displayName" value="" />
+        <button type="submit" className="text-button"><PencilLine size={15} />修改名字</button>
+      </form>
+      {member.id !== currentUserId && member.role !== "admin" && <form action={setAccountTypeAction} onSubmit={(event) => {
+        const nextLabel = member.accountType === "guest" ? "正式组员" : "游客";
+        if (!confirm(`确定把 ${member.displayName} 设为${nextLabel}？${member.accountType === "member" ? "游客不会进入积分、排名和发包，也不能自行修改密码。" : "转为组员后会补入当前及未来统计周。"}`)) event.preventDefault();
+      }}>
+        <input type="hidden" name="userId" value={member.id} />
+        <input type="hidden" name="accountType" value={member.accountType === "guest" ? "member" : "guest"} />
+        <button type="submit" className="text-button"><UserRoundCheck size={15} />设为{member.accountType === "guest" ? "组员" : "游客"}</button>
+      </form>}
+      <form action={resetPasswordAction} onSubmit={(event) => {
+        const temporaryPassword = prompt(`为 ${member.displayName} 设置至少8位的${member.accountType === "guest" ? "共享" : "临时"}密码：`);
+        if (!temporaryPassword || temporaryPassword.length < 8) {
+          event.preventDefault();
+          if (temporaryPassword !== null) alert("密码至少需要8位。");
+          return;
+        }
+        (event.currentTarget.elements.namedItem("temporaryPassword") as HTMLInputElement).value = temporaryPassword;
+        if (!confirm(`确定重置 ${member.displayName} 的密码并注销其全部会话？`)) event.preventDefault();
+      }}>
+        <input type="hidden" name="userId" value={member.id} />
+        <input type="hidden" name="temporaryPassword" value="" />
+        <button type="submit" className="text-button"><RotateCcw size={15} />设置密码</button>
+      </form>
+      {member.id !== currentUserId && member.role !== "admin" && <form action={toggleMemberAction} onSubmit={(event) => {
+        if (!confirm(member.isActive ? `确定停用 ${member.displayName}？历史分数会保留。` : `确定恢复 ${member.displayName}？`)) event.preventDefault();
+      }}>
+        <input type="hidden" name="userId" value={member.id} />
+        <input type="hidden" name="activate" value={member.isActive ? "0" : "1"} />
+        <button type="submit" className={member.isActive ? "text-button danger" : "text-button restore"}>
+          {member.isActive ? <><UserMinus size={15} />停用账号</> : <><UserRoundCheck size={15} />恢复账号</>}
+        </button>
+      </form>}
+      {member.id !== currentUserId && member.role !== "admin" && <form action={deleteAccountAction} onSubmit={(event) => {
+        const typed = prompt(`永久删除账号“${member.displayName}”？\n历史积分和已发包记录会保留。\n请输入账号名称确认：`);
+        if (typed !== member.displayName) {
+          event.preventDefault();
+          if (typed !== null) alert("输入的账号名称不一致，已取消删除。");
+        }
+      }}>
+        <input type="hidden" name="userId" value={member.id} />
+        <button type="submit" className="text-button danger delete-account-button"><Trash2 size={15} />删除账号</button>
+      </form>}
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <div className="member-actions-menu">
+      <button ref={buttonRef} type="button" className="text-button" aria-expanded={open} onClick={onToggle}>
+        <PencilLine size={15} />管理账号<ChevronDown className={open ? "rotated" : ""} size={14} />
+      </button>
+      {menu}
+    </div>
+  );
+}
+
 export function AdminMemberList({ members, currentUserId }: { members: MemberRow[]; currentUserId: number }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "online" | "guest" | "inactive">("all");
   const [, setTick] = useState(0);
+  const [openMemberId, setOpenMemberId] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -214,58 +350,14 @@ export function AdminMemberList({ members, currentUserId }: { members: MemberRow
                 <span className={online ? "online-text" : "offline-text"}><i />{online ? "在线" : member.isActive ? "离线" : "已停用"}</span>
                 <small>{online ? "刚刚活跃" : formatLastSeen(member.lastSeenAt)}</small>
               </div>
-              <details className="member-actions-menu">
-                <summary className="text-button"><PencilLine size={15} />管理账号<ChevronDown size={14} /></summary>
-                <div>
-                  <form action={renameAccountAction} onSubmit={(event) => {
-                    const displayName = prompt(`输入新的游戏昵称（也会作为登录账号）：`, member.displayName)?.trim();
-                    if (!displayName || displayName === member.displayName) {
-                      event.preventDefault();
-                      return;
-                    }
-                    if (members.some((item) => item.id !== member.id && item.username.localeCompare(displayName, "zh-CN", { sensitivity: "accent" }) === 0)) {
-                      event.preventDefault();
-                      alert("这个登录账号已经存在，请换一个名字。");
-                      return;
-                    }
-                    (event.currentTarget.elements.namedItem("displayName") as HTMLInputElement).value = displayName;
-                  }}>
-                    <input type="hidden" name="userId" value={member.id} />
-                    <input type="hidden" name="displayName" value="" />
-                    <button type="submit" className="text-button"><PencilLine size={15} />修改名字</button>
-                  </form>
-                  {member.id !== currentUserId && <form action={setAccountTypeAction} onSubmit={(event) => {
-                    const nextLabel = member.accountType === "guest" ? "正式组员" : "游客";
-                    if (!confirm(`确定把 ${member.displayName} 设为${nextLabel}？${member.accountType === "member" ? "游客不会进入积分、排名和发包。" : "转为组员后会补入当前及未来统计周。"}`)) event.preventDefault();
-                  }}>
-                    <input type="hidden" name="userId" value={member.id} />
-                    <input type="hidden" name="accountType" value={member.accountType === "guest" ? "member" : "guest"} />
-                    <button type="submit" className="text-button"><UserRoundCheck size={15} />设为{member.accountType === "guest" ? "组员" : "游客"}</button>
-                  </form>}
-                  <form action={resetPasswordAction} onSubmit={(event) => {
-                    const temporaryPassword = prompt(`为 ${member.displayName} 设置至少8位的临时密码：`);
-                    if (!temporaryPassword || temporaryPassword.length < 8) {
-                      event.preventDefault();
-                      if (temporaryPassword !== null) alert("临时密码至少需要8位。");
-                      return;
-                    }
-                    const input = event.currentTarget.elements.namedItem("temporaryPassword") as HTMLInputElement;
-                    input.value = temporaryPassword;
-                    if (!confirm(`确定重置 ${member.displayName} 的密码并注销其全部会话？`)) event.preventDefault();
-                  }}>
-                    <input type="hidden" name="userId" value={member.id} />
-                    <input type="hidden" name="temporaryPassword" value="" />
-                    <button type="submit" className="text-button"><RotateCcw size={15} />重置密码</button>
-                  </form>
-                  {member.id !== currentUserId && <form action={toggleMemberAction} onSubmit={(event) => { if (!confirm(member.isActive ? `确定停用 ${member.displayName}？历史分数会保留。` : `确定恢复 ${member.displayName}？`)) event.preventDefault(); }}>
-                    <input type="hidden" name="userId" value={member.id} />
-                    <input type="hidden" name="activate" value={member.isActive ? "0" : "1"} />
-                    <button type="submit" className={member.isActive ? "text-button danger" : "text-button restore"}>
-                      {member.isActive ? <><UserMinus size={15} />停用账号</> : <><UserRoundCheck size={15} />恢复账号</>}
-                    </button>
-                  </form>}
-                </div>
-              </details>
+              <AccountActionsMenu
+                member={member}
+                members={members}
+                currentUserId={currentUserId}
+                open={openMemberId === member.id}
+                onToggle={() => setOpenMemberId((value) => value === member.id ? null : member.id)}
+                onClose={() => setOpenMemberId(null)}
+              />
             </article>
           );
         })}

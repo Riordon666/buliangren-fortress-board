@@ -69,17 +69,16 @@ export function getScoreRows(weekId: number, activeOnly = false): ScoreRow[] {
       RANK() OVER (ORDER BY ws.score DESC) AS rank
     FROM weekly_scores ws
     JOIN users u ON u.id = ws.user_id
-    WHERE ws.week_id = ? AND u.account_type = 'member' ${activeOnly ? "AND u.is_active = 1" : ""}
+    WHERE ws.week_id = ? AND u.account_type = 'member'
+      ${activeOnly ? "AND u.is_active = 1 AND u.deleted_at IS NULL" : ""}
     ORDER BY ws.score DESC, COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
   `).all(weekId) as ScoreRow[];
 }
 
 export function getPackagePlanRows(weekId: number, activeOnly = true): ScoreRow[] {
-  const applied = new Map(getPackageDeductionApplications(weekId).map((item) => [item.userId, item.amount]));
-  return getScoreRows(weekId, activeOnly).map((row) => ({
-    ...row,
-    packageDeductions: Math.max(0, row.packageDeductions - (applied.get(row.userId) || 0))
-  }));
+  // 排包必须始终基于本期原始扣包数生成完整且稳定的8天名单。
+  // 实际执行记录只用于结算与顺延；若从这里减掉，后续日期会重排并产生重复人选。
+  return getScoreRows(weekId, activeOnly);
 }
 
 export function getLeaderboardRows(week: ScoreWeek): ScoreRow[] {
@@ -115,7 +114,7 @@ export function getPackageDeductionRows(weekId: number): ScoreRow[] {
       0 AS rank
     FROM users u
     LEFT JOIN weekly_scores ws ON ws.user_id = u.id AND ws.week_id = ?
-    WHERE u.package_deduction_total > 0 AND u.account_type = 'member'
+    WHERE u.package_deduction_total > 0 AND u.account_type = 'member' AND u.deleted_at IS NULL
     ORDER BY u.package_deduction_total DESC, COALESCE(ws.score, 0) DESC,
       COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
   `).all(weekId) as ScoreRow[];
@@ -171,7 +170,7 @@ export function getAllMemberTrends(): Array<TrendPoint & { userId: number; displ
 export function getPackageDayStatuses(weekId: number): PackageDayStatus[] {
   return getDb().prepare(`
     SELECT p.week_id AS weekId, p.day_index AS dayIndex, p.marked_by AS markedBy,
-      u.display_name AS markedByName, p.sent_at AS sentAt
+      u.display_name AS markedByName, p.confirmation_source AS confirmationSource, p.sent_at AS sentAt
     FROM package_day_statuses p
     LEFT JOIN users u ON u.id = p.marked_by
     WHERE p.week_id = ? ORDER BY p.day_index ASC
@@ -208,7 +207,7 @@ export function getMembers(includeInactive = true): MemberRow[] {
       must_change_password AS mustChangePassword,
       last_seen_at AS lastSeenAt, created_at AS createdAt
     FROM users
-    ${includeInactive ? "" : "WHERE is_active = 1"}
+    WHERE deleted_at IS NULL ${includeInactive ? "" : "AND is_active = 1"}
     ORDER BY is_active DESC, role = 'admin' DESC, account_type = 'member' DESC, display_name COLLATE NOCASE ASC
   `).all() as Array<Omit<MemberRow, "isActive" | "mustChangePassword"> & {
     isActive: number;

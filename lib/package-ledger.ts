@@ -53,7 +53,9 @@ export function rolloverExpiredPackageDeductions(database: Database.Database, to
         WHERE a.week_id = ws.week_id AND a.user_id = ws.user_id
       ), 0)) AS amount
     FROM weekly_scores ws
+    JOIN users u ON u.id = ws.user_id
     WHERE ws.week_id = ? AND ws.package_deductions > 0
+      AND u.deleted_at IS NULL AND u.is_active = 1 AND u.account_type = 'member'
       AND NOT EXISTS (
         SELECT 1 FROM package_deduction_rollovers r
         WHERE r.source_week_id = ws.week_id AND r.user_id = ws.user_id

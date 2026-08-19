@@ -52,6 +52,7 @@ export type PackageDayStatus = {
   dayIndex: number;
   markedBy: number | null;
   markedByName: string | null;
+  confirmationSource: "manual" | "automatic";
   sentAt: string;
 };
 

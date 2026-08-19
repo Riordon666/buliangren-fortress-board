@@ -21,6 +21,9 @@ const actionLabels: Record<string, string> = {
   "重置组员密码": "重置了组员密码",
   "停用组员": "停用了一名组员",
   "恢复组员": "恢复了一名组员",
+  "删除账号": "删除了一个账号",
+  "确认今日已发包": "确认了今日发包",
+  "系统自动确认发包": "自动确认了今日发包",
   "批量更新要塞分数": "更新了本周战绩",
   "新增扣包记录": "新增了扣包记录",
   "调整扣包记录": "调整了扣包记录",
@@ -88,7 +91,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <article className="stat-card green"><span className="stat-icon"><UsersRound size={20} /></span><div><small>有效组员</small><strong>{activeMembers.length}</strong><span>游客 {guestCount} · 总账号 {members.length}</span></div></article>
         <article className="stat-card orange"><span className="stat-icon"><Activity size={20} /></span><div><small>当前在线</small><strong>{onlineCount}</strong><span>90 秒内有活动</span></div></article>
         <article className="stat-card gold"><span className="stat-icon"><ListChecks size={20} /></span><div><small>本期记录</small><strong>{scores.length}</strong><span>{week?.title || "尚未创建"}</span></div></article>
-        <article className="stat-card ink"><span className="stat-icon"><KeyRound size={20} /></span><div><small>待改初始密码</small><strong>{members.filter((member) => member.isActive && member.mustChangePassword).length}</strong><span>首次登录强制更新</span></div></article>
+        <article className="stat-card ink"><span className="stat-icon"><KeyRound size={20} /></span><div><small>待改初始密码</small><strong>{members.filter((member) => member.isActive && member.accountType === "member" && member.mustChangePassword).length}</strong><span>正式组员首次登录更新</span></div></article>
       </section>
 
       <section className="admin-tools-grid">
@@ -122,7 +125,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
       <section className="panel member-management">
         <div className="panel-heading">
-          <div><span className="eyebrow">ACCOUNT DIRECTORY</span><h2>账号与在线状态</h2><p>管理员可改名、切换游客身份、重置密码或停用账号。</p></div>
+          <div><span className="eyebrow">ACCOUNT DIRECTORY</span><h2>账号与在线状态</h2><p>管理员可改名、切换游客身份、设置密码、停用或安全删除账号。</p></div>
           <span className="live-indicator"><i /> 实时监测</span>
         </div>
         <AdminMemberList members={members} currentUserId={admin.id} />

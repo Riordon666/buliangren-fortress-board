@@ -26,6 +26,9 @@ const passwordSchema = z.object({
 
 export async function changePasswordAction(_state: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
+  if (user.accountType === "guest") {
+    return { error: "游客账号为共享只读账号，密码只能由管理员设置。" };
+  }
   const parsed = passwordSchema.safeParse({
     currentPassword: formData.get("currentPassword"),
     newPassword: formData.get("newPassword"),

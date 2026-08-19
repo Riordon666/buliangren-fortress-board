@@ -12,7 +12,7 @@ import { getShanghaiDate } from "@/lib/data";
 import { recordPackageDeduction, recordPackageDeductionCorrection } from "@/lib/package-deductions";
 import { hashPassword } from "@/lib/password";
 import { recordScoreChange } from "@/lib/score-changes";
-import { backupDirectory } from "@/lib/storage-paths";
+import { backupDirectory, uploadDirectory } from "@/lib/storage-paths";
 
 export type AdminFormState = { error?: string; success?: string };
 
@@ -56,7 +56,7 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
   if (!parsed.success) return { error: parsed.error.issues[0]?.message.trim() };
 
   const db = getDb();
-  const exists = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE").get(parsed.data.displayName);
+  const exists = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE AND deleted_at IS NULL").get(parsed.data.displayName);
   if (exists) return { error: "这个登录账号已经存在。" };
 
   const passwordHash = await hashPassword(parsed.data.initialPassword);
@@ -64,9 +64,17 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
   let userId = 0;
   db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO users (username, display_name, password_hash, account_type, note, roster_order)
-      VALUES (?, ?, ?, ?, ?, (SELECT COALESCE(MAX(roster_order), 0) + 1 FROM users))
-    `).run(parsed.data.displayName, parsed.data.displayName, passwordHash, parsed.data.accountType, parsed.data.note || null);
+      INSERT INTO users (
+        username, display_name, password_hash, account_type, note, roster_order, must_change_password
+      ) VALUES (?, ?, ?, ?, ?, (SELECT COALESCE(MAX(roster_order), 0) + 1 FROM users), ?)
+    `).run(
+      parsed.data.displayName,
+      parsed.data.displayName,
+      passwordHash,
+      parsed.data.accountType,
+      parsed.data.note || null,
+      parsed.data.accountType === "guest" ? 0 : 1
+    );
     userId = Number(result.lastInsertRowid);
     if (parsed.data.accountType === "member") {
       db.prepare(`
@@ -98,15 +106,15 @@ export async function renameAccountAction(formData: FormData) {
   const parsedName = z.string().trim().min(1).max(40).safeParse(formData.get("displayName"));
   if (!Number.isInteger(userId) || userId <= 0 || !parsedName.success) return;
   const db = getDb();
-  const account = db.prepare("SELECT username, display_name AS displayName FROM users WHERE id = ?")
+  const account = db.prepare("SELECT username, display_name AS displayName FROM users WHERE id = ? AND deleted_at IS NULL")
     .get(userId) as { username: string; displayName: string } | undefined;
   if (!account || account.displayName === parsedName.data) return;
-  const duplicate = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE AND id != ?")
+  const duplicate = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE AND id != ? AND deleted_at IS NULL")
     .get(parsedName.data, userId);
   if (duplicate) return;
   db.prepare(`
     UPDATE users SET username = ?, display_name = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
+    WHERE id = ? AND deleted_at IS NULL
   `).run(parsedName.data, parsedName.data, userId);
   writeAuditLog(admin.id, "修改账号名称", userId, {
     previousName: account.displayName,
@@ -123,12 +131,16 @@ export async function setAccountTypeAction(formData: FormData) {
   const parsedType = z.enum(["member", "guest"]).safeParse(formData.get("accountType"));
   if (!Number.isInteger(userId) || userId <= 0 || userId === admin.id || !parsedType.success) return;
   const db = getDb();
-  const account = db.prepare("SELECT account_type AS accountType FROM users WHERE id = ?")
-    .get(userId) as { accountType: "member" | "guest" } | undefined;
-  if (!account || account.accountType === parsedType.data) return;
+  const account = db.prepare("SELECT account_type AS accountType, role FROM users WHERE id = ? AND deleted_at IS NULL")
+    .get(userId) as { accountType: "member" | "guest"; role: "admin" | "member" } | undefined;
+  if (!account || account.role === "admin" || account.accountType === parsedType.data) return;
   db.transaction(() => {
-    db.prepare("UPDATE users SET account_type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-      .run(parsedType.data, userId);
+    db.prepare(`
+      UPDATE users SET account_type = ?,
+        must_change_password = CASE WHEN ? = 'guest' THEN 0 ELSE 1 END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND deleted_at IS NULL
+    `).run(parsedType.data, parsedType.data, userId);
     if (parsedType.data === "member") {
       db.prepare(`
         INSERT OR IGNORE INTO weekly_scores (week_id, user_id, score)
@@ -140,6 +152,7 @@ export async function setAccountTypeAction(formData: FormData) {
       `).run(userId, getShanghaiDate());
     }
   }).immediate();
+  revokeUserSessions(userId);
   writeAuditLog(admin.id, parsedType.data === "guest" ? "设为游客" : "转为组员", userId, {
     previousType: account.accountType,
     accountType: parsedType.data
@@ -154,11 +167,15 @@ export async function resetPasswordAction(formData: FormData) {
   const userId = Number(formData.get("userId"));
   const parsedPassword = z.string().min(8).max(128).safeParse(formData.get("temporaryPassword"));
   if (!Number.isInteger(userId) || userId <= 0 || !parsedPassword.success) return;
+  const account = getDb().prepare(`
+    SELECT account_type AS accountType FROM users WHERE id = ? AND deleted_at IS NULL
+  `).get(userId) as { accountType: "member" | "guest" } | undefined;
+  if (!account) return;
   const passwordHash = await hashPassword(parsedPassword.data);
   getDb().prepare(`
-    UPDATE users SET password_hash = ?, must_change_password = 1,
-      updated_at = CURRENT_TIMESTAMP WHERE id = ?
-  `).run(passwordHash, userId);
+    UPDATE users SET password_hash = ?, must_change_password = ?,
+      updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL
+  `).run(passwordHash, account.accountType === "guest" ? 0 : 1, userId);
   revokeUserSessions(userId);
   writeAuditLog(admin.id, "重置组员密码", userId);
   revalidatePath("/admin");
@@ -170,8 +187,11 @@ export async function toggleMemberAction(formData: FormData) {
   const activate = formData.get("activate") === "1";
   if (!Number.isInteger(userId) || userId <= 0 || userId === admin.id) return;
   const db = getDb();
+  const target = db.prepare("SELECT role FROM users WHERE id = ? AND deleted_at IS NULL")
+    .get(userId) as { role: "admin" | "member" } | undefined;
+  if (!target || target.role === "admin") return;
   db.transaction(() => {
-    db.prepare("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    db.prepare("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL")
       .run(activate ? 1 : 0, userId);
     if (activate) {
       const today = getShanghaiDate();
@@ -221,6 +241,69 @@ export async function toggleMemberAction(formData: FormData) {
   revalidatePath("/compare");
 }
 
+export async function deleteAccountAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId) || userId <= 0 || userId === admin.id) return;
+
+  const db = getDb();
+  const account = db.prepare(`
+    SELECT id, username, display_name AS displayName, avatar_url AS avatarUrl,
+      role, account_type AS accountType
+    FROM users WHERE id = ? AND deleted_at IS NULL
+  `).get(userId) as {
+    id: number;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    role: "admin" | "member";
+    accountType: "member" | "guest";
+  } | undefined;
+  if (!account || account.role === "admin") return;
+
+  const retiredUsername = `__deleted_${userId}_${randomUUID().slice(0, 8)}`;
+  const retiredPasswordHash = await hashPassword(randomUUID() + randomUUID());
+  let deleted = false;
+  db.transaction(() => {
+    const current = db.prepare(`
+      SELECT role FROM users WHERE id = ? AND deleted_at IS NULL
+    `).get(userId) as { role: "admin" | "member" } | undefined;
+    if (!current || current.role === "admin") return;
+    const result = db.prepare(`
+      UPDATE users SET username = ?, password_hash = ?, avatar_url = NULL,
+        is_active = 0, must_change_password = 0, last_seen_at = NULL,
+        package_deduction_pending = 0,
+        deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND deleted_at IS NULL
+    `).run(retiredUsername, retiredPasswordHash, userId);
+    if (!result.changes) return;
+    db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
+    const attemptPrefix = `${normalizedMemberName(account.username)}|`;
+    db.prepare("DELETE FROM login_attempts WHERE substr(username, 1, ?) = ?")
+      .run(attemptPrefix.length, attemptPrefix);
+    db.prepare(`
+      INSERT INTO audit_logs (actor_user_id, action, target_user_id, details)
+      VALUES (?, '删除账号', ?, ?)
+    `).run(admin.id, userId, JSON.stringify({
+      originalUsername: account.username,
+      displayName: account.displayName,
+      accountType: account.accountType
+    }));
+    deleted = true;
+  }).immediate();
+  if (!deleted) return;
+
+  const avatarFilename = account.avatarUrl?.match(/^\/(?:api\/avatars|uploads)\/(\d+-[a-f0-9]{16}\.webp)$/)?.[1];
+  if (avatarFilename) {
+    await fs.unlink(path.join(uploadDirectory(), avatarFilename)).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT") console.error("Failed to remove deleted account avatar", error);
+    });
+  }
+  for (const route of ["/admin", "/scores", "/packages", "/home", "/reports", "/compare"]) {
+    revalidatePath(route);
+  }
+}
+
 export async function saveScoresAction(formData: FormData) {
   const admin = await requireAdmin();
   const weekId = Number(formData.get("weekId"));
@@ -239,7 +322,7 @@ export async function saveScoresAction(formData: FormData) {
     SELECT ws.user_id AS userId, ws.score
     FROM weekly_scores ws
     JOIN users u ON u.id = ws.user_id
-    WHERE ws.week_id = ? AND u.account_type = 'member'
+    WHERE ws.week_id = ? AND u.account_type = 'member' AND u.deleted_at IS NULL
   `);
   const update = db.prepare(`
     UPDATE weekly_scores SET score = ?, updated_at = CURRENT_TIMESTAMP
@@ -377,7 +460,7 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
       SELECT u.id, u.display_name AS displayName
       FROM users u
       JOIN weekly_scores ws ON ws.user_id = u.id AND ws.week_id = ?
-      WHERE u.account_type = 'member' AND (? = 1 OR u.is_active = 1)
+      WHERE u.account_type = 'member' AND u.deleted_at IS NULL AND (? = 1 OR u.is_active = 1)
       ORDER BY COALESCE(u.roster_order, 999999), u.id
     `).all(weekId, historical ? 1 : 0) as Array<{ id: number; displayName: string }>;
     const memberMap = new Map(members.map((member) => [normalizedMemberName(member.displayName), member]));
@@ -476,11 +559,11 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
     db.prepare(`
       INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
       SELECT ?, id, 0, package_deduction_pending FROM users
-      WHERE is_active = 1 AND account_type = 'member'
+      WHERE is_active = 1 AND account_type = 'member' AND deleted_at IS NULL
     `).run(weekId);
     db.prepare(`
       UPDATE users SET package_deduction_pending = 0, updated_at = CURRENT_TIMESTAMP
-      WHERE is_active = 1 AND account_type = 'member' AND package_deduction_pending > 0
+      WHERE is_active = 1 AND account_type = 'member' AND deleted_at IS NULL AND package_deduction_pending > 0
     `).run();
   }).immediate();
   if (creationError) return { error: creationError };
@@ -559,9 +642,11 @@ export async function deleteWeekAction(formData: FormData) {
 
     if (lockedWeek.eventDate > getShanghaiDate()) {
       const deductions = db.prepare(`
-        SELECT user_id AS userId, package_deductions AS amount
-        FROM weekly_scores
-        WHERE week_id = ? AND package_deductions > 0
+        SELECT ws.user_id AS userId, ws.package_deductions AS amount
+        FROM weekly_scores ws
+        JOIN users u ON u.id = ws.user_id
+        WHERE ws.week_id = ? AND ws.package_deductions > 0
+          AND u.deleted_at IS NULL AND u.is_active = 1 AND u.account_type = 'member'
       `).all(lockedWeek.id) as Array<{ userId: number; amount: number }>;
       const nextWeek = db.prepare(`
         SELECT id FROM weeks

@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 
 export async function GET(_request: Request, context: { params: Promise<{ weekId: string }> }) {
   const user = await getSessionUser();
-  if (!user || user.mustChangePassword) return new Response("Unauthorized", { status: 401 });
+  if (!user || (user.accountType !== "guest" && user.mustChangePassword)) return new Response("Unauthorized", { status: 401 });
   const { weekId: rawWeekId } = await context.params;
   const weekId = Number(rawWeekId);
   if (!Number.isInteger(weekId) || weekId <= 0) return new Response("Not found", { status: 404 });

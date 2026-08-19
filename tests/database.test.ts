@@ -9,6 +9,7 @@ import { savePackageDaySnapshot } from "@/lib/package-snapshots";
 import { verifyPassword } from "@/lib/password";
 import { recordScoreChange } from "@/lib/score-changes";
 import { buildWeeklyReportSvg } from "@/lib/report-image";
+import { autoConfirmDuePackageDays, confirmPackageDay } from "@/lib/package-delivery";
 import type { ScoreRow, ScoreWeek } from "@/lib/types";
 
 describe("初始组织数据", () => {
@@ -374,6 +375,105 @@ describe("初始组织数据", () => {
     }
   });
 
+  it("北京时间23:30自动确认发包并冻结五人名单，重复执行保持幂等", () => {
+    const db = getDb();
+    const admin = getMembers().find((member) => member.role === "admin")!;
+    db.exec("BEGIN");
+    try {
+      const eventDate = "2097-06-01";
+      const weekId = Number(db.prepare(`
+        INSERT INTO weeks (title, event_date, status) VALUES ('自动确认测试周', ?, 'published')
+      `).run(eventDate).lastInsertRowid);
+      db.prepare(`
+        INSERT INTO weekly_scores (week_id, user_id, score)
+        SELECT ?, id, 100 - id FROM users
+        WHERE is_active = 1 AND account_type = 'member' AND deleted_at IS NULL
+      `).run(weekId);
+      db.prepare("DELETE FROM app_settings WHERE key = 'package_auto_confirm_start_date'").run();
+
+      expect(autoConfirmDuePackageDays(db, new Date("2097-06-01T15:29:59.000Z"))).toBe(0);
+      expect(db.prepare("SELECT id FROM package_day_statuses WHERE week_id = ?").get(weekId)).toBeUndefined();
+      expect(autoConfirmDuePackageDays(db, new Date("2097-06-01T15:30:00.000Z"))).toBe(1);
+      expect(autoConfirmDuePackageDays(db, new Date("2097-06-01T15:31:00.000Z"))).toBe(0);
+
+      expect(db.prepare(`
+        SELECT marked_by AS markedBy, confirmation_source AS confirmationSource
+        FROM package_day_statuses WHERE week_id = ? AND day_index = 0
+      `).get(weekId)).toEqual({ markedBy: null, confirmationSource: "automatic" });
+      expect(db.prepare("SELECT COUNT(*) AS count FROM package_assignments WHERE week_id = ? AND day_index = 0")
+        .get(weekId)).toEqual({ count: 5 });
+      expect(db.prepare("SELECT COUNT(*) AS count FROM audit_logs WHERE action = '系统自动确认发包' AND actor_user_id IS NULL")
+        .get()).toMatchObject({ count: expect.any(Number) });
+      expect(admin.id).toBeGreaterThan(0);
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("手动确认与自动确认共用幂等锁，系统不会覆盖管理员记录", () => {
+    const db = getDb();
+    const admin = getMembers().find((member) => member.role === "admin")!;
+    db.exec("BEGIN");
+    try {
+      const eventDate = "2097-06-08";
+      const weekId = Number(db.prepare(`
+        INSERT INTO weeks (title, event_date, status) VALUES ('手动优先测试周', ?, 'published')
+      `).run(eventDate).lastInsertRowid);
+      db.prepare(`
+        INSERT INTO weekly_scores (week_id, user_id, score)
+        SELECT ?, id, 100 FROM users
+        WHERE is_active = 1 AND account_type = 'member' AND deleted_at IS NULL
+      `).run(weekId);
+      expect(confirmPackageDay(db, { weekId, dayIndex: 0, source: "manual", markedBy: admin.id })).toBe(true);
+      db.prepare(`
+        INSERT INTO app_settings (key, value) VALUES ('package_auto_confirm_start_date', ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      `).run(eventDate);
+      expect(autoConfirmDuePackageDays(db, new Date("2097-06-08T15:30:00.000Z"))).toBe(0);
+      expect(db.prepare(`
+        SELECT marked_by AS markedBy, confirmation_source AS confirmationSource
+        FROM package_day_statuses WHERE week_id = ? AND day_index = 0
+      `).get(weekId)).toEqual({ markedBy: admin.id, confirmationSource: "manual" });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("跨期周六会同时自动确认旧周第八天与新周第一天", () => {
+    const db = getDb();
+    db.exec("BEGIN");
+    try {
+      const oldWeekId = Number(db.prepare(`
+        INSERT INTO weeks (title, event_date, status) VALUES ('跨期旧周', '2097-06-15', 'published')
+      `).run().lastInsertRowid);
+      const newWeekId = Number(db.prepare(`
+        INSERT INTO weeks (title, event_date, status) VALUES ('跨期新周', '2097-06-22', 'published')
+      `).run().lastInsertRowid);
+      const insertScores = db.prepare(`
+        INSERT INTO weekly_scores (week_id, user_id, score)
+        SELECT ?, id, 100 FROM users
+        WHERE is_active = 1 AND account_type = 'member' AND deleted_at IS NULL
+      `);
+      insertScores.run(oldWeekId);
+      insertScores.run(newWeekId);
+      db.prepare(`
+        INSERT INTO app_settings (key, value) VALUES ('package_auto_confirm_start_date', '2097-06-22')
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+      `).run();
+
+      expect(autoConfirmDuePackageDays(db, new Date("2097-06-22T15:30:00.000Z"))).toBe(2);
+      expect(db.prepare(`
+        SELECT week_id AS weekId, day_index AS dayIndex FROM package_day_statuses
+        WHERE week_id IN (?, ?) ORDER BY week_id
+      `).all(oldWeekId, newWeekId)).toEqual([
+        { weekId: oldWeekId, dayIndex: 7 },
+        { weekId: newWeekId, dayIndex: 0 }
+      ]);
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
   it("周报分享图包含本周汇总和前五名", () => {
     const week = getLatestWeek()!;
     const svg = buildWeeklyReportSvg({ week, rows: getScoreRows(week.id), sentDays: 3 });
@@ -414,6 +514,9 @@ describe("初始组织数据", () => {
       PRAGMA foreign_keys = ON;
       CREATE TABLE users (
         id INTEGER PRIMARY KEY,
+        account_type TEXT NOT NULL DEFAULT 'member',
+        is_active INTEGER NOT NULL DEFAULT 1,
+        deleted_at TEXT,
         package_deduction_pending INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
@@ -441,8 +544,10 @@ describe("初始组织数据", () => {
         UNIQUE (source_week_id, user_id)
       );
       INSERT INTO users (id) VALUES (1);
+      INSERT INTO users (id, is_active, deleted_at) VALUES (2, 0, CURRENT_TIMESTAMP);
       INSERT INTO weeks (id, event_date) VALUES (1, '2098-01-01'), (2, '2098-01-08');
-      INSERT INTO weekly_scores (week_id, user_id, package_deductions) VALUES (1, 1, 3), (2, 1, 0);
+      INSERT INTO weekly_scores (week_id, user_id, package_deductions) VALUES
+        (1, 1, 3), (2, 1, 0), (1, 2, 4), (2, 2, 0);
     `);
     const skips = [
       { userId: 1, dayIndex: 3, round: 2 },
@@ -458,10 +563,12 @@ describe("初始组织数据", () => {
       .toEqual({ amount: 1 });
     expect(db.prepare("SELECT amount FROM package_deduction_rollovers WHERE source_week_id = 1 AND user_id = 1").get())
       .toEqual({ amount: 1 });
+    expect(db.prepare("SELECT amount FROM package_deduction_rollovers WHERE source_week_id = 1 AND user_id = 2").get())
+      .toBeUndefined();
     db.close();
   });
 
-  it("已实际扣过的次数不会再次进入后续计划或超过本期登记数", () => {
+  it("实际扣包记录不会改变本期完整排包，且落账不会超过登记数", () => {
     const db = getDb();
     const week = getLatestWeek()!;
     const member = getScoreRows(week.id, true)[0];
@@ -483,7 +590,30 @@ describe("初始组织数据", () => {
         SELECT COALESCE(SUM(amount), 0) AS amount FROM package_deduction_applications
         WHERE week_id = ? AND user_id = ?
       `).get(week.id, member.userId)).toEqual({ amount: 1 });
-      expect(getPackagePlanRows(week.id).find((row) => row.userId === member.userId)?.packageDeductions).toBe(0);
+      expect(getPackagePlanRows(week.id).find((row) => row.userId === member.userId)?.packageDeductions).toBe(1);
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("某天扣包落账后，尚未发放日期的名单不会左移或出现重复成员", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const member = getScoreRows(week.id, true)[0];
+    db.exec("BEGIN");
+    try {
+      db.prepare("DELETE FROM package_deduction_applications WHERE week_id = ?").run(week.id);
+      db.prepare("UPDATE weekly_scores SET package_deductions = 0 WHERE week_id = ?").run(week.id);
+      db.prepare("UPDATE weekly_scores SET package_deductions = 1 WHERE week_id = ? AND user_id = ?")
+        .run(week.id, member.userId);
+      const before = generatePackagePlan(getPackagePlanRows(week.id), week.eventDate);
+      const skipDay = before.deductionSkips.find((item) => item.userId === member.userId)?.dayIndex;
+      expect(skipDay).toBeTypeOf("number");
+      recordDeductionApplications(db, week.id, skipDay!, before.deductionSkips);
+      const after = generatePackagePlan(getPackagePlanRows(week.id), week.eventDate);
+
+      expect(after.assignments.map((item) => [item.dayIndex, item.position, item.member.userId]))
+        .toEqual(before.assignments.map((item) => [item.dayIndex, item.position, item.member.userId]));
     } finally {
       db.exec("ROLLBACK");
     }

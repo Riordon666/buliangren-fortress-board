@@ -7,10 +7,12 @@ import { getSeedInitialPassword } from "@/lib/server-config";
 import { rolloverExpiredPackageDeductions } from "@/lib/package-ledger";
 import { databaseFilePath } from "@/lib/storage-paths";
 import { backfillMissingPackageSnapshots } from "@/lib/package-snapshots";
+import { autoConfirmDuePackageDays } from "@/lib/package-delivery";
 
 type GlobalDatabase = typeof globalThis & {
   __fortressDatabase?: Database.Database;
   __fortressRolloverDate?: string;
+  __fortressAutoConfirmMinute?: number;
 };
 
 const globalDatabase = globalThis as GlobalDatabase;
@@ -142,6 +144,7 @@ function createDatabase() {
       package_deduction_total INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_total >= 0),
       package_deduction_pending INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_pending >= 0),
       last_seen_at TEXT,
+      deleted_at TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
@@ -214,6 +217,7 @@ function createDatabase() {
       week_id INTEGER NOT NULL REFERENCES weeks(id) ON DELETE CASCADE,
       day_index INTEGER NOT NULL CHECK (day_index BETWEEN 0 AND 7),
       marked_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      confirmation_source TEXT NOT NULL DEFAULT 'manual' CHECK (confirmation_source IN ('manual', 'automatic')),
       sent_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE (week_id, day_index)
     );
@@ -277,6 +281,12 @@ function createDatabase() {
       applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_scores_week ON weekly_scores(week_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
     CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
@@ -315,6 +325,9 @@ function createDatabase() {
         ADD COLUMN account_type TEXT NOT NULL DEFAULT 'member' CHECK (account_type IN ('member', 'guest'))
       `);
     }
+    if (!userColumns.some((column) => column.name === "deleted_at")) {
+      database.exec("ALTER TABLE users ADD COLUMN deleted_at TEXT");
+    }
 
     const scoreColumns = database.pragma("table_info(weekly_scores)") as Array<{ name: string }>;
     if (!scoreColumns.some((column) => column.name === "package_deductions")) {
@@ -323,9 +336,30 @@ function createDatabase() {
         ADD COLUMN package_deductions INTEGER NOT NULL DEFAULT 0 CHECK (package_deductions >= 0)
       `);
     }
+
+    const packageStatusColumns = database.pragma("table_info(package_day_statuses)") as Array<{ name: string }>;
+    if (!packageStatusColumns.some((column) => column.name === "confirmation_source")) {
+      database.exec(`
+        ALTER TABLE package_day_statuses
+        ADD COLUMN confirmation_source TEXT NOT NULL DEFAULT 'manual'
+          CHECK (confirmation_source IN ('manual', 'automatic'))
+      `);
+    }
+
+    database.prepare(`
+      DELETE FROM sessions
+      WHERE user_id IN (
+        SELECT id FROM users WHERE account_type = 'guest' AND must_change_password != 0
+      )
+    `).run();
+    database.prepare(`
+      UPDATE users SET must_change_password = 0, updated_at = CURRENT_TIMESTAMP
+      WHERE account_type = 'guest' AND must_change_password != 0
+    `).run();
   }).immediate();
 
   database.exec("CREATE INDEX IF NOT EXISTS idx_users_account_active ON users(account_type, is_active)");
+  database.exec("CREATE INDEX IF NOT EXISTS idx_users_deleted ON users(deleted_at)");
 
   migratePermanentPackageDeductions(database);
 
@@ -401,7 +435,18 @@ export function getDb() {
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit"
   }).format(new Date());
-  if (globalDatabase.__fortressRolloverDate !== today) {
+  const currentMinute = Math.floor(Date.now() / 60_000);
+  let autoConfirmReady = true;
+  if (globalDatabase.__fortressAutoConfirmMinute !== currentMinute) {
+    try {
+      autoConfirmDuePackageDays(globalDatabase.__fortressDatabase, new Date());
+      globalDatabase.__fortressAutoConfirmMinute = currentMinute;
+    } catch (error) {
+      autoConfirmReady = false;
+      console.error("Package auto-confirm check failed", error);
+    }
+  }
+  if (autoConfirmReady && globalDatabase.__fortressRolloverDate !== today) {
     rolloverExpiredPackageDeductions(globalDatabase.__fortressDatabase, today);
     globalDatabase.__fortressRolloverDate = today;
   }
@@ -412,4 +457,5 @@ export function closeDbForTests() {
   globalDatabase.__fortressDatabase?.close();
   delete globalDatabase.__fortressDatabase;
   delete globalDatabase.__fortressRolloverDate;
+  delete globalDatabase.__fortressAutoConfirmMinute;
 }
