@@ -410,6 +410,7 @@ button:disabled {
 
 .login-form input,
 .compact-form input,
+.compact-form select,
 .profile-form input,
 .table-input,
 .search-box input {
@@ -430,6 +431,7 @@ button:disabled {
 
 .login-form input:focus,
 .compact-form input:focus,
+.compact-form select:focus,
 .profile-form input:focus,
 .table-input:focus,
 .search-box input:focus {
@@ -3409,6 +3411,13 @@ button:disabled {
   }
 }
 
+@media (max-width: 760px) {
+  .panel,
+  .stat-card {
+    backdrop-filter: none;
+  }
+}
+
 @media (max-width: 420px) {
   .login-story {
     min-height: 315px;
@@ -3442,5 +3451,169 @@ button:disabled {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+}
+
+/* Readability and lightweight interaction pass */
+body { font-size: 15px; }
+.eyebrow { font-size: 12px; }
+.brand-lockup small { font-size: 10px; }
+.squad-plaque span,
+.squad-plaque small { font-size: 12px; }
+.sidebar-nav a { font-size: 14px; }
+.page-hero p { font-size: 15px; }
+.panel-heading p { font-size: 14px; }
+.compact-form label > span:first-child,
+.profile-form label > span:first-child { font-size: 13px; }
+.compact-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 36px 0 13px;
+  color: var(--ink);
+  outline: none;
+  border: 1px solid rgba(88, 77, 59, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.62);
+}
+.week-button-copy strong,
+.week-menu > button strong { font-size: 13px; }
+.week-button-copy small,
+.week-menu-title small,
+.week-menu > button small { font-size: 11px; }
+.stat-card small { font-size: 13px; }
+.stat-card div > span { font-size: 12px; }
+.record-count,
+.live-indicator,
+.admin-auth-badge { font-size: 12px; }
+.score-table { font-size: 14px; }
+.score-table th { font-size: 12px; }
+.rank-cell { font-size: 13px; }
+.member-cell strong { font-size: 14px; }
+.round-badge,
+.role-badge { font-size: 11px; }
+.muted { font-size: 12px; }
+.week-list-heading strong { font-size: 14px; }
+.week-list-heading span,
+.week-management-list small,
+.week-rename-button { font-size: 11px; }
+.week-title-input { font-size: 13px; }
+.member-profile strong { font-size: 14px; }
+.member-profile span { font-size: 12px; }
+.online-cell > span { font-size: 13px; }
+.online-cell small { font-size: 11px; }
+.text-button { font-size: 12px; }
+.table-input { font-size: 13px; }
+.deduction-add-control > span > strong { font-size: 13px; }
+.deduction-add-control > span > small,
+.deduction-add-control label,
+.editor-actions span { font-size: 11px; }
+.audit-list strong { font-size: 13px; }
+.audit-list div > span,
+.audit-list time { font-size: 11px; }
+.package-member strong { font-size: 14px; }
+.package-member small,
+.round-chip { font-size: 12px; }
+.package-day-tab small,
+.package-day-tab > span { font-size: 11px; }
+.package-day-tab > i { font-size: 10px; }
+.today-package-names span,
+.deduction-note { font-size: 11px; }
+.overlap-notice,
+.home-overlap-list strong { font-size: 13px; }
+.home-overlap-list span { font-size: 11px; }
+.text-link,
+.target-panel > small { font-size: 13px; }
+.achievement strong { font-size: 14px; }
+.achievement span { font-size: 11px; }
+.comparison-selects label span { font-size: 11px; }
+.metric-switch button,
+.compare-legend { font-size: 12px; }
+.highlight-list small,
+.report-top-list > div > span { font-size: 11px; }
+.highlight-list strong,
+.highlight-list b,
+.report-top-list strong { font-size: 13px; }
+.achievement-tag b,
+.score-change-list strong { font-size: 12px; }
+.achievement-tag small,
+.score-change-list small { font-size: 10px; }
+.share-report p,
+.package-today p { font-size: 13px; }
+.mobile-primary-nav small { font-size: 11px; }
+
+.account-type-badge {
+  display: inline-flex;
+  margin-left: 5px;
+  padding: 2px 6px;
+  vertical-align: 1px;
+  color: #476f56;
+  border-radius: 999px;
+  background: rgba(65, 103, 77, .09);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+.account-type-badge.guest,
+.role-badge.guest {
+  color: #755184;
+  background: rgba(117, 81, 132, .1);
+}
+.member-actions-menu {
+  width: 132px;
+  justify-self: end;
+}
+.member-actions-menu summary {
+  width: 100%;
+  justify-content: center;
+  list-style: none;
+}
+.member-actions-menu summary::-webkit-details-marker { display: none; }
+.member-actions-menu[open] summary svg:last-child { transform: rotate(180deg); }
+.member-actions-menu > div {
+  display: grid;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255, 250, 240, .9);
+}
+.member-actions-menu form,
+.member-actions-menu button { width: 100%; }
+.member-actions-menu button { justify-content: flex-start; }
+
+.guest-mode-note {
+  display: grid;
+  gap: 7px;
+  margin-top: 18px;
+  padding: 17px;
+  color: #604b69;
+  border: 1px solid rgba(117, 81, 132, .16);
+  border-radius: 14px;
+  background: rgba(117, 81, 132, .07);
+}
+.guest-mode-note strong { font-size: 17px; }
+.guest-mode-note span { color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+
+.deferred-chart { min-width: 0; }
+.deferred-chart-placeholder,
+.deferred-chart-loading {
+  display: flex;
+  min-height: inherit;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--muted);
+  border: 1px dashed rgba(72, 100, 79, .16);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 250, 240, .38);
+  font-size: 13px;
+}
+
+@media (max-width: 1240px) {
+  .member-actions-menu {
+    width: min(220px, calc(100% - 58px));
+    justify-self: start;
+    margin-left: 58px;
   }
 }

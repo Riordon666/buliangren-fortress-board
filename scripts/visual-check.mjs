@@ -125,17 +125,21 @@ if (!(await page.getByRole("button", { name: "排名趋势" }).isVisible())) thr
 await page.screenshot({ path: path.join(output, "compare-desktop.png"), fullPage: false });
 
 await page.goto("http://localhost:3000/admin", { waitUntil: "networkidle" });
-if (!(await page.getByText("组员与在线状态").isVisible())) throw new Error("管理员页未显示");
+if (!(await page.getByText("账号与在线状态").isVisible())) throw new Error("管理员页未显示");
 if (!(await page.getByLabel("游戏昵称 / 登录账号").isVisible())) throw new Error("合并后的组员账号输入框未显示");
 if (!(await page.locator('input[name="initialPassword"]').isVisible())) throw new Error("自定义初始密码输入框未显示");
+if (!(await page.locator('select[name="accountType"]').isVisible())) throw new Error("游客账号类型选择器未显示");
+if (!(await page.getByText("游客（仅浏览，不参与统计）", { exact: true }).count())) throw new Error("游客账号说明未显示");
 if (!(await page.getByText("已有统计周", { exact: true }).isVisible())) throw new Error("统计周管理列表未显示");
 const futureDeleteButtons = page.getByRole("button", { name: "删除" });
 if (await futureDeleteButtons.count() && !(await futureDeleteButtons.first().isVisible())) throw new Error("未来统计周删除入口不可见");
 if (!(await page.getByRole("button", { name: "保存名称" }).first().isVisible())) throw new Error("重命名统计周入口未显示");
 if (!(await page.getByText("表格导入积分").isVisible())) throw new Error("积分导入区域未显示");
 if (!(await page.getByRole("link", { name: "下载标准模板" }).isVisible())) throw new Error("标准模板下载入口未显示");
-if (!(await page.getByRole("columnheader", { name: "累计 / 新增扣包" }).isVisible())) throw new Error("管理员永久扣包设置入口未显示");
+if (!(await page.getByRole("columnheader", { name: "累计 / 调整扣包" }).isVisible())) throw new Error("管理员永久扣包设置入口未显示");
 if (!(await page.locator('input[name^="deduction_add_"]').first().isVisible())) throw new Error("管理员新增扣包输入框未显示");
+if ((await page.locator('input[name^="deduction_add_"]').first().getAttribute("min")) !== "-99") throw new Error("扣包输入框不支持负数修正");
+if (!(await page.getByText("管理账号", { exact: true }).first().isVisible())) throw new Error("管理员改名入口未显示");
 const addMemberBox = await page.locator(".add-member-card").boundingBox();
 const scoreImportBox = await page.locator(".compact-score-import-panel").boundingBox();
 const weekAdminBox = await page.locator(".week-admin-card").boundingBox();

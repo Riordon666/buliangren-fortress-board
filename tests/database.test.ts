@@ -3,7 +3,7 @@ import Database from "better-sqlite3";
 import { getDb, migratePermanentPackageDeductions, PERMANENT_DEDUCTION_MIGRATION } from "@/lib/db";
 import { getLatestWeek, getLeaderboardRows, getMembers, getPackageAssignmentSnapshots, getPackageDeductionRows, getPackagePlanRows, getScoreRows, getShanghaiDate, getWeeks, selectCurrentWeek } from "@/lib/data";
 import { recordDeductionApplications, rolloverExpiredPackageDeductions } from "@/lib/package-ledger";
-import { recordPackageDeduction } from "@/lib/package-deductions";
+import { recordPackageDeduction, recordPackageDeductionCorrection } from "@/lib/package-deductions";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
 import { savePackageDaySnapshot } from "@/lib/package-snapshots";
 import { verifyPassword } from "@/lib/password";
@@ -117,6 +117,61 @@ describe("初始组织数据", () => {
         .get(targetWeekId, member.id)).toEqual({ amount: 2 });
       expect(db.prepare("SELECT COUNT(*) AS count FROM package_deduction_events WHERE request_id = ?")
         .get(event.requestId)).toEqual({ count: 1 });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("输入负数会幂等地减少累计与下一周待执行扣包", () => {
+    const db = getDb();
+    const sourceWeek = getLatestWeek()!;
+    const member = db.prepare("SELECT id FROM users WHERE account_type = 'member' ORDER BY id LIMIT 1")
+      .get() as { id: number };
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      const targetWeekId = Number(db.prepare("INSERT INTO weeks (title, event_date) VALUES (?, ?)")
+        .run("扣包撤销测试周", "2199-12-14").lastInsertRowid);
+      db.prepare("UPDATE users SET package_deduction_total = 2, package_deduction_pending = 0 WHERE id = ?")
+        .run(member.id);
+      db.prepare(`
+        INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
+        VALUES (?, ?, 0, 2)
+      `).run(targetWeekId, member.id);
+      const correction = {
+        requestId: "22222222-2222-4222-8222-222222222222",
+        sourceWeekId: sourceWeek.id,
+        preferredWeekId: targetWeekId,
+        userId: member.id,
+        amount: 1,
+        createdBy: member.id
+      };
+
+      expect(recordPackageDeductionCorrection(db, correction)).toBe(1);
+      expect(recordPackageDeductionCorrection(db, correction)).toBe(0);
+      expect(db.prepare("SELECT package_deduction_total AS total FROM users WHERE id = ?").get(member.id))
+        .toEqual({ total: 1 });
+      expect(db.prepare("SELECT package_deductions AS amount FROM weekly_scores WHERE week_id = ? AND user_id = ?")
+        .get(targetWeekId, member.id)).toEqual({ amount: 1 });
+      expect(db.prepare("SELECT COUNT(*) AS count FROM package_deduction_corrections WHERE request_id = ?")
+        .get(correction.requestId)).toEqual({ count: 1 });
+    } finally {
+      db.exec("ROLLBACK");
+    }
+  });
+
+  it("游客保留登录档案但不会进入积分榜与发包算法", () => {
+    const db = getDb();
+    const week = getLatestWeek()!;
+    const member = db.prepare("SELECT id FROM users WHERE account_type = 'member' ORDER BY id DESC LIMIT 1")
+      .get() as { id: number };
+    db.exec("BEGIN");
+    try {
+      db.prepare("UPDATE users SET account_type = 'guest' WHERE id = ?").run(member.id);
+      const rows = getScoreRows(week.id);
+      expect(rows.some((row) => row.userId === member.id)).toBe(false);
+      expect(generatePackagePlan(getPackagePlanRows(week.id), week.eventDate).assignments
+        .some((assignment) => assignment.member.userId === member.id)).toBe(false);
+      expect(getMembers().find((row) => row.id === member.id)?.accountType).toBe("guest");
     } finally {
       db.exec("ROLLBACK");
     }

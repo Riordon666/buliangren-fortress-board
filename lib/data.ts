@@ -69,7 +69,7 @@ export function getScoreRows(weekId: number, activeOnly = false): ScoreRow[] {
       RANK() OVER (ORDER BY ws.score DESC) AS rank
     FROM weekly_scores ws
     JOIN users u ON u.id = ws.user_id
-    WHERE ws.week_id = ? ${activeOnly ? "AND u.is_active = 1" : ""}
+    WHERE ws.week_id = ? AND u.account_type = 'member' ${activeOnly ? "AND u.is_active = 1" : ""}
     ORDER BY ws.score DESC, COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
   `).all(weekId) as ScoreRow[];
 }
@@ -115,7 +115,7 @@ export function getPackageDeductionRows(weekId: number): ScoreRow[] {
       0 AS rank
     FROM users u
     LEFT JOIN weekly_scores ws ON ws.user_id = u.id AND ws.week_id = ?
-    WHERE u.package_deduction_total > 0
+    WHERE u.package_deduction_total > 0 AND u.account_type = 'member'
     ORDER BY u.package_deduction_total DESC, COALESCE(ws.score, 0) DESC,
       COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
   `).all(weekId) as ScoreRow[];
@@ -136,6 +136,8 @@ export function getMemberTrend(userId: number): TrendPoint[] {
       SELECT ws.user_id, ws.week_id, ws.score,
         RANK() OVER (PARTITION BY ws.week_id ORDER BY ws.score DESC) AS rank
       FROM weekly_scores ws
+      JOIN users member_user ON member_user.id = ws.user_id
+      WHERE member_user.account_type = 'member'
     )
     SELECT w.id AS weekId, w.title AS weekTitle, w.event_date AS eventDate,
       ranked.score, ranked.rank
@@ -152,6 +154,8 @@ export function getAllMemberTrends(): Array<TrendPoint & { userId: number; displ
       SELECT ws.user_id, ws.week_id, ws.score,
         RANK() OVER (PARTITION BY ws.week_id ORDER BY ws.score DESC) AS rank
       FROM weekly_scores ws
+      JOIN users member_user ON member_user.id = ws.user_id
+      WHERE member_user.account_type = 'member'
     )
     SELECT u.id AS userId, u.display_name AS displayName, u.avatar_url AS avatarUrl,
       w.id AS weekId, w.title AS weekTitle, w.event_date AS eventDate,
@@ -159,7 +163,7 @@ export function getAllMemberTrends(): Array<TrendPoint & { userId: number; displ
     FROM ranked
     JOIN weeks w ON w.id = ranked.week_id
     JOIN users u ON u.id = ranked.user_id
-    WHERE u.is_active = 1 AND w.status != 'draft'
+    WHERE u.is_active = 1 AND u.account_type = 'member' AND w.status != 'draft'
     ORDER BY w.event_date ASC, w.id ASC, COALESCE(u.roster_order, 999999), u.id
   `).all() as Array<TrendPoint & { userId: number; displayName: string; avatarUrl: string | null }>;
 }
@@ -200,12 +204,12 @@ export function getScoreChangeEvents(userId: number, limit = 12): ScoreChangeEve
 export function getMembers(includeInactive = true): MemberRow[] {
   const rows = getDb().prepare(`
     SELECT id, username, display_name AS displayName, avatar_url AS avatarUrl,
-      role, note, is_active AS isActive,
+      role, account_type AS accountType, note, is_active AS isActive,
       must_change_password AS mustChangePassword,
       last_seen_at AS lastSeenAt, created_at AS createdAt
     FROM users
     ${includeInactive ? "" : "WHERE is_active = 1"}
-    ORDER BY is_active DESC, role = 'admin' DESC, display_name COLLATE NOCASE ASC
+    ORDER BY is_active DESC, role = 'admin' DESC, account_type = 'member' DESC, display_name COLLATE NOCASE ASC
   `).all() as Array<Omit<MemberRow, "isActive" | "mustChangePassword"> & {
     isActive: number;
     mustChangePassword: number;

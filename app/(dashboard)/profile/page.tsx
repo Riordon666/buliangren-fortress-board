@@ -1,6 +1,6 @@
 import { AlertTriangle, Award, CalendarRange, Fingerprint, History, ShieldCheck, Sparkles, TrendingUp, UserRound } from "lucide-react";
 import { Avatar } from "@/components/avatar";
-import { MemberHistoryChart } from "@/components/member-history-chart";
+import { DeferredMemberHistoryChart } from "@/components/deferred-charts";
 import { AvatarForm, PasswordForm } from "@/components/profile-forms";
 import { requireUser } from "@/lib/auth";
 import { getAchievements } from "@/lib/insights";
@@ -52,7 +52,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         <div className="identity-main">
           <div className="identity-avatar"><Avatar name={user.displayName} src={user.avatarUrl} size={104} /><i /></div>
           <div>
-            <span className="role-badge leader">{user.note || (user.role === "admin" ? "管理员" : "组织成员")}</span>
+            <span className={`role-badge ${user.accountType === "guest" ? "guest" : "leader"}`}>{user.note || (user.accountType === "guest" ? "游客账号" : user.role === "admin" ? "管理员" : "组织成员")}</span>
             <h2>{user.displayName}</h2>
             <p><Fingerprint size={15} /> 登录账号：{user.username}</p>
           </div>
@@ -68,7 +68,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <section className="profile-history-grid">
         <article className="panel profile-trend-panel">
           <div className="panel-heading"><div><span className="eyebrow"><TrendingUp size={13} /> PERFORMANCE</span><h2>我的战绩轨迹</h2><p>橙色为分数，绿色虚线为排名。</p></div></div>
-          <MemberHistoryChart trend={trend} />
+          <DeferredMemberHistoryChart trend={trend} />
         </article>
         <div className="profile-side-stack">
           <article className="panel mini-achievements">

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { FORCE_PASSWORD_COOKIE, SESSION_TTL_DAYS } from "@/lib/constants";
 import { getDb } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
-import type { SessionUser } from "@/lib/types";
+import type { AccountType, SessionUser } from "@/lib/types";
 
 const isProduction = process.env.NODE_ENV === "production";
 export const SESSION_COOKIE = isProduction ? "__Host-fortress_session" : "fortress_session";
@@ -16,6 +16,7 @@ type UserRecord = {
   passwordHash: string;
   avatarUrl: string | null;
   role: "admin" | "member";
+  accountType: AccountType;
   note: string | null;
   isActive: number;
   mustChangePassword: number;
@@ -33,6 +34,7 @@ function toSessionUser(record: Omit<UserRecord, "passwordHash" | "isActive">): S
     displayName: record.displayName,
     avatarUrl: record.avatarUrl,
     role: record.role,
+    accountType: record.accountType,
     note: record.note,
     mustChangePassword: Boolean(record.mustChangePassword),
     lastSeenAt: record.lastSeenAt
@@ -56,7 +58,7 @@ export async function authenticate(username: string, password: string, clientKey
 
   const user = db.prepare(`
     SELECT id, username, display_name AS displayName, password_hash AS passwordHash,
-      avatar_url AS avatarUrl, role, note, is_active AS isActive,
+      avatar_url AS avatarUrl, role, account_type AS accountType, note, is_active AS isActive,
       must_change_password AS mustChangePassword, last_seen_at AS lastSeenAt
     FROM users WHERE username = ? COLLATE NOCASE
   `).get(normalizedUsername) as UserRecord | undefined;
@@ -118,7 +120,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const db = getDb();
   const user = db.prepare(`
     SELECT u.id, u.username, u.display_name AS displayName,
-      u.avatar_url AS avatarUrl, u.role, u.note,
+      u.avatar_url AS avatarUrl, u.role, u.account_type AS accountType, u.note,
       u.must_change_password AS mustChangePassword,
       u.last_seen_at AS lastSeenAt
     FROM sessions s

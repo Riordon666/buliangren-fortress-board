@@ -9,7 +9,7 @@ import { z } from "zod";
 import { requireAdmin, revokeUserSessions, writeAuditLog } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getShanghaiDate } from "@/lib/data";
-import { recordPackageDeduction } from "@/lib/package-deductions";
+import { recordPackageDeduction, recordPackageDeductionCorrection } from "@/lib/package-deductions";
 import { hashPassword } from "@/lib/password";
 import { recordScoreChange } from "@/lib/score-changes";
 import { backupDirectory } from "@/lib/storage-paths";
@@ -41,6 +41,7 @@ async function pruneAutomaticBackups(directory: string, keep = 30) {
 const memberSchema = z.object({
   displayName: z.string().trim().min(1, "请输入游戏昵称。").max(40),
   initialPassword: z.string().min(8, "初始密码至少需要8位。").max(128, "初始密码不能超过128位。"),
+  accountType: z.enum(["member", "guest"]),
   note: z.string().trim().max(30).optional()
 });
 
@@ -49,6 +50,7 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
   const parsed = memberSchema.safeParse({
     displayName: formData.get("displayName"),
     initialPassword: formData.get("initialPassword"),
+    accountType: formData.get("accountType") || "member",
     note: formData.get("note") || undefined
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message.trim() };
@@ -62,27 +64,89 @@ export async function addMemberAction(_state: AdminFormState, formData: FormData
   let userId = 0;
   db.transaction(() => {
     const result = db.prepare(`
-      INSERT INTO users (username, display_name, password_hash, note, roster_order)
-      VALUES (?, ?, ?, ?, (SELECT COALESCE(MAX(roster_order), 0) + 1 FROM users))
-    `).run(parsed.data.displayName, parsed.data.displayName, passwordHash, parsed.data.note || null);
+      INSERT INTO users (username, display_name, password_hash, account_type, note, roster_order)
+      VALUES (?, ?, ?, ?, ?, (SELECT COALESCE(MAX(roster_order), 0) + 1 FROM users))
+    `).run(parsed.data.displayName, parsed.data.displayName, passwordHash, parsed.data.accountType, parsed.data.note || null);
     userId = Number(result.lastInsertRowid);
-    db.prepare(`
-      INSERT INTO weekly_scores (week_id, user_id, score)
-      SELECT id, ?, 0 FROM weeks
-      WHERE event_date >= COALESCE(
-        (SELECT MAX(event_date) FROM weeks WHERE event_date <= ?),
-        (SELECT MIN(event_date) FROM weeks)
-      )
-    `).run(userId, currentDate);
+    if (parsed.data.accountType === "member") {
+      db.prepare(`
+        INSERT INTO weekly_scores (week_id, user_id, score)
+        SELECT id, ?, 0 FROM weeks
+        WHERE event_date >= COALESCE(
+          (SELECT MAX(event_date) FROM weeks WHERE event_date <= ?),
+          (SELECT MIN(event_date) FROM weeks)
+        )
+      `).run(userId, currentDate);
+    }
   }).immediate();
-  writeAuditLog(admin.id, "添加组员", userId, { username: parsed.data.displayName });
+  writeAuditLog(admin.id, parsed.data.accountType === "guest" ? "添加游客" : "添加组员", userId, {
+    username: parsed.data.displayName,
+    accountType: parsed.data.accountType
+  });
   revalidatePath("/admin");
   revalidatePath("/scores");
   revalidatePath("/packages");
   revalidatePath("/home");
   revalidatePath("/reports");
   revalidatePath("/compare");
-  return { success: `已添加 ${parsed.data.displayName}，初始密码已加密保存。` };
+  return { success: `已添加${parsed.data.accountType === "guest" ? "游客" : "组员"} ${parsed.data.displayName}，初始密码已加密保存。` };
+}
+
+export async function renameAccountAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  const parsedName = z.string().trim().min(1).max(40).safeParse(formData.get("displayName"));
+  if (!Number.isInteger(userId) || userId <= 0 || !parsedName.success) return;
+  const db = getDb();
+  const account = db.prepare("SELECT username, display_name AS displayName FROM users WHERE id = ?")
+    .get(userId) as { username: string; displayName: string } | undefined;
+  if (!account || account.displayName === parsedName.data) return;
+  const duplicate = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE AND id != ?")
+    .get(parsedName.data, userId);
+  if (duplicate) return;
+  db.prepare(`
+    UPDATE users SET username = ?, display_name = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(parsedName.data, parsedName.data, userId);
+  writeAuditLog(admin.id, "修改账号名称", userId, {
+    previousName: account.displayName,
+    displayName: parsedName.data
+  });
+  for (const route of ["/admin", "/scores", "/packages", "/profile", "/home", "/reports", "/compare"]) {
+    revalidatePath(route);
+  }
+}
+
+export async function setAccountTypeAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const userId = Number(formData.get("userId"));
+  const parsedType = z.enum(["member", "guest"]).safeParse(formData.get("accountType"));
+  if (!Number.isInteger(userId) || userId <= 0 || userId === admin.id || !parsedType.success) return;
+  const db = getDb();
+  const account = db.prepare("SELECT account_type AS accountType FROM users WHERE id = ?")
+    .get(userId) as { accountType: "member" | "guest" } | undefined;
+  if (!account || account.accountType === parsedType.data) return;
+  db.transaction(() => {
+    db.prepare("UPDATE users SET account_type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+      .run(parsedType.data, userId);
+    if (parsedType.data === "member") {
+      db.prepare(`
+        INSERT OR IGNORE INTO weekly_scores (week_id, user_id, score)
+        SELECT id, ?, 0 FROM weeks
+        WHERE event_date >= COALESCE(
+          (SELECT MAX(event_date) FROM weeks WHERE event_date <= ?),
+          (SELECT MIN(event_date) FROM weeks)
+        )
+      `).run(userId, getShanghaiDate());
+    }
+  }).immediate();
+  writeAuditLog(admin.id, parsedType.data === "guest" ? "设为游客" : "转为组员", userId, {
+    previousType: account.accountType,
+    accountType: parsedType.data
+  });
+  for (const route of ["/admin", "/scores", "/packages", "/profile", "/home", "/reports", "/compare"]) {
+    revalidatePath(route);
+  }
 }
 
 export async function resetPasswordAction(formData: FormData) {
@@ -111,6 +175,9 @@ export async function toggleMemberAction(formData: FormData) {
       .run(activate ? 1 : 0, userId);
     if (activate) {
       const today = getShanghaiDate();
+      const account = db.prepare("SELECT account_type AS accountType FROM users WHERE id = ?")
+        .get(userId) as { accountType: "member" | "guest" } | undefined;
+      if (account?.accountType !== "member") return;
       db.prepare(`
         INSERT OR IGNORE INTO weekly_scores (week_id, user_id, score)
         SELECT id, ?, 0 FROM weeks
@@ -168,7 +235,12 @@ export async function saveScoresAction(formData: FormData) {
     ORDER BY event_date ASC, id ASC
     LIMIT 1
   `);
-  const getRows = db.prepare("SELECT user_id AS userId, score FROM weekly_scores WHERE week_id = ?");
+  const getRows = db.prepare(`
+    SELECT ws.user_id AS userId, ws.score
+    FROM weekly_scores ws
+    JOIN users u ON u.id = ws.user_id
+    WHERE ws.week_id = ? AND u.account_type = 'member'
+  `);
   const update = db.prepare(`
     UPDATE weekly_scores SET score = ?, updated_at = CURRENT_TIMESTAMP
     WHERE week_id = ? AND user_id = ?
@@ -178,8 +250,8 @@ export async function saveScoresAction(formData: FormData) {
     if (!week || week.status === "locked") return;
     const nextWeek = getNextWeek.get(week.eventDate) as { id: number; title: string } | undefined;
     const rows = getRows.all(weekId) as Array<{ userId: number; score: number }>;
-    let totalAddedDeductions = 0;
-    const deductionDetails: Array<{ userId: number; amount: number }> = [];
+    let totalDeductionAdjustment = 0;
+    const deductionDetails: Array<{ userId: number; adjustment: number }> = [];
 
     for (const row of rows) {
       if (!formData.has(`score_${row.userId}`)) continue;
@@ -196,28 +268,42 @@ export async function saveScoresAction(formData: FormData) {
       });
       update.run(scoreValue, weekId, row.userId);
 
-      const addition = Number(formData.get(`deduction_add_${row.userId}`));
-      if (!Number.isInteger(addition) || addition <= 0 || addition > 99) continue;
-      const recorded = recordPackageDeduction(db, {
-        requestId,
-        sourceWeekId: weekId,
-        effectiveWeekId: nextWeek?.id || null,
-        userId: row.userId,
-        amount: addition,
-        createdBy: admin.id
-      });
-      if (!recorded) continue;
-      totalAddedDeductions += addition;
-      deductionDetails.push({ userId: row.userId, amount: addition });
+      const adjustment = Number(formData.get(`deduction_add_${row.userId}`));
+      if (!Number.isInteger(adjustment) || adjustment === 0 || adjustment < -99 || adjustment > 99) continue;
+      if (adjustment > 0) {
+        const recorded = recordPackageDeduction(db, {
+          requestId,
+          sourceWeekId: weekId,
+          effectiveWeekId: nextWeek?.id || null,
+          userId: row.userId,
+          amount: adjustment,
+          createdBy: admin.id
+        });
+        if (!recorded) continue;
+        totalDeductionAdjustment += adjustment;
+        deductionDetails.push({ userId: row.userId, adjustment });
+      } else {
+        const removed = recordPackageDeductionCorrection(db, {
+          requestId,
+          sourceWeekId: weekId,
+          preferredWeekId: nextWeek?.id || null,
+          userId: row.userId,
+          amount: Math.abs(adjustment),
+          createdBy: admin.id
+        });
+        if (!removed) continue;
+        totalDeductionAdjustment -= removed;
+        deductionDetails.push({ userId: row.userId, adjustment: -removed });
+      }
     }
 
     writeAuditLog(admin.id, "批量更新要塞分数", undefined, { weekId, memberCount: rows.length });
-    if (totalAddedDeductions > 0) {
-      writeAuditLog(admin.id, "新增扣包记录", undefined, {
+    if (deductionDetails.length > 0) {
+      writeAuditLog(admin.id, "调整扣包记录", undefined, {
         requestId,
         sourceWeekId: weekId,
         effectiveWeekId: nextWeek?.id || null,
-        amount: totalAddedDeductions,
+        adjustment: totalDeductionAdjustment,
         members: deductionDetails
       });
     }
@@ -291,7 +377,7 @@ export async function importScoresAction(_state: AdminFormState, formData: FormD
       SELECT u.id, u.display_name AS displayName
       FROM users u
       JOIN weekly_scores ws ON ws.user_id = u.id AND ws.week_id = ?
-      WHERE ? = 1 OR u.is_active = 1
+      WHERE u.account_type = 'member' AND (? = 1 OR u.is_active = 1)
       ORDER BY COALESCE(u.roster_order, 999999), u.id
     `).all(weekId, historical ? 1 : 0) as Array<{ id: number; displayName: string }>;
     const memberMap = new Map(members.map((member) => [normalizedMemberName(member.displayName), member]));
@@ -389,11 +475,12 @@ export async function createWeekAction(_state: AdminFormState, formData: FormDat
     weekId = Number(result.lastInsertRowid);
     db.prepare(`
       INSERT INTO weekly_scores (week_id, user_id, score, package_deductions)
-      SELECT ?, id, 0, package_deduction_pending FROM users WHERE is_active = 1
+      SELECT ?, id, 0, package_deduction_pending FROM users
+      WHERE is_active = 1 AND account_type = 'member'
     `).run(weekId);
     db.prepare(`
       UPDATE users SET package_deduction_pending = 0, updated_at = CURRENT_TIMESTAMP
-      WHERE is_active = 1 AND package_deduction_pending > 0
+      WHERE is_active = 1 AND account_type = 'member' AND package_deduction_pending > 0
     `).run();
   }).immediate();
   if (creationError) return { error: creationError };

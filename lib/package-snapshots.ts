@@ -81,7 +81,7 @@ export function backfillMissingPackageSnapshots(database: Database.Database) {
       u.package_deduction_pending AS packageDeductionPending,
       RANK() OVER (ORDER BY ws.score DESC) AS rank
     FROM weekly_scores ws JOIN users u ON u.id = ws.user_id
-    WHERE ws.week_id = ? AND u.is_active = 1
+    WHERE ws.week_id = ? AND u.is_active = 1 AND u.account_type = 'member'
     ORDER BY ws.score DESC, COALESCE(u.roster_order, 999999), u.display_name COLLATE NOCASE
   `);
   database.transaction(() => {

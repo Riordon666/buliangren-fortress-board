@@ -1,4 +1,5 @@
 export type Role = "admin" | "member";
+export type AccountType = "member" | "guest";
 
 export type SessionUser = {
   id: number;
@@ -6,6 +7,7 @@ export type SessionUser = {
   displayName: string;
   avatarUrl: string | null;
   role: Role;
+  accountType: AccountType;
   note: string | null;
   mustChangePassword: boolean;
   lastSeenAt: string | null;

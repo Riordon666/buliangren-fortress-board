@@ -1,6 +1,6 @@
 import { Award, Flame, Gauge, ScrollText, Target, Trophy } from "lucide-react";
 import { Avatar } from "@/components/avatar";
-import { ScoreVisualizations } from "@/components/score-visualizations";
+import { DeferredScoreVisualizations } from "@/components/deferred-charts";
 import { WeekPicker } from "@/components/week-picker";
 import { getCurrentWeek, getLeaderboardRows, getPackageAssignmentSnapshots, getPackageDayStatuses, getPackagePlanRows, getScoreOverview, getWeekById, getWeeks } from "@/lib/data";
 import { generatePackagePlan, getPackageRoundsByMember } from "@/lib/package-plan";
@@ -80,7 +80,7 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
         </div>
       </section>
 
-      <ScoreVisualizations rows={rows} packageRoundsByUser={packageRoundsByUser} />
+      <DeferredScoreVisualizations rows={rows} packageRoundsByUser={packageRoundsByUser} />
 
       <section className="panel score-table-panel">
         <div className="panel-heading">

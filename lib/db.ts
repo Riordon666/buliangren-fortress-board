@@ -134,6 +134,7 @@ function createDatabase() {
       password_hash TEXT NOT NULL,
       avatar_url TEXT,
       role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+      account_type TEXT NOT NULL DEFAULT 'member' CHECK (account_type IN ('member', 'guest')),
       note TEXT,
       roster_order INTEGER,
       is_active INTEGER NOT NULL DEFAULT 1,
@@ -189,6 +190,20 @@ function createDatabase() {
       effective_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
       amount INTEGER NOT NULL CHECK (amount > 0),
+      created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (request_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS package_deduction_corrections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      request_id TEXT NOT NULL,
+      source_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
+      preferred_week_id INTEGER REFERENCES weeks(id) ON DELETE SET NULL,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      amount INTEGER NOT NULL CHECK (amount > 0),
+      scheduled_removed INTEGER NOT NULL DEFAULT 0 CHECK (scheduled_removed >= 0),
+      pending_removed INTEGER NOT NULL DEFAULT 0 CHECK (pending_removed >= 0),
       created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE (request_id, user_id)
@@ -266,6 +281,7 @@ function createDatabase() {
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
     CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
     CREATE INDEX IF NOT EXISTS idx_deduction_events_user ON package_deduction_events(user_id);
+    CREATE INDEX IF NOT EXISTS idx_deduction_corrections_user ON package_deduction_corrections(user_id);
     CREATE INDEX IF NOT EXISTS idx_package_day_status_week ON package_day_statuses(week_id, day_index);
     CREATE INDEX IF NOT EXISTS idx_package_assignments_week ON package_assignments(week_id, day_index);
     CREATE INDEX IF NOT EXISTS idx_deduction_applications_week ON package_deduction_applications(week_id, day_index);
@@ -293,6 +309,12 @@ function createDatabase() {
         ADD COLUMN package_deduction_pending INTEGER NOT NULL DEFAULT 0 CHECK (package_deduction_pending >= 0)
       `);
     }
+    if (!userColumns.some((column) => column.name === "account_type")) {
+      database.exec(`
+        ALTER TABLE users
+        ADD COLUMN account_type TEXT NOT NULL DEFAULT 'member' CHECK (account_type IN ('member', 'guest'))
+      `);
+    }
 
     const scoreColumns = database.pragma("table_info(weekly_scores)") as Array<{ name: string }>;
     if (!scoreColumns.some((column) => column.name === "package_deductions")) {
@@ -302,6 +324,8 @@ function createDatabase() {
       `);
     }
   }).immediate();
+
+  database.exec("CREATE INDEX IF NOT EXISTS idx_users_account_active ON users(account_type, is_active)");
 
   migratePermanentPackageDeductions(database);
 

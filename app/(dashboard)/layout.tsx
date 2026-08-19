@@ -8,11 +8,14 @@ export const dynamic = "force-dynamic";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
   let packageAlert = false;
-  for (const week of getActivePackageWeeks(getShanghaiDate())) {
-    const plan = generatePackagePlan(getPackagePlanRows(week.id), week.eventDate);
-    const todayPlan = plan.days.find((day) => day.date === getShanghaiDate());
-    const sent = todayPlan && getPackageDayStatuses(week.id).some((status) => status.dayIndex === todayPlan.dayIndex);
-    if (todayPlan?.assignments.some((assignment) => assignment.member.userId === user.id) && !sent) packageAlert = true;
+  if (user.accountType === "member") {
+    const today = getShanghaiDate();
+    for (const week of getActivePackageWeeks(today)) {
+      const plan = generatePackagePlan(getPackagePlanRows(week.id), week.eventDate);
+      const todayPlan = plan.days.find((day) => day.date === today);
+      const sent = todayPlan && getPackageDayStatuses(week.id).some((status) => status.dayIndex === todayPlan.dayIndex);
+      if (todayPlan?.assignments.some((assignment) => assignment.member.userId === user.id) && !sent) packageAlert = true;
+    }
   }
   return <DashboardShell user={user} packageAlert={packageAlert}>{children}</DashboardShell>;
 }

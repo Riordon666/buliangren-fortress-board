@@ -33,7 +33,7 @@ export function DashboardShell({ user, packageAlert, children }: { user: Session
           <Avatar name={user.displayName} src={user.avatarUrl} size={42} />
           <div>
             <strong>{user.displayName}</strong>
-            <small>{user.note || (user.role === "admin" ? "管理员" : "组织成员")}</small>
+            <small>{user.note || (user.accountType === "guest" ? "游客账号" : user.role === "admin" ? "管理员" : "组织成员")}</small>
           </div>
           <form action={logoutAction}>
             <button type="submit" className="icon-button" title="退出登录" aria-label="退出登录">
