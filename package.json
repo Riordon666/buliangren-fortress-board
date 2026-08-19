@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "node scripts/build-low-memory.mjs",
     "start": "next start",
     "backup": "node scripts/backup-db.mjs",
     "typecheck": "tsc --noEmit",
