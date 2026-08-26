@@ -5,6 +5,5 @@ import { destroyCurrentSession } from "@/lib/auth";
 
 export async function logoutAction() {
   await destroyCurrentSession();
-  redirect("/login");
+  redirect("/");
 }
-

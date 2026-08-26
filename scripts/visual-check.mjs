@@ -12,7 +12,37 @@ const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.
 const browser = await chromium.launch({ executablePath: edgePath, headless: true });
 
 const publicContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
-const loginPage = await publicContext.newPage();
+const publicPage = await publicContext.newPage();
+await publicPage.goto("http://localhost:3000/", { waitUntil: "networkidle" });
+if (new URL(publicPage.url()).pathname !== "/") throw new Error("匿名访问首页不应被重定向到登录页");
+if (!(await publicPage.getByRole("heading", { level: 1, name: /火影手游资料库/ }).isVisible())) throw new Error("公开首页主标题未显示");
+if (!(await publicPage.getByRole("navigation", { name: "公开导航" }).isVisible())) throw new Error("公开首页导航未显示");
+const publicLoginLink = publicPage.getByRole("link", { name: "组织登录" });
+if (!(await publicLoginLink.isVisible()) || await publicLoginLink.getAttribute("href") !== "/login") throw new Error("公开首页组织登录入口不正确");
+const accessoryEntry = publicPage.getByRole("link", { name: "查询饰品数据" });
+if (!(await accessoryEntry.isVisible()) || await accessoryEntry.getAttribute("href") !== "/accessories") throw new Error("公开首页饰品资料入口不正确");
+await publicPage.screenshot({ path: path.join(output, "public-home-desktop.png"), fullPage: true });
+
+await publicPage.goto("http://localhost:3000/accessories", { waitUntil: "networkidle" });
+if (!(await publicPage.getByRole("heading", { level: 1, name: "饰品资料库" }).isVisible())) throw new Error("公开饰品资料页未显示");
+if (!(await publicPage.getByRole("link", { name: "组织登录" }).isVisible())) throw new Error("饰品资料页未保留组织登录入口");
+const antiMagicInput = publicPage.getByRole("spinbutton", { name: "输入抗魔值" });
+if (!(await antiMagicInput.isVisible())) throw new Error("抗魔值查询输入框未显示");
+await antiMagicInput.fill("29161");
+const accessoryResult = publicPage.getByRole("region", { name: "抗魔值查询结果" });
+if (!(await accessoryResult.getByText("祈愿", { exact: true }).isVisible())) throw new Error("29161 抗魔值未查询到祈愿饰品");
+const accessoryTable = publicPage.getByRole("table", { name: "饰品系列完整数据" });
+if (!(await accessoryTable.isVisible())) throw new Error("饰品系列完整数据表未显示");
+if ((await accessoryTable.locator("tbody tr").count()) !== 14) throw new Error("饰品系列完整数据表不是14项");
+if (!(await accessoryTable.getByText("云迹", { exact: true }).isVisible())) throw new Error("饰品完整数据表缺少云迹");
+await publicPage.screenshot({ path: path.join(output, "accessories-desktop.png"), fullPage: true });
+
+const anonymousGuardPage = await publicContext.newPage();
+await anonymousGuardPage.goto("http://localhost:3000/scores", { waitUntil: "networkidle" });
+if (new URL(anonymousGuardPage.url()).pathname !== "/login") throw new Error("匿名访客访问内部战绩页时未跳转到登录页");
+await anonymousGuardPage.close();
+
+const loginPage = publicPage;
 for (const width of [901, 1024, 1280, 1440, 1920, 2560]) {
   await loginPage.setViewportSize({ width, height: 1000 });
   await loginPage.goto("http://localhost:3000/login", { waitUntil: "networkidle" });
@@ -32,6 +62,20 @@ await loginPage.screenshot({ path: path.join(output, "login-desktop.png"), fullP
 
 const mobileLoginContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
 const mobileLoginPage = await mobileLoginContext.newPage();
+await mobileLoginPage.goto("http://localhost:3000/", { waitUntil: "networkidle" });
+if (!(await mobileLoginPage.getByRole("heading", { level: 1, name: /火影手游资料库/ }).isVisible())) throw new Error("手机端公开首页主标题未显示");
+if (!(await mobileLoginPage.getByRole("link", { name: "组织登录" }).isVisible())) throw new Error("手机端公开首页登录入口未显示");
+if (await mobileLoginPage.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)) throw new Error("手机端公开首页存在横向溢出");
+await mobileLoginPage.screenshot({ path: path.join(output, "public-home-mobile.png"), fullPage: true });
+await mobileLoginPage.goto("http://localhost:3000/accessories", { waitUntil: "networkidle" });
+if (!(await mobileLoginPage.getByRole("heading", { level: 1, name: "饰品资料库" }).isVisible())) throw new Error("手机端饰品资料页未显示");
+if (await mobileLoginPage.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)) throw new Error("手机端饰品资料页存在横向溢出");
+if (!(await mobileLoginPage.getByText("← 左右滑动表格，查看全部字段 →", { exact: true }).isVisible())) throw new Error("手机端饰品表格缺少横向滑动提示");
+const mobileAntiMagicInput = mobileLoginPage.getByRole("spinbutton", { name: "输入抗魔值" });
+await mobileAntiMagicInput.fill("54351");
+if (!(await mobileLoginPage.getByRole("region", { name: "抗魔值查询结果" }).getByText("云迹", { exact: true }).isVisible())) throw new Error("手机端54351抗魔值未查询到云迹饰品");
+if ((await mobileLoginPage.getByRole("table", { name: "饰品系列完整数据" }).locator("tbody tr").count()) !== 14) throw new Error("手机端饰品数据表不是14项");
+await mobileLoginPage.screenshot({ path: path.join(output, "accessories-mobile.png"), fullPage: true });
 await mobileLoginPage.goto("http://localhost:3000/login", { waitUntil: "networkidle" });
 if (!(await mobileLoginPage.getByText("让每一分战绩", { exact: true }).isVisible())) throw new Error("手机端未显示登录页主标题");
 if (!(await mobileLoginPage.getByText("都有迹可循", { exact: true }).isVisible())) throw new Error("手机端未显示登录页强调标题");
@@ -84,7 +128,10 @@ const cleanupSession = () => {
 process.once("exit", cleanupSession);
 
 const appContext = await browser.newContext({ viewport: { width: 1600, height: 1100 }, deviceScaleFactor: 1 });
-await appContext.addCookies([{ name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" }]);
+await appContext.addCookies([
+  { name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" },
+  { name: "__Host-fortress_session", value: token, url: "https://localhost:3000", httpOnly: true, secure: true, sameSite: "Strict" }
+]);
 const page = await appContext.newPage();
 await page.goto("http://localhost:3000/home", { waitUntil: "networkidle" });
 if (!(await page.getByText("今日发包提醒", { exact: true }).isVisible())) throw new Error("我的作战室未显示今日发包提醒");
@@ -196,7 +243,10 @@ await page.screenshot({ path: path.join(output, "profile-desktop.png"), fullPage
 await appContext.close();
 
 const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
-await mobileContext.addCookies([{ name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" }]);
+await mobileContext.addCookies([
+  { name: "fortress_session", value: token, url: "http://localhost:3000", httpOnly: true, sameSite: "Strict" },
+  { name: "__Host-fortress_session", value: token, url: "https://localhost:3000", httpOnly: true, secure: true, sameSite: "Strict" }
+]);
 const mobilePage = await mobileContext.newPage();
 await mobilePage.goto("http://localhost:3000/home", { waitUntil: "networkidle" });
 if ((await mobilePage.locator(".mobile-primary-nav > a, .mobile-primary-nav > button").count()) !== 4) throw new Error("手机端主导航应保持4个固定入口");

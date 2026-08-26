@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { BarChart3, FileText, Gift, GitCompareArrows, House, ShieldCheck, UserRound } from "lucide-react";
+import { BarChart3, BookOpenText, FileText, Gift, GitCompareArrows, House, ShieldCheck, UserRound } from "lucide-react";
 
 const baseItems = [
   { href: "/home", label: "我的作战室", icon: House },
@@ -11,6 +11,7 @@ const baseItems = [
   { href: "/packages", label: "发包安排", icon: Gift },
   { href: "/reports", label: "每周战报", icon: FileText },
   { href: "/compare", label: "成员对比", icon: GitCompareArrows },
+  { href: "/accessories", label: "饰品资料", icon: BookOpenText },
   { href: "/profile", label: "个人信息", icon: UserRound }
 ];
 

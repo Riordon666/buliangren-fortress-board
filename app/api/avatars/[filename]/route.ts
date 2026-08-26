@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getSessionUser } from "@/lib/auth";
 import { uploadDirectory } from "@/lib/storage-paths";
 
 const avatarFilename = /^\d+-[a-f0-9]{16}\.webp$/;
@@ -10,6 +11,14 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ filename: string }> }
 ) {
+  const user = await getSessionUser();
+  if (!user) {
+    return new Response(null, {
+      status: 401,
+      headers: { "Cache-Control": "no-store" }
+    });
+  }
+
   const { filename } = await params;
   if (!avatarFilename.test(filename)) {
     return new Response(null, {
@@ -23,7 +32,7 @@ export async function GET(
     return new Response(new Uint8Array(file), {
       headers: {
         "Content-Type": "image/webp",
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "private, max-age=86400, immutable",
         "X-Content-Type-Options": "nosniff"
       }
     });

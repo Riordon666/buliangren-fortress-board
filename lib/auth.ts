@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { FORCE_PASSWORD_COOKIE, SESSION_TTL_DAYS } from "@/lib/constants";
@@ -112,7 +113,7 @@ export async function authenticate(username: string, password: string, clientKey
   return { ok: true as const, user: toSessionUser(user) };
 }
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -132,7 +133,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   `).get(tokenHash(token)) as Omit<UserRecord, "passwordHash" | "isActive"> | undefined;
 
   return user ? toSessionUser(user) : null;
-}
+});
 
 export async function requireUser() {
   const user = await getSessionUser();
@@ -149,7 +150,7 @@ export async function requireReadyUser() {
 export async function requireAdmin() {
   const user = await requireUser();
   if (user.accountType !== "guest" && user.mustChangePassword) redirect("/profile?required=1");
-  if (user.role !== "admin") redirect("/scores");
+  if (user.accountType !== "member" || user.role !== "admin") redirect("/scores");
   return user;
 }
 

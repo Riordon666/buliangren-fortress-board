@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, FileText, Gift, GitCompareArrows, House, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
+import { BarChart3, BookOpenText, FileText, Gift, GitCompareArrows, House, LogOut, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { logoutAction } from "@/app/actions";
 
 const primary = [
@@ -18,6 +18,7 @@ export function MobileNavigation({ isAdmin, packageAlert }: { isAdmin: boolean; 
   const more = [
     { href: "/reports", label: "每周战报", icon: FileText },
     { href: "/compare", label: "成员对比", icon: GitCompareArrows },
+    { href: "/accessories", label: "饰品资料", icon: BookOpenText },
     { href: "/profile", label: "个人信息", icon: UserRound },
     ...(isAdmin ? [{ href: "/admin", label: "管理员页面", icon: ShieldCheck }] : [])
   ];
