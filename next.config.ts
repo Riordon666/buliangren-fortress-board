@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
     serverSourceMaps: false,
     preloadEntriesOnStart: false,
     serverActions: {
+      allowedOrigins: ["naruto.riordon.xyz"],
       bodySizeLimit: "3mb"
     }
   }

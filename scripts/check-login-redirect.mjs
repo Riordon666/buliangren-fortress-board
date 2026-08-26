@@ -3,6 +3,7 @@ import Database from "better-sqlite3";
 import { hash } from "@node-rs/argon2";
 
 const baseUrl = process.env.CHECK_BASE_URL || "http://localhost:3000";
+const actionOrigin = process.env.CHECK_ACTION_ORIGIN;
 const username = "__login_redirect_test__";
 const password = "RegressionPass!42";
 const db = new Database(process.env.DATABASE_PATH || "data/naruto-fortress.db");
@@ -23,6 +24,14 @@ const context = await browser.newContext();
 const page = await context.newPage();
 const events = [];
 let homeDocumentRequests = 0;
+
+if (actionOrigin) {
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    if (request.method() !== "POST") return route.continue();
+    await route.continue({ headers: { ...request.headers(), origin: actionOrigin } });
+  });
+}
 
 page.on("console", (message) => events.push(`console:${message.type()}:${message.text()}`));
 page.on("pageerror", (error) => events.push(`pageerror:${error.stack || error.message}`));
@@ -51,7 +60,15 @@ try {
 
   await page.getByRole("textbox", { name: "组织账号" }).fill(username);
   await page.getByLabel("通行口令").fill(password);
+  const actionResponsePromise = page.waitForResponse((response) =>
+    response.request().method() === "POST" && new URL(response.url()).pathname === "/login"
+  );
   await page.getByRole("button", { name: "登录并进入内部" }).click();
+  const actionResponse = await actionResponsePromise;
+  if (!actionResponse.ok()) {
+    events.push(`action-response-headers:${JSON.stringify(actionResponse.headers())}`);
+    events.push(`action-response-body:${await actionResponse.text()}`);
+  }
   await page.waitForURL((url) => url.pathname === "/home", { timeout: 15_000 });
   await page.getByText("我的作战室", { exact: true }).waitFor({ state: "visible", timeout: 15_000 });
   if (homeDocumentRequests !== 1) {
