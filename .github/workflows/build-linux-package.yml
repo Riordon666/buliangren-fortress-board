@@ -24,7 +24,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.13.0
           cache: npm
 
       - name: Install dependencies
@@ -42,6 +42,8 @@ jobs:
           cp -a .next/static/. deploy/.next/static/
           cp -a public/. deploy/public/
           printf '%s\n' "$GITHUB_SHA" > deploy/BUILD_COMMIT
+          node --version > deploy/NODE_VERSION
+          uname -m > deploy/BUILD_ARCH
           tar -czf buliangren-linux-x64.tar.gz -C deploy .
 
       - name: Upload deployment package
