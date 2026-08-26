@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: linux-package-${{ github.ref }}
@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Validate deployment script
+        run: bash -n scripts/deploy-latest.sh
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -45,12 +48,43 @@ jobs:
           node --version > deploy/NODE_VERSION
           uname -m > deploy/BUILD_ARCH
           tar -czf buliangren-linux-x64.tar.gz -C deploy .
+          sha256sum buliangren-linux-x64.tar.gz > buliangren-linux-x64.tar.gz.sha256
 
       - name: Upload deployment package
         uses: actions/upload-artifact@v4
         with:
           name: buliangren-linux-x64
-          path: buliangren-linux-x64.tar.gz
+          path: |
+            buliangren-linux-x64.tar.gz
+            buliangren-linux-x64.tar.gz.sha256
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
+
+      - name: Publish latest deployment release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_tag="deploy-latest"
+          release_title="Latest Linux deployment package"
+          release_notes="Automated Linux x86_64 deployment package for commit ${GITHUB_SHA}, built with Node $(cat deploy/NODE_VERSION)."
+
+          git tag -f "$release_tag" "$GITHUB_SHA"
+          git push origin "refs/tags/$release_tag" --force
+
+          if gh release view "$release_tag" >/dev/null 2>&1; then
+            gh release upload "$release_tag" \
+              buliangren-linux-x64.tar.gz \
+              buliangren-linux-x64.tar.gz.sha256 \
+              --clobber
+            gh release edit "$release_tag" --title "$release_title" --notes "$release_notes"
+          else
+            gh release create "$release_tag" \
+              buliangren-linux-x64.tar.gz \
+              buliangren-linux-x64.tar.gz.sha256 \
+              --verify-tag \
+              --title "$release_title" \
+              --notes "$release_notes"
+          fi

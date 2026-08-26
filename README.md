@@ -54,3 +54,17 @@ node scripts/visual-check.mjs
 ## 部署提示
 
 推荐以单实例 Node.js 方式部署，并在前面配置 Nginx 与 HTTPS。生产环境若找不到数据库会直接停止启动，以防误建空库；请先上传现有数据库，或仅在确实要初始化全新站点时设置 `ALLOW_DATABASE_INIT=1` 和至少 8 位的 `INITIAL_PASSWORD`。不要部署到本地磁盘会随请求重置的纯 Serverless 环境；如果将来需要多实例横向扩容，应把 SQLite 迁移到 PostgreSQL。
+
+### 低内存服务器更新
+
+`main` 分支推送后，GitHub Actions 会使用 Linux x86_64 与 Node 24.13.0 构建 standalone 成品，并更新固定的 `deploy-latest` Release。服务器不再安装依赖或执行 Next.js 构建。
+
+先在宝塔停止 Node 项目，然后执行：
+
+```bash
+cd /www/wwwroot/buliangren-fortress-board
+git pull --ff-only
+bash scripts/deploy-latest.sh
+```
+
+脚本会校验 SHA-256、源码与成品提交、Node 版本和 CPU 架构，然后安全替换 `/www/wwwroot/buliangren-runtime`，保留 `.env.production` 和一个固定的上一版本目录。完成后回到宝塔启动 Node 项目。SQLite、上传头像、备份与战报缓存必须继续通过绝对路径保存在源码目录或其他持久化目录中。
