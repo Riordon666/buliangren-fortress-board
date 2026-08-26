@@ -63,11 +63,23 @@ expected_commit="$(git -C "$source_root" rev-parse HEAD)"
 temp_dir="$(mktemp -d)"
 trap 'rm -rf -- "$temp_dir"' EXIT
 
-printf '下载 GitHub Linux 成品包...\n'
-curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
-  --output "$temp_dir/$archive_name" "$release_base/$archive_name"
-curl --fail --location --silent --show-error --retry 3 --retry-delay 2 \
-  --output "$temp_dir/$checksum_name" "$release_base/$checksum_name"
+download_file() {
+  local label="$1"
+  local source_url="$2"
+  local destination="$3"
+
+  printf '\n%s\n' "$label"
+  curl --fail --location --show-error --progress-bar \
+    --connect-timeout 20 --max-time 600 --retry 2 --retry-delay 2 \
+    --write-out $'\n下载完成：%{size_download} 字节，用时 %{time_total} 秒\n' \
+    --output "$destination" "$source_url"
+}
+
+printf '开始下载 GitHub Linux 成品包。单次最长等待 10 分钟，失败会自动重试 2 次。\n'
+download_file '【1/2】主程序包（约 24 MB）' \
+  "$release_base/$archive_name" "$temp_dir/$archive_name"
+download_file '【2/2】SHA256 校验文件' \
+  "$release_base/$checksum_name" "$temp_dir/$checksum_name"
 
 (
   cd "$temp_dir"
