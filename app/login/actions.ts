@@ -1,11 +1,10 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { authenticate } from "@/lib/auth";
 
-export type LoginState = { error?: string };
+export type LoginState = { error?: string; destination?: string };
 
 const loginSchema = z.object({
   username: z.string().trim().min(1, "请输入账号。").max(40),
@@ -27,5 +26,9 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     || "unknown";
   const result = await authenticate(parsed.data.username, parsed.data.password, clientKey);
   if (!result.ok) return { error: result.reason };
-  redirect(result.user.accountType !== "guest" && result.user.mustChangePassword ? "/profile?required=1" : "/home");
+  return {
+    destination: result.user.accountType !== "guest" && result.user.mustChangePassword
+      ? "/profile?required=1"
+      : "/home"
+  };
 }

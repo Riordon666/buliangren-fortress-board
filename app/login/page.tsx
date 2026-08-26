@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Database, Leaf, LockKeyhole, ScrollText } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
@@ -9,7 +8,11 @@ export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   const user = await getSessionUser();
-  if (user) redirect(user.accountType !== "guest" && user.mustChangePassword ? "/profile?required=1" : "/home");
+  const authenticatedDestination = user
+    ? user.accountType !== "guest" && user.mustChangePassword
+      ? "/profile?required=1"
+      : "/home"
+    : undefined;
 
   return (
     <main className="login-page">
@@ -36,7 +39,7 @@ export default async function LoginPage() {
             <h2>欢迎归队</h2>
             <p>使用组织账号或共享游客账号和密码登录</p>
           </div>
-          <LoginForm />
+          <LoginForm authenticatedDestination={authenticatedDestination} />
         </div>
         <p className="login-footer">不良人要塞战报 · 授权账号内部入口</p>
       </section>
