@@ -1,0 +1,1071 @@
+openapi: 3.1.0
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+info:
+  title: 不良人 QQ Bot 只读事实 API
+  version: 1.0.0
+  description: |
+    供 QQ Bot 通过 HTTPS 查询要塞事实的版本化只读 API。
+    所有操作都需要独立 Bearer Token；API 不调用大模型，不开放写入、管理、任意 SQL 或万能查询。
+    只返回 published/locked 周，draft 对所有端点表现为不存在。
+    每 Token 持续 60 次/分钟、突发 10 次；单个 JSON 响应不超过 128 KiB。
+  contact:
+    name: 不良人要塞战报管理员
+servers:
+  - url: https://naruto.riordon.xyz/api/bot/v1
+    description: 生产环境（启用前必须完成 Secret 人工检查点）
+tags:
+  - name: System
+    description: 只读服务状态
+  - name: Weeks
+    description: 可见统计周、汇总与排行榜
+  - name: Members
+    description: 严格昵称查询与可见历史
+  - name: Packages
+    description: 按日期查询发包周期与名单
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [System]
+      operationId: getBotApiHealth
+      summary: 检查只读事实服务
+      description: 验证鉴权、只读 SQLite 连接和最小事实查询；不返回数据库版本或内部路径。
+      responses:
+        "200":
+          description: 服务可用
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/ContentTypeOptions"
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthSuccess"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /weeks:
+    get:
+      tags: [Weeks]
+      operationId: listBotVisibleWeeks
+      summary: 列出可见统计周
+      description: 仅返回 published/locked，按 eventDate、weekId 倒序。未知或重复查询参数返回 400。
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: 返回记录数；默认和最大值均为 12。
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            default: 12
+          example: 12
+      responses:
+        "200":
+          description: 可见周列表
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/ContentTypeOptions"
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeksSuccess"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /weeks/{weekRef}/summary:
+    get:
+      tags: [Weeks]
+      operationId: getBotWeekSummary
+      summary: 查询统计周汇总
+      description: weekRef=current 时按 Asia/Shanghai 当前日期从 published/locked 周中选择；draft 或不存在的 ID 返回 404。
+      parameters:
+        - $ref: "#/components/parameters/WeekRef"
+      responses:
+        "200":
+          description: 周汇总
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/ContentTypeOptions"
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeekSummarySuccess"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /weeks/{weekRef}/leaderboard:
+    get:
+      tags: [Weeks]
+      operationId: getBotWeekLeaderboard
+      summary: 查询统计周排行榜
+      description: 使用竞赛排名规则；同分示例为 11、11、13。只返回成员白名单字段。
+      parameters:
+        - $ref: "#/components/parameters/WeekRef"
+        - name: limit
+          in: query
+          required: false
+          description: 返回记录数；默认和最大值均为 30。
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+            default: 30
+          example: 30
+      responses:
+        "200":
+          description: 排行榜
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/ContentTypeOptions"
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardSuccess"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /members/lookup:
+    post:
+      tags: [Members]
+      operationId: lookupBotMember
+      summary: 按规范化昵称精确查询成员
+      description: |
+        请求正文仅用于只读查询，最大 4 KiB。query 会 trim、NFKC 规范化后精确匹配。
+        不做模糊匹配；无结果返回 404，重名返回 409 和最多 5 个安全候选后停止本次查询。
+        v1 不提供按 memberId 重查的端点，调用方不得猜测身份。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberLookupRequest"
+            example:
+              query: 示例成员甲
+              historyLimit: 8
+      responses:
+        "200":
+          description: 唯一匹配成员及其可见周历史
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/ContentTypeOptions"
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberLookupSuccess"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "409":
+          $ref: "#/components/responses/AmbiguousMember"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /packages:
+    get:
+      tags: [Packages]
+      operationId: getBotPackagesByDate
+      summary: 按日期查询发包周期和名单
+      description: |
+        已发日期只返回冻结快照；未发日期使用网站当前纯算法。周六可能同时返回上一周期第 8 天和新周期第 1 天。
+        没有匹配周期时返回 200 且 cycles=[]。未知或重复查询参数返回 400。
+      parameters:
+        - name: date
+          in: query
+          required: true
+          description: 严格公历日期 YYYY-MM-DD。
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: "2026-09-05"
+      responses:
+        "200":
+          description: 对应日期的零个或多个发包周期
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+            X-Content-Type-Options:
+              $ref: "#/components/headers/ContentTypeOptions"
+            X-Request-Id:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackagesSuccess"
+        "400":
+          $ref: "#/components/responses/InvalidArgument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque high-entropy token
+      description: 原始 Token 只存在于 Bot Secret；网站仅保存 BOT_API_TOKEN_SHA256。
+  parameters:
+    WeekRef:
+      name: weekRef
+      in: path
+      required: true
+      description: 小写 current 或 JavaScript 安全整数范围内的正整数周 ID。
+      schema:
+        oneOf:
+          - type: string
+            const: current
+          - type: integer
+            minimum: 1
+            maximum: 9007199254740991
+      example: current
+  headers:
+    CacheControl:
+      description: 响应禁止缓存。
+      schema:
+        type: string
+        const: no-store
+    ContentTypeOptions:
+      description: 禁止 MIME 嗅探。
+      schema:
+        type: string
+        const: nosniff
+    RequestId:
+      description: 服务端生成的请求追踪 UUID。
+      schema:
+        type: string
+        format: uuid
+    RetryAfter:
+      description: 可再次尝试前至少等待的整数秒数。
+      schema:
+        type: integer
+        minimum: 1
+    Allow:
+      description: 此端点允许的方法。
+      schema:
+        type: string
+    WwwAuthenticate:
+      description: Bearer 鉴权提示，不包含 Token。
+      schema:
+        type: string
+        const: Bearer
+  responses:
+    InvalidArgument:
+      description: 参数不正确
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: INVALID_ARGUMENT
+              message: 参数不正确
+            meta:
+              requestId: 88888888-8888-4888-8888-888888888888
+    Unauthorized:
+      description: 未授权访问
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+        WWW-Authenticate:
+          $ref: "#/components/headers/WwwAuthenticate"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: UNAUTHORIZED
+              message: 未授权访问
+            meta:
+              requestId: 99999999-9999-4999-8999-999999999999
+    NotFound:
+      description: 资源不存在或不可见
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: NOT_FOUND
+              message: 未找到请求的资源
+            meta:
+              requestId: aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+    MethodNotAllowed:
+      description: 请求方法不允许
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+        Allow:
+          $ref: "#/components/headers/Allow"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: METHOD_NOT_ALLOWED
+              message: 请求方法不允许
+            meta:
+              requestId: bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb
+    AmbiguousMember:
+      description: NFKC 精确匹配得到多个成员
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AmbiguousMemberErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: AMBIGUOUS_MEMBER
+              message: 存在多个同名成员
+              details:
+                candidates:
+                  - memberId: 101
+                    displayName: 同名示例
+                  - memberId: 205
+                    displayName: 同名示例
+            meta:
+              requestId: cccccccc-cccc-4ccc-8ccc-cccccccccccc
+    RateLimited:
+      description: 请求过于频繁
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: RATE_LIMITED
+              message: 请求过于频繁，请稍后重试
+            meta:
+              requestId: dddddddd-dddd-4ddd-8ddd-dddddddddddd
+    InternalError:
+      description: 通用内部错误，不暴露异常细节
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: INTERNAL_ERROR
+              message: 服务内部错误
+            meta:
+              requestId: eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee
+    ServiceUnavailable:
+      description: 服务暂时不可用
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/CacheControl"
+        X-Content-Type-Options:
+          $ref: "#/components/headers/ContentTypeOptions"
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            ok: false
+            error:
+              code: SERVICE_UNAVAILABLE
+              message: 服务暂时不可用
+            meta:
+              requestId: ffffffff-ffff-4fff-8fff-ffffffffffff
+  schemas:
+    SuccessMeta:
+      type: object
+      additionalProperties: false
+      required: [apiVersion, timezone, generatedAt, requestId]
+      properties:
+        apiVersion:
+          type: string
+          const: v1
+        timezone:
+          type: string
+          const: Asia/Shanghai
+        generatedAt:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+    ErrorMeta:
+      type: object
+      additionalProperties: false
+      required: [requestId]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+    ErrorCode:
+      type: string
+      enum:
+        - INVALID_ARGUMENT
+        - UNAUTHORIZED
+        - NOT_FOUND
+        - METHOD_NOT_ALLOWED
+        - AMBIGUOUS_MEMBER
+        - RATE_LIMITED
+        - INTERNAL_ERROR
+        - SERVICE_UNAVAILABLE
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, error, meta]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              $ref: "#/components/schemas/ErrorCode"
+            message:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ErrorMeta"
+    Week:
+      type: object
+      additionalProperties: false
+      required: [weekId, title, eventDate, status]
+      properties:
+        weekId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        title:
+          type: string
+        eventDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [published, locked]
+    MemberReference:
+      type: object
+      additionalProperties: false
+      required: [memberId, displayName]
+      properties:
+        memberId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        displayName:
+          type: string
+          minLength: 1
+    Eligibility:
+      type: object
+      additionalProperties: false
+      required: [firstRoundEligible, laterRoundsEligible]
+      properties:
+        firstRoundEligible:
+          type: boolean
+        laterRoundsEligible:
+          type: boolean
+    HealthSuccess:
+      type: object
+      additionalProperties: false
+      required: [ok, data, meta]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: false
+          required: [healthy]
+          properties:
+            healthy:
+              type: boolean
+              const: true
+        meta:
+          $ref: "#/components/schemas/SuccessMeta"
+      example:
+        ok: true
+        data:
+          healthy: true
+        meta:
+          apiVersion: v1
+          timezone: Asia/Shanghai
+          generatedAt: "2026-09-01T12:00:00.000Z"
+          requestId: 11111111-1111-4111-8111-111111111111
+    WeeksSuccess:
+      type: object
+      additionalProperties: false
+      required: [ok, data, meta]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: false
+          required: [weeks]
+          properties:
+            weeks:
+              type: array
+              maxItems: 12
+              items:
+                $ref: "#/components/schemas/Week"
+        meta:
+          $ref: "#/components/schemas/SuccessMeta"
+      example:
+        ok: true
+        data:
+          weeks:
+            - weekId: 42
+              title: 示例统计周
+              eventDate: "2026-09-05"
+              status: published
+            - weekId: 41
+              title: 示例历史周
+              eventDate: "2026-08-29"
+              status: locked
+        meta:
+          apiVersion: v1
+          timezone: Asia/Shanghai
+          generatedAt: "2026-09-01T12:00:00.000Z"
+          requestId: 22222222-2222-4222-8222-222222222222
+    WeekSummarySuccess:
+      type: object
+      additionalProperties: false
+      required: [ok, data, meta]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: false
+          required: [week, summary, eligibilityThresholds]
+          properties:
+            week:
+              $ref: "#/components/schemas/Week"
+            summary:
+              $ref: "#/components/schemas/WeekSummary"
+            eligibilityThresholds:
+              $ref: "#/components/schemas/EligibilityThresholds"
+        meta:
+          $ref: "#/components/schemas/SuccessMeta"
+      example:
+        ok: true
+        data:
+          week:
+            weekId: 42
+            title: 示例统计周
+            eventDate: "2026-09-05"
+            status: published
+          summary:
+            memberCount: 30
+            participantCount: 28
+            totalScore: 2480
+            averageParticipantScore: 89
+            topScore: 192
+            firstRoundEligibleCount: 26
+            laterRoundEligibleCount: 17
+            sentPackageDays: 3
+            totalPackageDays: 8
+            packagesPerDay: 5
+          eligibilityThresholds:
+            firstRoundMinScore: 40
+            laterRoundsMinScore: 60
+        meta:
+          apiVersion: v1
+          timezone: Asia/Shanghai
+          generatedAt: "2026-09-01T12:00:00.000Z"
+          requestId: 33333333-3333-4333-8333-333333333333
+    WeekSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - memberCount
+        - participantCount
+        - totalScore
+        - averageParticipantScore
+        - topScore
+        - firstRoundEligibleCount
+        - laterRoundEligibleCount
+        - sentPackageDays
+        - totalPackageDays
+        - packagesPerDay
+      properties:
+        memberCount:
+          type: integer
+          minimum: 0
+        participantCount:
+          type: integer
+          minimum: 0
+        totalScore:
+          type: integer
+          minimum: 0
+        averageParticipantScore:
+          type: integer
+          minimum: 0
+        topScore:
+          type: integer
+          minimum: 0
+        firstRoundEligibleCount:
+          type: integer
+          minimum: 0
+        laterRoundEligibleCount:
+          type: integer
+          minimum: 0
+        sentPackageDays:
+          type: integer
+          minimum: 0
+          maximum: 8
+        totalPackageDays:
+          type: integer
+          const: 8
+        packagesPerDay:
+          type: integer
+          const: 5
+    EligibilityThresholds:
+      type: object
+      additionalProperties: false
+      required: [firstRoundMinScore, laterRoundsMinScore]
+      properties:
+        firstRoundMinScore:
+          type: integer
+          const: 40
+        laterRoundsMinScore:
+          type: integer
+          const: 60
+    LeaderboardSuccess:
+      type: object
+      additionalProperties: false
+      required: [ok, data, meta]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: false
+          required: [week, entries]
+          properties:
+            week:
+              $ref: "#/components/schemas/Week"
+            entries:
+              type: array
+              maxItems: 30
+              items:
+                $ref: "#/components/schemas/LeaderboardEntry"
+        meta:
+          $ref: "#/components/schemas/SuccessMeta"
+      example:
+        ok: true
+        data:
+          week:
+            weekId: 42
+            title: 示例统计周
+            eventDate: "2026-09-05"
+            status: published
+          entries:
+            - memberId: 101
+              displayName: 示例成员甲
+              rank: 1
+              score: 192
+              firstRoundEligible: true
+              laterRoundsEligible: true
+        meta:
+          apiVersion: v1
+          timezone: Asia/Shanghai
+          generatedAt: "2026-09-01T12:00:00.000Z"
+          requestId: 44444444-4444-4444-8444-444444444444
+    LeaderboardEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - displayName
+        - rank
+        - score
+        - firstRoundEligible
+        - laterRoundsEligible
+      properties:
+        memberId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        displayName:
+          type: string
+          minLength: 1
+        rank:
+          type: integer
+          minimum: 1
+        score:
+          type: integer
+          minimum: 0
+        firstRoundEligible:
+          type: boolean
+        laterRoundsEligible:
+          type: boolean
+    MemberLookupRequest:
+      type: object
+      additionalProperties: false
+      required: [query]
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 40
+          description: 服务端 trim 并做 NFKC 后精确匹配，规范化后也必须保持 1..40。
+        historyLimit:
+          type: integer
+          minimum: 1
+          maximum: 12
+          default: 8
+    MemberLookupSuccess:
+      type: object
+      additionalProperties: false
+      required: [ok, data, meta]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: false
+          required: [member, history]
+          properties:
+            member:
+              $ref: "#/components/schemas/MemberReference"
+            history:
+              type: array
+              maxItems: 12
+              items:
+                $ref: "#/components/schemas/MemberHistoryPoint"
+        meta:
+          $ref: "#/components/schemas/SuccessMeta"
+      example:
+        ok: true
+        data:
+          member:
+            memberId: 101
+            displayName: 示例成员甲
+          history:
+            - weekId: 42
+              title: 示例统计周
+              eventDate: "2026-09-05"
+              status: published
+              rank: 1
+              score: 192
+              firstRoundEligible: true
+              laterRoundsEligible: true
+        meta:
+          apiVersion: v1
+          timezone: Asia/Shanghai
+          generatedAt: "2026-09-01T12:00:00.000Z"
+          requestId: 55555555-5555-4555-8555-555555555555
+    MemberHistoryPoint:
+      type: object
+      additionalProperties: false
+      required:
+        - weekId
+        - title
+        - eventDate
+        - status
+        - rank
+        - score
+        - firstRoundEligible
+        - laterRoundsEligible
+      properties:
+        weekId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        title:
+          type: string
+        eventDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [published, locked]
+        rank:
+          type: integer
+          minimum: 1
+        score:
+          type: integer
+          minimum: 0
+        firstRoundEligible:
+          type: boolean
+        laterRoundsEligible:
+          type: boolean
+    AmbiguousMemberErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, error, meta]
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+              const: AMBIGUOUS_MEMBER
+            message:
+              type: string
+              const: 存在多个同名成员
+            details:
+              type: object
+              additionalProperties: false
+              required: [candidates]
+              properties:
+                candidates:
+                  type: array
+                  minItems: 2
+                  maxItems: 5
+                  items:
+                    $ref: "#/components/schemas/MemberReference"
+        meta:
+          $ref: "#/components/schemas/ErrorMeta"
+    PackagesSuccess:
+      type: object
+      additionalProperties: false
+      required: [ok, data, meta]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        data:
+          type: object
+          additionalProperties: false
+          required: [date, cycles]
+          properties:
+            date:
+              type: string
+              format: date
+            cycles:
+              type: array
+              maxItems: 2
+              items:
+                $ref: "#/components/schemas/PackageCycle"
+        meta:
+          $ref: "#/components/schemas/SuccessMeta"
+      example:
+        ok: true
+        data:
+          date: "2026-09-05"
+          cycles:
+            - week:
+                weekId: 41
+                title: 上一周期
+                eventDate: "2026-08-29"
+                status: locked
+              isSent: true
+              assignments:
+                - memberId: 101
+                  displayName: 示例成员甲
+                  position: 1
+                  round: 2
+                  rank: 1
+                  score: 192
+                  firstRoundEligible: true
+                  laterRoundsEligible: true
+            - week:
+                weekId: 42
+                title: 新周期
+                eventDate: "2026-09-05"
+                status: published
+              isSent: false
+              assignments:
+                - memberId: 108
+                  displayName: 示例成员乙
+                  position: 1
+                  round: 1
+                  rank: 2
+                  score: 153
+                  firstRoundEligible: true
+                  laterRoundsEligible: true
+        meta:
+          apiVersion: v1
+          timezone: Asia/Shanghai
+          generatedAt: "2026-09-05T12:00:00.000Z"
+          requestId: 77777777-7777-4777-8777-777777777777
+    PackageCycle:
+      type: object
+      additionalProperties: false
+      required: [week, isSent, assignments]
+      properties:
+        week:
+          $ref: "#/components/schemas/Week"
+        isSent:
+          type: boolean
+        assignments:
+          type: array
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/PackageAssignment"
+    PackageAssignment:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - displayName
+        - position
+        - round
+        - rank
+        - score
+        - firstRoundEligible
+        - laterRoundsEligible
+      properties:
+        memberId:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        displayName:
+          type: string
+          minLength: 1
+        position:
+          type: integer
+          minimum: 1
+          maximum: 5
+        round:
+          type: integer
+          minimum: 1
+        rank:
+          type: integer
+          minimum: 1
+        score:
+          type: integer
+          minimum: 0
+        firstRoundEligible:
+          type: boolean
+        laterRoundsEligible:
+          type: boolean

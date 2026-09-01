@@ -1,5 +1,10 @@
 import { getDb } from "@/lib/db";
+import { queryScoreRows } from "@/lib/score-read-model";
+import { addDateDays, getShanghaiDate, selectCurrentWeek } from "@/lib/shanghai-date";
 import type { MemberRow, PackageAssignmentSnapshot, PackageDayStatus, ScoreChangeEvent, ScoreRow, ScoreWeek, TrendPoint } from "@/lib/types";
+
+export { getShanghaiDate, selectCurrentWeek } from "@/lib/shanghai-date";
+export { getScoreOverview } from "@/lib/score-read-model";
 
 export function getWeeks(includeDrafts = true): ScoreWeek[] {
   return getDb().prepare(`
@@ -13,31 +18,8 @@ export function getLatestWeek() {
   return getWeeks()[0] || null;
 }
 
-export function getShanghaiDate(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(date);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
-
-export function selectCurrentWeek(weeks: ScoreWeek[], today: string) {
-  const orderedWeeks = [...weeks].sort((left, right) =>
-    right.eventDate.localeCompare(left.eventDate) || right.id - left.id
-  );
-  return orderedWeeks.find((week) => week.eventDate <= today) || orderedWeeks.at(-1) || null;
-}
-
 export function getCurrentWeek(today = getShanghaiDate(), includeDrafts = false) {
   return selectCurrentWeek(getWeeks(includeDrafts), today);
-}
-
-function addDateDays(date: string, offset: number) {
-  const [year, month, day] = date.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day + offset)).toISOString().slice(0, 10);
 }
 
 export function getActivePackageWeeks(today = getShanghaiDate(), includeDrafts = false) {
@@ -54,25 +36,7 @@ export function getWeekById(weekId: number) {
 }
 
 export function getScoreRows(weekId: number, activeOnly = false): ScoreRow[] {
-  return getDb().prepare(`
-    SELECT
-      u.id AS userId,
-      u.username,
-      u.display_name AS displayName,
-      u.avatar_url AS avatarUrl,
-      u.note,
-      ws.score,
-      ws.package_round AS packageRound,
-      ws.package_deductions AS packageDeductions,
-      u.package_deduction_total AS packageDeductionTotal,
-      u.package_deduction_pending AS packageDeductionPending,
-      RANK() OVER (ORDER BY ws.score DESC) AS rank
-    FROM weekly_scores ws
-    JOIN users u ON u.id = ws.user_id
-    WHERE ws.week_id = ? AND u.account_type = 'member'
-      ${activeOnly ? "AND u.is_active = 1 AND u.deleted_at IS NULL" : ""}
-    ORDER BY ws.score DESC, COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
-  `).all(weekId) as ScoreRow[];
+  return queryScoreRows(getDb(), weekId, { activeOnly });
 }
 
 export function getPackagePlanRows(weekId: number, activeOnly = true): ScoreRow[] {
@@ -118,15 +82,6 @@ export function getPackageDeductionRows(weekId: number): ScoreRow[] {
     ORDER BY u.package_deduction_total DESC, COALESCE(ws.score, 0) DESC,
       COALESCE(u.roster_order, 999999) ASC, u.display_name COLLATE NOCASE ASC
   `).all(weekId) as ScoreRow[];
-}
-
-export function getScoreOverview(rows: ScoreRow[]) {
-  const totalScore = rows.reduce((sum, row) => sum + row.score, 0);
-  const participants = rows.filter((row) => row.score > 0).length;
-  const average = participants ? Math.round(totalScore / participants) : 0;
-  const topScore = rows[0]?.score || 0;
-  const packageConfigured = rows.filter((row) => row.packageRound !== null).length;
-  return { totalScore, participants, average, topScore, packageConfigured };
 }
 
 export function getMemberTrend(userId: number): TrendPoint[] {

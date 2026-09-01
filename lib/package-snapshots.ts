@@ -1,7 +1,9 @@
 import type Database from "better-sqlite3";
-import { generatePackagePlan, type PackageAssignment, type PackageDay } from "@/lib/package-plan";
-import type { PackageAssignmentSnapshot, ScoreRow } from "@/lib/types";
+import { generatePackagePlan, type PackageAssignment } from "@/lib/package-plan";
+import type { ScoreRow } from "@/lib/types";
 import { recordDeductionApplications } from "@/lib/package-ledger";
+
+export { mergePackagePlanDays, snapshotsToAssignments } from "@/lib/package-snapshot-view";
 
 export function savePackageDaySnapshot(
   database: Database.Database,
@@ -25,41 +27,6 @@ export function savePackageDaySnapshot(
       assignment.member.rank
     );
   }
-}
-
-export function snapshotsToAssignments(snapshots: PackageAssignmentSnapshot[]): PackageAssignment[] {
-  return snapshots.map((snapshot) => ({
-    slot: snapshot.dayIndex * 5 + snapshot.position - 1,
-    dayIndex: snapshot.dayIndex,
-    position: snapshot.position,
-    round: snapshot.round,
-    member: {
-      userId: snapshot.userId,
-      username: snapshot.displayName,
-      displayName: snapshot.displayName,
-      avatarUrl: snapshot.avatarUrl,
-      note: snapshot.note,
-      score: snapshot.score,
-      rank: snapshot.rank,
-      packageRound: null,
-      packageDeductions: 0,
-      packageDeductionTotal: 0,
-      packageDeductionPending: 0
-    }
-  }));
-}
-
-export function mergePackagePlanDays(
-  days: PackageDay[],
-  snapshots: PackageAssignmentSnapshot[],
-  sentDayIndexes: Iterable<number>
-) {
-  const sent = new Set(sentDayIndexes);
-  const savedAssignments = snapshotsToAssignments(snapshots);
-  return days.map((day) => sent.has(day.dayIndex) ? {
-    ...day,
-    assignments: savedAssignments.filter((assignment) => assignment.dayIndex === day.dayIndex)
-  } : day);
 }
 
 export function backfillMissingPackageSnapshots(database: Database.Database) {
