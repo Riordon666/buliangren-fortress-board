@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./konoha-theme.css";
+import "./public-theme.css";
 
 export const metadata: Metadata = {
   title: {

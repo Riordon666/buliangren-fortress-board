@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShinobiMark } from "@/components/shinobi-mark";
 import { BookOpenText, Database, Home, LogIn } from "lucide-react";
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
@@ -7,7 +8,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       <header className="public-header">
         <div className="public-header-inner">
           <Link href="/" className="public-brand" aria-label="木叶资料卷轴首页">
-            <span className="brand-seal" aria-hidden="true"><span className="seal-leaf" /></span>
+            <span className="brand-seal" aria-hidden="true"><ShinobiMark size={32} /></span>
             <span><strong>木叶资料卷轴</strong><small>NINJA ARCHIVES</small></span>
           </Link>
 

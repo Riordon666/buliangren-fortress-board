@@ -80,7 +80,7 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
         </div>
       </section>
 
-      <DeferredScoreVisualizations rows={rows} packageRoundsByUser={packageRoundsByUser} />
+      <div className="score-workspace">
 
       <section className="panel score-table-panel">
         <div className="panel-heading">
@@ -113,6 +113,8 @@ export default async function ScoresPage({ searchParams }: { searchParams: Promi
           </table>
         </div>
       </section>
+      <DeferredScoreVisualizations rows={rows} packageRoundsByUser={packageRoundsByUser} />
+      </div>
     </div>
   );
 }

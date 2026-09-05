@@ -27,7 +27,7 @@ import type { ScoreRow } from "@/lib/types";
 
 type View = "bar" | "line" | "pie" | "distribution" | "radar";
 
-const colors = ["#e77732", "#f0a64c", "#d3b169", "#638667", "#416955", "#2f5144", "#8c6650", "#b77b47", "#6f7e5e"];
+const colors = ["#df642f", "#f0a64c", "#d3b169", "#638667", "#416955", "#2f5144", "#8c6650", "#b77b47", "#6f7e5e"];
 
 const tabs: Array<{ id: View; label: string; icon: typeof BarChart3 }> = [
   { id: "bar", label: "横向柱状", icon: BarChart3 },
@@ -128,15 +128,15 @@ export function ScoreVisualizations({
 
       <div className={`chart-stage chart-${view}`}>
         {view === "bar" && (
-          <ResponsiveContainer width="100%" height={Math.max(560, rows.length * 31)}>
-            <BarChart data={data.barData} layout="vertical" margin={{ top: 6, right: 56, bottom: 6, left: 18 }}>
+          <ResponsiveContainer width="100%" height={Math.max(560, rows.length * 40)}>
+            <BarChart data={data.barData} layout="vertical" margin={{ top: 6, right: Math.max(56, Math.max(...rows.map((row) => String(row.score).length), 1) * 9 + 20), bottom: 6, left: 4 }}>
               <CartesianGrid strokeDasharray="3 5" horizontal={false} stroke="rgba(86,76,58,.13)" />
-              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 12 }} />
-              <YAxis type="category" dataKey="name" width={92} axisLine={false} tickLine={false} tick={{ fill: "#332f29", fontSize: 12 }} />
+              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 14 }} />
+              <YAxis type="category" dataKey="name" width={110} tickFormatter={(value) => String(value).length > 7 ? `${String(value).slice(0, 6)}…` : String(value)} axisLine={false} tickLine={false} tick={{ fill: "#332f29", fontSize: 14 }} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(230,119,50,.06)" }} />
-              <Bar dataKey="score" name="分数" radius={[0, 8, 8, 0]} maxBarSize={17} minPointSize={2}>
+              <Bar dataKey="score" name="分数" radius={[0, 8, 8, 0]} isAnimationActive={false} maxBarSize={21} minPointSize={2}>
                 {data.barData.map((entry, index) => <Cell key={entry.name} fill={index < 3 ? colors[index] : "#52735b"} />)}
-                <LabelList className="bar-score-label" dataKey="score" position="right" offset={8} fill="#9f482b" fontSize={11} fontWeight={800} />
+                <LabelList className="bar-score-label" dataKey="score" position="right" offset={8} fill="#9f482b" fontSize={14} fontWeight={800} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -149,13 +149,13 @@ export function ScoreVisualizations({
               <AreaChart data={data.lineData} margin={{ top: 18, right: 24, bottom: 16, left: 4 }}>
                 <defs>
                   <linearGradient id="scoreArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#e77732" stopOpacity={0.38} />
-                    <stop offset="100%" stopColor="#e77732" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="#df642f" stopOpacity={0.38} />
+                    <stop offset="100%" stopColor="#df642f" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 5" stroke="rgba(86,76,58,.13)" />
-                <XAxis dataKey="position" tickFormatter={(value) => `第${value}位`} tick={{ fill: "#766c5c", fontSize: 11 }} axisLine={false} tickLine={false} interval={4} />
-                <YAxis tick={{ fill: "#766c5c", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="position" tickFormatter={(value) => `第${value}位`} tick={{ fill: "#766c5c", fontSize: 14 }} axisLine={false} tickLine={false} interval={4} />
+                <YAxis tick={{ fill: "#766c5c", fontSize: 14 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTooltip />} />
                 <Line type="monotone" dataKey="score" name="分数" stroke="#d85f29" strokeWidth={3} dot={{ r: 3, fill: "#fff7e8", strokeWidth: 2 }} activeDot={{ r: 6 }} />
               </AreaChart>
@@ -167,7 +167,7 @@ export function ScoreVisualizations({
           <div className="pie-layout">
             <ResponsiveContainer width="100%" height={410}>
               <PieChart>
-                <Pie data={data.pieData} dataKey="value" nameKey="name" innerRadius={92} outerRadius={145} paddingAngle={2} stroke="transparent">
+                <Pie data={data.pieData} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="70%" paddingAngle={2} stroke="transparent">
                   {data.pieData.map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
                 </Pie>
                 <Tooltip content={<ChartTooltip />} />
@@ -188,8 +188,8 @@ export function ScoreVisualizations({
             <ResponsiveContainer width="100%" height={390}>
               <BarChart data={data.ranges} margin={{ top: 28, right: 24, bottom: 8, left: 4 }}>
                 <CartesianGrid strokeDasharray="4 5" vertical={false} stroke="rgba(86,76,58,.13)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#4b453d" }} />
-                <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#766c5c" }} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#4b453d", fontSize: 14 }} />
+                <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 14 }} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(230,119,50,.05)" }} />
                 <Bar dataKey="count" name="人数" radius={[10, 10, 2, 2]} maxBarSize={72}>
                   {data.ranges.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
@@ -202,11 +202,11 @@ export function ScoreVisualizations({
         {view === "radar" && (
           <div className="radar-layout">
             <ResponsiveContainer width="100%" height={430}>
-              <RadarChart data={data.radarData} outerRadius="72%">
+              <RadarChart data={data.radarData} outerRadius="60%">
                 <PolarGrid stroke="rgba(76,91,67,.22)" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: "#3e493b", fontSize: 12, fontWeight: 600 }} />
+                <PolarAngleAxis dataKey="metric" tick={{ fill: "#3e493b", fontSize: 14, fontWeight: 600 }} />
                 <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-                <Radar name="达成率" dataKey="value" stroke="#d9662f" fill="#e77732" fillOpacity={0.28} strokeWidth={2.5} />
+                <Radar name="达成率" dataKey="value" stroke="#d9662f" fill="#df642f" fillOpacity={0.28} strokeWidth={2.5} />
                 <Tooltip content={<ChartTooltip />} />
               </RadarChart>
             </ResponsiveContainer>

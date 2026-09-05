@@ -31,7 +31,7 @@ export function SidebarNav({ isAdmin, packageAlert = false }: { isAdmin: boolean
         const active = pathname.startsWith(item.href);
         const Icon = item.icon;
         return (
-          <Link key={item.href} href={item.href} prefetch={false} className={active ? "active" : ""} ref={active ? activeRef : undefined}>
+          <Link key={item.href} href={item.href} prefetch={false} className={active ? "active" : ""} aria-current={active ? "page" : undefined} ref={active ? activeRef : undefined}>
             <span className="nav-icon"><Icon size={19} strokeWidth={2.2} /></span>
             <span>{item.label}</span>
             {item.href === "/packages" && packageAlert && <span className="nav-notice" title="今天有你的发包安排" />}

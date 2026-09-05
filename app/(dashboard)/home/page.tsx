@@ -46,7 +46,7 @@ export default async function HomePage() {
   return (
     <div className="page-stack home-page">
       <header className="page-hero home-hero">
-        <div><span className="eyebrow"><Sparkles size={13} /> MY WAR ROOM</span><h1>{user.displayName}，今日作战简报</h1><p>{isGuest ? `${week.title} · 当前为游客浏览模式，不参与积分排名和发包。` : `${week.title} · 你的分数、排名和发包安排都在这里。`}</p></div>
+        <div><span className="eyebrow"><Sparkles size={13} /> MY WAR ROOM</span><h1>{user.displayName}，<span className="home-greeting">今日作战简报</span></h1><p>{isGuest ? `${week.title} · 当前为游客浏览模式，不参与积分排名和发包。` : `${week.title} · 你的分数、排名和发包安排都在这里。`}</p></div>
         <Avatar name={user.displayName} src={user.avatarUrl} size={72} />
       </header>
 

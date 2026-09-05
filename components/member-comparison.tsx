@@ -5,7 +5,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 
 type Trend = { userId: number; displayName: string; eventDate: string; weekTitle: string; score: number; rank: number };
 type Member = { id: number; displayName: string };
-const colors = ["#df662d", "#3f6c55", "#c08b36"];
+const colors = ["#df642f", "#315846", "#b78638"];
 
 export function MemberComparison({ members, trends, initialIds }: { members: Member[]; trends: Trend[]; initialIds: number[] }) {
   const [metric, setMetric] = useState<"score" | "rank">("score");
@@ -51,9 +51,9 @@ export function MemberComparison({ members, trends, initialIds }: { members: Mem
         <ResponsiveContainer width="100%" height={390}>
           <LineChart data={data} margin={{ top: 15, right: 20, bottom: 5, left: -10 }}>
             <CartesianGrid strokeDasharray="3 5" stroke="rgba(86,76,58,.13)" />
-            <XAxis dataKey="eventDate" axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 11 }} />
-            <YAxis reversed={metric === "rank"} allowDecimals={false} domain={metric === "rank" ? [1, "dataMax + 2"] : [0, "auto"]} axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 11 }} />
-            <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid rgba(80,66,44,.15)", background: "#fffaf0" }} />
+            <XAxis dataKey="eventDate" minTickGap={24} tickFormatter={(value) => String(value).slice(5)} axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 14 }} />
+            <YAxis reversed={metric === "rank"} allowDecimals={false} domain={metric === "rank" ? [1, "dataMax + 2"] : [0, "auto"]} axisLine={false} tickLine={false} tick={{ fill: "#766c5c", fontSize: 14 }} />
+            <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid rgba(80,66,44,.15)", background: "#fffaf0", fontSize: 14 }} />
             {selectedMembers.map((member, index) => (
               <Line key={member.id} type="monotone" dataKey={`u${member.id}`} name={member.displayName} connectNulls stroke={colors[index]} strokeWidth={3} dot={{ r: 4, fill: colors[index] }} />
             ))}

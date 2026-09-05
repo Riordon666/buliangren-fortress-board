@@ -88,7 +88,7 @@ button:disabled {
   align-items: center;
   gap: 7px;
   color: var(--orange-600);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -140,7 +140,7 @@ button:disabled {
   gap: 7px;
   padding: 9px 11px;
   border-radius: 9px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .form-message.error {
@@ -239,7 +239,7 @@ button:disabled {
   color: #ffe2af;
   background: rgba(19, 38, 28, 0.38);
   backdrop-filter: blur(8px);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -279,7 +279,7 @@ button:disabled {
   gap: 22px;
   margin-top: 30px;
   color: rgba(255,255,255,.85);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .story-points span {
@@ -357,7 +357,7 @@ button:disabled {
 
 .login-heading > span {
   color: var(--orange-600);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.18em;
 }
@@ -371,7 +371,7 @@ button:disabled {
 .login-heading p {
   margin: 0;
   color: #857b6b;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .login-form {
@@ -390,7 +390,7 @@ button:disabled {
 .compact-form label > span:first-child,
 .profile-form label > span:first-child {
   color: #5b554c;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -453,7 +453,7 @@ button:disabled {
   padding-top: 18px;
   color: #897f70;
   border-top: 1px dashed rgba(84, 71, 50, 0.18);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .login-hint code {
@@ -467,7 +467,7 @@ button:disabled {
 
 .login-footer {
   color: rgba(255, 255, 255, 0.5);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 /* App shell */
@@ -559,7 +559,7 @@ button:disabled {
   display: block;
   margin-top: 1px;
   color: rgba(255,255,255,.43);
-  font-size: 8px;
+  font-size: 14px;
   letter-spacing: .16em;
 }
 
@@ -580,7 +580,7 @@ button:disabled {
   align-items: center;
   gap: 6px;
   color: #e9b77b;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .squad-plaque strong {
@@ -611,7 +611,7 @@ button:disabled {
   color: rgba(255,255,255,.64);
   border: 1px solid transparent;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
   transition: .2s ease;
 }
@@ -666,12 +666,12 @@ button:disabled {
 }
 
 .sidebar-user strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .sidebar-user small {
   color: rgba(255,255,255,.42);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .icon-button {
@@ -726,7 +726,7 @@ button:disabled {
 .page-hero p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .week-picker-wrap {
@@ -784,12 +784,12 @@ button:disabled {
 
 .week-button-copy strong {
   color: var(--ink);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .week-button-copy small {
   color: #958b7b;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .week-picker > svg {
@@ -847,7 +847,7 @@ button:disabled {
 
 .week-menu-title small {
   color: #988d7d;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .week-menu > button {
@@ -876,12 +876,12 @@ button:disabled {
 }
 
 .week-menu > button strong {
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .week-menu > button small {
   color: #928878;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .panel {
@@ -912,7 +912,7 @@ button:disabled {
 .panel-heading p {
   margin: 0;
   color: #817869;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .stat-grid {
@@ -984,7 +984,7 @@ button:disabled {
 
 .stat-card small {
   color: #7c7467;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -1006,7 +1006,7 @@ button:disabled {
 .stat-card div > span {
   overflow: hidden;
   color: #9a9182;
-  font-size: 10px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1058,7 +1058,7 @@ button:disabled {
 .leaders-copy p {
   margin: 0;
   color: rgba(255,255,255,.51);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .podium-list {
@@ -1083,7 +1083,7 @@ button:disabled {
 .podium-rank {
   color: rgba(255,255,255,.3);
   font-family: Georgia, serif;
-  font-size: 12px;
+  font-size: 14px;
   font-style: italic;
 }
 
@@ -1096,12 +1096,12 @@ button:disabled {
 }
 
 .podium-item div strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .podium-item div span {
   color: rgba(255,255,255,.42);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .podium-item > b {
@@ -1110,7 +1110,7 @@ button:disabled {
 }
 
 .podium-item > b small {
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .visualization-panel {
@@ -1140,7 +1140,7 @@ button:disabled {
   border: 1px solid transparent;
   border-radius: 9px;
   background: rgba(84, 74, 58, .045);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -1176,7 +1176,7 @@ button:disabled {
 
 .chart-note span {
   color: #918777;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .chart-tooltip {
@@ -1189,7 +1189,7 @@ button:disabled {
   border-radius: 10px;
   background: rgba(31, 47, 38, .94);
   box-shadow: 0 8px 24px rgba(20,26,22,.2);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .chart-tooltip strong {
@@ -1221,7 +1221,7 @@ button:disabled {
 
 .pie-center span {
   color: #8f8678;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .chart-legend {
@@ -1239,7 +1239,7 @@ button:disabled {
   color: #625c52;
   border-radius: 10px;
   background: rgba(91, 77, 56, .045);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .chart-legend i {
@@ -1266,7 +1266,7 @@ button:disabled {
 .radar-explain > p {
   margin: 0 0 18px;
   color: #7f776a;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .radar-metrics {
@@ -1281,7 +1281,7 @@ button:disabled {
   color: #82796b;
   border-radius: 10px;
   background: rgba(80, 107, 84, .07);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .radar-metrics b {
@@ -1304,7 +1304,7 @@ button:disabled {
   border: 1px solid rgba(64, 99, 75, .14);
   border-radius: 99px;
   background: rgba(76, 115, 85, .07);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -1316,7 +1316,7 @@ button:disabled {
 .score-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .score-table th,
@@ -1330,7 +1330,7 @@ button:disabled {
 .score-table th {
   color: #8d8475;
   background: rgba(89, 77, 59, .028);
-  font-size: 10px;
+  font-size: 14px;
   letter-spacing: .06em;
 }
 
@@ -1357,7 +1357,7 @@ button:disabled {
   min-width: 45px;
   color: #786f62;
   font-family: Georgia, serif;
-  font-size: 12px;
+  font-size: 14px;
   font-style: italic;
 }
 
@@ -1366,7 +1366,7 @@ button:disabled {
 .rank-3 .rank-cell { color: #ad6e3d; }
 
 .member-cell strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .score-value {
@@ -1382,7 +1382,7 @@ button:disabled {
   color: #47674f;
   border-radius: 99px;
   background: rgba(70, 112, 81, .1);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -1421,7 +1421,7 @@ button:disabled {
 
 .muted {
   color: #aaa194;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .empty-state,
@@ -1450,12 +1450,12 @@ button:disabled {
 }
 
 .security-banner strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .security-banner span {
   color: #a87348;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .profile-identity {
@@ -1501,7 +1501,7 @@ button:disabled {
   gap: 6px;
   margin: 0;
   color: #7f776a;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .identity-stats {
@@ -1534,7 +1534,7 @@ button:disabled {
 
 .identity-stats small {
   color: #908779;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .profile-settings-grid {
@@ -1597,13 +1597,13 @@ button:disabled {
 .form-title p {
   margin: 3px 0 12px;
   color: #8d8476;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .file-button {
   position: relative;
   min-height: 38px;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .file-button input {
@@ -1712,12 +1712,12 @@ button:disabled {
 }
 
 .week-list-heading strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .week-list-heading span {
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .week-management-list {
@@ -1798,7 +1798,7 @@ button:disabled {
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 750;
   transition: .18s ease;
 }
@@ -1819,14 +1819,14 @@ button:disabled {
 
 .week-management-list small {
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .week-rename-button {
   min-height: 24px;
   padding: 0 5px;
   color: var(--forest-700);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .week-delete-button {
@@ -1902,7 +1902,7 @@ button:disabled {
 .import-guide div > span,
 .spreadsheet-picker small {
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .spreadsheet-picker {
@@ -1986,12 +1986,12 @@ button:disabled {
   border: 1px solid rgba(118, 103, 78, .11);
   border-radius: 11px;
   background: rgba(255, 255, 255, .38);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .package-rule-list i {
   color: #d7642f;
-  font-size: 10px;
+  font-size: 14px;
   font-style: normal;
   font-weight: 800;
 }
@@ -2024,7 +2024,7 @@ button:disabled {
   border: 1px solid rgba(153, 70, 53, .14);
   border-radius: 999px;
   background: rgba(255, 255, 255, .48);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -2058,12 +2058,12 @@ button:disabled {
 
 .deduction-rank-item strong {
   margin-bottom: 3px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .deduction-rank-item small {
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .deduction-rank-item > b {
@@ -2071,14 +2071,14 @@ button:disabled {
   color: #a64735;
   border-radius: 999px;
   background: rgba(169, 71, 53, .09);
-  font-size: 10px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
 .deduction-rank {
   color: #a76049;
   font-family: Georgia, serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -2090,7 +2090,7 @@ button:disabled {
   gap: 8px;
   padding: 20px;
   color: #777064;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .package-days-grid {
@@ -2125,7 +2125,7 @@ button:disabled {
 .package-day-card > header small {
   display: block;
   color: rgba(255, 255, 255, .58);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .package-day-card > header h2 {
@@ -2143,7 +2143,7 @@ button:disabled {
   border: 1px solid rgba(255, 211, 168, .16);
   border-radius: 999px;
   background: rgba(255, 255, 255, .06);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .package-member-list {
@@ -2167,7 +2167,7 @@ button:disabled {
 .package-position {
   color: #c27245;
   font-family: Georgia, serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -2181,12 +2181,12 @@ button:disabled {
 
 .package-member strong {
   margin-bottom: 3px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .package-member small {
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .round-chip {
@@ -2197,7 +2197,7 @@ button:disabled {
   color: #296044;
   border-radius: 999px;
   background: rgba(63, 125, 83, .1);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -2209,7 +2209,7 @@ button:disabled {
 .empty-slot {
   grid-template-columns: 25px 1fr;
   color: #9b9285;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .member-management,
@@ -2322,12 +2322,12 @@ button:disabled {
 }
 
 .member-profile strong {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .member-profile span {
   color: #8b8274;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .member-profile em {
@@ -2344,7 +2344,7 @@ button:disabled {
 }
 
 .online-cell > span {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -2361,7 +2361,7 @@ button:disabled {
 .online-cell small {
   margin-top: 2px;
   color: #aaa194;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .member-actions {
@@ -2380,7 +2380,7 @@ button:disabled {
   border: 1px solid rgba(82,73,59,.1);
   border-radius: 8px;
   background: rgba(255,255,255,.42);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -2406,7 +2406,7 @@ button:disabled {
 .table-input {
   min-height: 36px;
   padding: 0 10px;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .score-input {
@@ -2435,12 +2435,12 @@ button:disabled {
 .deduction-add-control > span > strong {
   margin-bottom: 3px;
   color: #984b38;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .deduction-add-control > span > small {
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .deduction-add-control label {
@@ -2448,7 +2448,7 @@ button:disabled {
   align-items: center;
   gap: 6px;
   color: var(--ink-soft);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .deduction-add-control .deduction-input {
@@ -2468,7 +2468,7 @@ button:disabled {
 
 .editor-actions span {
   color: #8d8476;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .audit-list {
@@ -2504,13 +2504,13 @@ button:disabled {
 }
 
 .audit-list strong {
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .audit-list div > span,
 .audit-list time {
   color: #968d80;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .nav-notice {
@@ -2566,7 +2566,7 @@ button:disabled {
   white-space: nowrap;
   border: 1px solid;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -2585,7 +2585,7 @@ button:disabled {
 .send-status.mini {
   min-height: 24px;
   padding: 0 8px;
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .today-personal-assignment {
@@ -2613,7 +2613,7 @@ button:disabled {
 
 .today-personal-assignment span {
   color: rgba(255,255,255,.78);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .compact-empty {
@@ -2622,7 +2622,7 @@ button:disabled {
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
 }
 
@@ -2631,7 +2631,7 @@ button:disabled {
   align-items: center;
   gap: 5px;
   color: var(--forest-700);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -2664,7 +2664,7 @@ button:disabled {
 
 .target-panel > small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .achievement-grid {
@@ -2687,8 +2687,8 @@ button:disabled {
 .achievement svg { flex: 0 0 auto; }
 .achievement strong,
 .achievement span { display: block; }
-.achievement strong { margin-bottom: 4px; font-size: 12px; }
-.achievement span { color: var(--muted); font-size: 9px; line-height: 1.45; }
+.achievement strong { margin-bottom: 4px; font-size: 14px; }
+.achievement span { color: var(--muted); font-size: 14px; line-height: 1.45; }
 .achievement.orange svg { color: #df662d; }
 .achievement.green svg { color: #467156; }
 .achievement.gold svg { color: #b9822f; }
@@ -2714,7 +2714,7 @@ button:disabled {
   display: block;
   margin-bottom: 7px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -2745,7 +2745,7 @@ button:disabled {
   border: 0;
   border-radius: 8px;
   background: transparent;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -2760,7 +2760,7 @@ button:disabled {
   gap: 18px;
   padding: 18px 6px 5px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .compare-legend span { display: flex; align-items: center; gap: 6px; }
@@ -2791,13 +2791,13 @@ button:disabled {
 .highlight-list span { flex: 1; }
 .highlight-list small,
 .highlight-list strong { display: block; }
-.highlight-list small { margin-bottom: 3px; color: var(--muted); font-size: 9px; }
-.highlight-list strong { font-size: 12px; }
-.highlight-list b { color: var(--orange-600); font-size: 12px; }
+.highlight-list small { margin-bottom: 3px; color: var(--muted); font-size: 14px; }
+.highlight-list strong { font-size: 14px; }
+.highlight-list b { color: var(--orange-600); font-size: 14px; }
 .report-top-list > div { min-height: 52px; }
-.report-top-list > div > span { width: 28px; color: var(--muted); font-size: 10px; }
-.report-top-list strong { min-width: 0; flex: 1; font-size: 11px; }
-.report-top-list b { color: var(--orange-600); font-size: 13px; }
+.report-top-list > div > span { width: 28px; color: var(--muted); font-size: 14px; }
+.report-top-list strong { min-width: 0; flex: 1; font-size: 14px; }
+.report-top-list b { color: var(--orange-600); font-size: 14px; }
 
 .share-report {
   display: flex;
@@ -2807,7 +2807,7 @@ button:disabled {
 }
 
 .share-report h2 { margin: 6px 0; font-family: "STKaiti", "KaiTi", serif; }
-.share-report p { margin: 0; color: var(--muted); font-size: 11px; }
+.share-report p { margin: 0; color: var(--muted); font-size: 14px; }
 
 .profile-side-stack {
   display: grid;
@@ -2825,16 +2825,16 @@ button:disabled {
   background: rgba(255,255,255,.38);
 }
 .achievement-tag svg { grid-row: 1 / 3; align-self: center; color: var(--orange-600); }
-.achievement-tag b { font-size: 10px; }
-.achievement-tag small { color: var(--muted); font-size: 8px; }
+.achievement-tag b { font-size: 14px; }
+.achievement-tag small { color: var(--muted); font-size: 14px; }
 .score-change-list > div { min-height: 49px; padding: 8px 11px; }
-.score-change-list > div > span { width: 41px; font-size: 13px; font-weight: 900; }
+.score-change-list > div > span { width: 41px; font-size: 14px; font-weight: 900; }
 .score-change-list .positive { color: #3f7455; }
 .score-change-list .negative { color: #c24d35; }
 .score-change-list strong,
 .score-change-list small { display: block; }
-.score-change-list strong { font-size: 10px; }
-.score-change-list small { margin-top: 2px; color: var(--muted); font-size: 8px; }
+.score-change-list strong { font-size: 14px; }
+.score-change-list small { margin-top: 2px; color: var(--muted); font-size: 14px; }
 
 .package-today {
   display: grid;
@@ -2846,8 +2846,8 @@ button:disabled {
 .package-today-heading { min-width: 0; }
 .package-today.sent { border-left-color: #477458; }
 .package-today h2 { margin: 6px 0; font-family: "STKaiti", "KaiTi", serif; font-size: 23px; }
-.package-today p { margin: 0; color: var(--muted); font-size: 11px; }
-.deduction-note { margin: 4px 0 0; color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: 0; }
+.package-today p { margin: 0; color: var(--muted); font-size: 14px; }
+.deduction-note { margin: 4px 0 0; color: var(--muted); font-size: 14px; font-weight: 500; letter-spacing: 0; }
 .package-today-action { display: flex; align-items: center; gap: 10px; }
 .package-today-action form { margin: 0; }
 .package-day-meta { display: flex; align-items: center; gap: 7px; }
@@ -2887,7 +2887,7 @@ button:disabled {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.today-package-seat small { color: var(--muted); font-size: 12px; font-weight: 650; }
+.today-package-seat small { color: var(--muted); font-size: 14px; font-weight: 650; }
 .today-seat-number {
   position: absolute;
   top: 9px;
@@ -2899,7 +2899,7 @@ button:disabled {
   color: #fff;
   border-radius: 50%;
   background: var(--forest-600);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 850;
 }
 .today-package-seat.empty {
@@ -2919,7 +2919,7 @@ button:disabled {
   border: 1px solid rgba(190,128,47,.2);
   border-radius: 14px;
   background: rgba(255,237,196,.68);
-  font-size: 11px;
+  font-size: 14px;
 }
 .overlap-notice span { flex: 1; color: #8a745c; }
 .overlap-notice a { color: var(--orange-600); font-weight: 800; }
@@ -2943,10 +2943,10 @@ button:disabled {
   background: rgba(255,250,240,.72);
   cursor: pointer;
 }
-.package-day-tab small { font-size: 8px; }
+.package-day-tab small { font-size: 14px; }
 .package-day-tab strong { color: var(--ink); font-family: "STKaiti", "KaiTi", serif; font-size: 16px; }
-.package-day-tab > span { font-size: 9px; }
-.package-day-tab > i { justify-self: start; margin-top: 4px; padding: 2px 6px; border-radius: 99px; font-size: 8px; font-style: normal; }
+.package-day-tab > span { font-size: 14px; }
+.package-day-tab > i { justify-self: start; margin-top: 4px; padding: 2px 6px; border-radius: 99px; font-size: 14px; font-style: normal; }
 .package-day-tab > i.sent { color: #356248; background: rgba(70,117,84,.12); }
 .package-day-tab > i.pending { color: #8c7661; background: rgba(130,113,87,.08); }
 .package-day-tab.active { color: #fff; border-color: #254d3a; background: linear-gradient(145deg, #204a37, #173629); box-shadow: 0 8px 20px rgba(28,61,45,.18); }
@@ -2955,8 +2955,8 @@ button:disabled {
 .package-day-card.selected { max-width: 760px; width: 100%; margin: 0 auto; }
 .home-overlap-list { display: grid; gap: 8px; margin-bottom: 14px; }
 .home-overlap-list a { display: flex; justify-content: space-between; gap: 15px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.35); }
-.home-overlap-list strong { font-size: 11px; }
-.home-overlap-list span { color: var(--muted); font-size: 9px; }
+.home-overlap-list strong { font-size: 14px; }
+.home-overlap-list span { color: var(--muted); font-size: 14px; }
 .admin-hero-tools { display: flex; align-items: center; gap: 10px; }
 .week-status-form { margin-left: auto; }
 .week-status-button { min-width: 66px; justify-content: center; }
@@ -2969,7 +2969,7 @@ button:disabled {
 .mobile-primary-nav > button { position: relative; display: grid; min-height: 49px; place-items: center; gap: 2px; padding: 4px; color: rgba(255,255,255,.58); border: 0; border-radius: 11px; background: transparent; }
 .mobile-primary-nav a.active,
 .mobile-primary-nav > button.active { color: #fff5e8; background: rgba(224,106,50,.2); }
-.mobile-primary-nav small { font-size: 9px; font-weight: 750; }
+.mobile-primary-nav small { font-size: 14px; font-weight: 750; }
 .mobile-primary-nav a > span { position: relative; display: grid; place-items: center; }
 .mobile-primary-nav a > span > i { position: absolute; top: -2px; right: -7px; width: 7px; height: 7px; border: 2px solid #203b2e; border-radius: 50%; background: #ff9b4b; }
 .mobile-more-backdrop { position: fixed; z-index: 70; inset: 0; display: flex; align-items: end; background: rgba(13,25,19,.48); backdrop-filter: blur(3px); }
@@ -2978,7 +2978,7 @@ button:disabled {
 .mobile-more-sheet header strong { font-family: "STKaiti", "KaiTi", serif; font-size: 22px; }
 .mobile-more-sheet header button { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: rgba(46,76,58,.08); }
 .mobile-more-sheet > div { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.mobile-more-sheet a { display: flex; min-height: 54px; align-items: center; gap: 10px; padding: 0 14px; color: var(--forest-700); border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.45); font-size: 12px; font-weight: 750; }
+.mobile-more-sheet a { display: flex; min-height: 54px; align-items: center; gap: 10px; padding: 0 14px; color: var(--forest-700); border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.45); font-size: 14px; font-weight: 750; }
 .mobile-more-sheet a.active { color: #fff; background: var(--forest-700); }
 .mobile-logout { display: flex; width: 100%; height: 46px; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; color: #a24634; border: 0; border-radius: 12px; background: rgba(191,72,46,.08); font-weight: 800; }
 
@@ -3109,7 +3109,7 @@ button:disabled {
     justify-content: center;
     gap: 6px;
     padding: 0 7px;
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .mobile-nav .nav-notice { position: absolute; top: 8px; right: 9px; }
@@ -3151,14 +3151,14 @@ button:disabled {
 
   .login-story > p {
     max-width: 560px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.75;
   }
 
   .story-points {
     gap: 14px;
     margin-top: 18px;
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .login-card-wrap {
@@ -3469,7 +3469,7 @@ button:disabled {
 
   .story-kicker {
     padding: 7px 10px;
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .login-story h1 {
@@ -3478,13 +3478,13 @@ button:disabled {
   }
 
   .login-story > p {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .story-points {
     gap: 9px 13px;
     margin-top: 14px;
-    font-size: 10px;
+    font-size: 14px;
   }
 }
 
@@ -3499,15 +3499,15 @@ button:disabled {
 
 /* Readability and lightweight interaction pass */
 body { font-size: 15px; }
-.eyebrow { font-size: 12px; }
-.brand-lockup small { font-size: 10px; }
+.eyebrow { font-size: 14px; }
+.brand-lockup small { font-size: 14px; }
 .squad-plaque span,
-.squad-plaque small { font-size: 12px; }
+.squad-plaque small { font-size: 14px; }
 .sidebar-nav a { font-size: 14px; }
 .page-hero p { font-size: 15px; }
 .panel-heading p { font-size: 14px; }
 .compact-form label > span:first-child,
-.profile-form label > span:first-child { font-size: 13px; }
+.profile-form label > span:first-child { font-size: 14px; }
 .compact-form select {
   width: 100%;
   min-height: 44px;
@@ -3519,70 +3519,70 @@ body { font-size: 15px; }
   background: rgba(255, 255, 255, 0.62);
 }
 .week-button-copy strong,
-.week-menu > button strong { font-size: 13px; }
+.week-menu > button strong { font-size: 14px; }
 .week-button-copy small,
 .week-menu-title small,
-.week-menu > button small { font-size: 11px; }
-.stat-card small { font-size: 13px; }
-.stat-card div > span { font-size: 12px; }
+.week-menu > button small { font-size: 14px; }
+.stat-card small { font-size: 14px; }
+.stat-card div > span { font-size: 14px; }
 .record-count,
 .live-indicator,
-.admin-auth-badge { font-size: 12px; }
+.admin-auth-badge { font-size: 14px; }
 .score-table { font-size: 14px; }
-.score-table th { font-size: 12px; }
-.rank-cell { font-size: 13px; }
+.score-table th { font-size: 14px; }
+.rank-cell { font-size: 14px; }
 .member-cell strong { font-size: 14px; }
 .round-badge,
-.role-badge { font-size: 11px; }
-.muted { font-size: 12px; }
+.role-badge { font-size: 14px; }
+.muted { font-size: 14px; }
 .week-list-heading strong { font-size: 14px; }
 .week-list-heading span,
 .week-management-list small,
-.week-rename-button { font-size: 11px; }
-.week-title-input { font-size: 13px; }
+.week-rename-button { font-size: 14px; }
+.week-title-input { font-size: 14px; }
 .member-profile strong { font-size: 14px; }
-.member-profile span { font-size: 12px; }
-.online-cell > span { font-size: 13px; }
-.online-cell small { font-size: 11px; }
-.text-button { font-size: 12px; }
-.table-input { font-size: 13px; }
-.deduction-add-control > span > strong { font-size: 13px; }
+.member-profile span { font-size: 14px; }
+.online-cell > span { font-size: 14px; }
+.online-cell small { font-size: 14px; }
+.text-button { font-size: 14px; }
+.table-input { font-size: 14px; }
+.deduction-add-control > span > strong { font-size: 14px; }
 .deduction-add-control > span > small,
 .deduction-add-control label,
-.editor-actions span { font-size: 11px; }
-.audit-list strong { font-size: 13px; }
+.editor-actions span { font-size: 14px; }
+.audit-list strong { font-size: 14px; }
 .audit-list div > span,
-.audit-list time { font-size: 11px; }
+.audit-list time { font-size: 14px; }
 .package-member strong { font-size: 14px; }
 .package-member small,
-.round-chip { font-size: 12px; }
+.round-chip { font-size: 14px; }
 .package-day-tab small,
-.package-day-tab > span { font-size: 11px; }
-.package-day-tab > i { font-size: 10px; }
+.package-day-tab > span { font-size: 14px; }
+.package-day-tab > i { font-size: 14px; }
 .today-package-names span,
-.deduction-note { font-size: 11px; }
+.deduction-note { font-size: 14px; }
 .overlap-notice,
-.home-overlap-list strong { font-size: 13px; }
-.home-overlap-list span { font-size: 11px; }
+.home-overlap-list strong { font-size: 14px; }
+.home-overlap-list span { font-size: 14px; }
 .text-link,
-.target-panel > small { font-size: 13px; }
+.target-panel > small { font-size: 14px; }
 .achievement strong { font-size: 14px; }
-.achievement span { font-size: 11px; }
-.comparison-selects label span { font-size: 11px; }
+.achievement span { font-size: 14px; }
+.comparison-selects label span { font-size: 14px; }
 .metric-switch button,
-.compare-legend { font-size: 12px; }
+.compare-legend { font-size: 14px; }
 .highlight-list small,
-.report-top-list > div > span { font-size: 11px; }
+.report-top-list > div > span { font-size: 14px; }
 .highlight-list strong,
 .highlight-list b,
-.report-top-list strong { font-size: 13px; }
+.report-top-list strong { font-size: 14px; }
 .achievement-tag b,
-.score-change-list strong { font-size: 12px; }
+.score-change-list strong { font-size: 14px; }
 .achievement-tag small,
-.score-change-list small { font-size: 10px; }
+.score-change-list small { font-size: 14px; }
 .share-report p,
-.package-today p { font-size: 13px; }
-.mobile-primary-nav small { font-size: 11px; }
+.package-today p { font-size: 14px; }
+.mobile-primary-nav small { font-size: 14px; }
 
 .account-type-badge {
   display: inline-flex;
@@ -3592,7 +3592,7 @@ body { font-size: 15px; }
   color: #476f56;
   border-radius: 999px;
   background: rgba(65, 103, 77, .09);
-  font-size: 10px;
+  font-size: 14px;
   font-style: normal;
   font-weight: 800;
 }
@@ -3629,7 +3629,7 @@ body { font-size: 15px; }
   padding: 5px 8px 8px;
   color: var(--ink);
   border-bottom: 1px solid var(--line);
-  font-size: 13px;
+  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3656,7 +3656,7 @@ body { font-size: 15px; }
   background: rgba(117, 81, 132, .07);
 }
 .guest-mode-note strong { font-size: 17px; }
-.guest-mode-note span { color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+.guest-mode-note span { color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
 
 .deferred-chart { min-width: 0; }
 .deferred-chart-placeholder,
@@ -3670,7 +3670,7 @@ body { font-size: 15px; }
   border: 1px dashed rgba(72, 100, 79, .16);
   border-radius: var(--radius-xl);
   background: rgba(255, 250, 240, .38);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 @media (max-width: 1240px) {
@@ -3693,7 +3693,7 @@ body {
 }
 
 .eyebrow {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .page-stack {
@@ -3730,7 +3730,7 @@ body {
 .stat-card div > span,
 .sidebar-user small,
 .muted {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .sidebar-nav a {
@@ -3746,14 +3746,14 @@ body {
 }
 
 .score-table th {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .round-badge,
 .role-badge,
 .text-button,
 .round-chip {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .compact-form input,
@@ -3791,7 +3791,7 @@ body {
 .score-change-list small,
 .report-top-list > div > span,
 .highlight-list small {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 @media (min-width: 901px) {
@@ -3859,7 +3859,7 @@ body {
 .public-brand small {
   margin-top: 1px;
   color: var(--forest-600);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 750;
   letter-spacing: .15em;
 }
@@ -3963,7 +3963,7 @@ body {
 .public-footer small,
 .public-disclaimer {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .public-footer nav {
@@ -4138,7 +4138,7 @@ body {
 
 .public-trust-row small {
   color: rgba(255, 255, 255, .64);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .public-hero-card {
@@ -4192,7 +4192,7 @@ body {
 
 .hero-series-list small {
   color: rgba(255, 255, 255, .58);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .hero-series-list em {
@@ -4239,7 +4239,7 @@ body {
 .public-metric-grid span,
 .public-metric-grid small {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .public-metric-grid strong {
@@ -4305,7 +4305,7 @@ body {
   color: var(--forest-700);
   border-radius: 999px;
   background: rgba(62, 98, 77, .08);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -4429,7 +4429,7 @@ body {
   border: 1px solid rgba(62, 98, 77, .1);
   border-radius: 999px;
   background: rgba(62, 98, 77, .06);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -4450,7 +4450,7 @@ body {
 
 .anti-magic-control > small {
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .public-search-input {
@@ -4524,7 +4524,7 @@ body {
 .accessory-result-empty small,
 .accessory-result-warning small {
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .accessory-result-match {
@@ -4541,7 +4541,7 @@ body {
 
 .accessory-result-match > span small {
   color: rgba(255, 255, 255, .63);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .accessory-result-match > span strong {
@@ -4567,7 +4567,7 @@ body {
 
 .accessory-result-match dt {
   color: rgba(255, 255, 255, .58);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .accessory-result-match dd {
@@ -4600,7 +4600,7 @@ body {
 }
 
 .accessory-catalog-summary span {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .accessory-toolbar {
@@ -4619,7 +4619,7 @@ body {
 
 .public-keyword-search > span:first-child {
   color: var(--forest-800);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -4667,7 +4667,7 @@ body {
   border: 1px solid rgba(62, 98, 77, .12);
   border-radius: 10px;
   background: rgba(255, 255, 255, .45);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -4718,7 +4718,7 @@ body {
 .accessory-table th {
   color: var(--forest-700);
   background: rgba(62, 98, 77, .07);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 850;
 }
 
@@ -4741,7 +4741,7 @@ body {
 
 .accessory-table td:first-child small {
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .enhance-badge {
@@ -4753,7 +4753,7 @@ body {
   color: #a94c26;
   border-radius: 999px;
   background: rgba(220, 102, 46, .09);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 850;
 }
 
@@ -4804,7 +4804,7 @@ body {
 
 .power-reference span small {
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .power-reference > p {
@@ -4812,7 +4812,7 @@ body {
   padding-top: 12px;
   color: var(--ink-soft);
   border-top: 1px dashed rgba(81, 70, 54, .15);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .data-gap-notice {
@@ -4839,7 +4839,7 @@ body {
 
 .data-gap-notice span {
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .source-list {
@@ -4874,13 +4874,13 @@ body {
 
 .source-list small {
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .source-list em {
   grid-column: 1 / -1;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 14px;
   font-style: normal;
   line-height: 1.55;
 }
@@ -4922,7 +4922,7 @@ body {
 }
 
 .login-heading > span {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .login-heading p {
@@ -4938,7 +4938,7 @@ body {
 }
 
 .login-footer {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .week-button-copy small,
@@ -4961,11 +4961,11 @@ body {
 .report-top-list > div > span,
 .achievement-tag small,
 .score-change-list small {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .mobile-primary-nav small {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 @media (max-width: 1120px) {
@@ -5061,7 +5061,7 @@ body {
   }
 
   .public-brand small {
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .public-login-button {
@@ -5103,7 +5103,7 @@ body {
   }
 
   .public-kicker {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .public-hero h1 {
@@ -5229,7 +5229,7 @@ body {
     display: block;
     margin: -2px 0 8px;
     color: var(--forest-600);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 750;
     text-align: center;
   }
@@ -5271,7 +5271,7 @@ body {
   .login-public-link {
     min-height: 38px;
     padding: 0 10px;
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .login-story {

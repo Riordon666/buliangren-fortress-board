@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShinobiMark } from "@/components/shinobi-mark";
 import { ArrowLeft, Database, Leaf, LockKeyhole, ScrollText } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { LoginForm } from "./login-form";
@@ -33,7 +34,7 @@ export default async function LoginPage() {
 
       <section className="login-card-wrap">
         <div className="login-card">
-          <div className="card-seal"><span className="seal-leaf" /></div>
+          <div className="card-seal"><ShinobiMark size={34} /></div>
           <div className="login-heading">
             <span>忍者身份核验</span>
             <h2>欢迎归队</h2>
