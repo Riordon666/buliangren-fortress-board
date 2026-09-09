@@ -5,6 +5,7 @@ import { PackageDayBrowser } from "@/components/package-day-browser";
 import { WeekPicker } from "@/components/week-picker";
 import { MarkPackageSentForm } from "@/components/mark-package-sent-form";
 import { requireReadyUser } from "@/lib/auth";
+import { canConfirmPackageDelivery } from "@/lib/permissions";
 import { getActivePackageWeeks, getCurrentWeek, getPackageAssignmentSnapshots, getPackageDayStatuses, getPackageDeductionApplications, getPackageDeductionRows, getPackagePlanRows, getShanghaiDate, getWeekById, getWeeks } from "@/lib/data";
 import {
   FIRST_ROUND_MIN_SCORE,
@@ -56,13 +57,13 @@ export default async function PackagesPage({ searchParams }: { searchParams: Pro
           <h2>今日发包状态</h2>
           {!todayPlan ? <p>今天不在当前所选统计周的发包周期内。</p> : <p>{todayStatus
             ? todayStatus.confirmationSource === "automatic"
-              ? "管理员未手动确认，系统已在 23:30 后自动确认今天的包已发放。"
-              : `${todayStatus.markedByName || "管理员"}已确认今天的包已发放。`
-            : "今天暂未发包；若 23:30 前仍未手动确认，系统会自动确认。"}</p>}
+              ? "今日无人手动确认，系统已在 23:30 后自动确认今天的包已发放。"
+              : `${todayStatus.markedByName || "发包负责人"}已确认今天的包已发放。`
+            : "今天暂未发包，首领或高层可在发放后确认；若 23:30 前仍未手动确认，系统会自动确认。"}</p>}
         </div>
         <div className="package-today-action">
           <span className={`send-status ${todayStatus ? "sent" : "pending"}`}>{todayStatus ? <><CheckCircle2 size={15} />已发包</> : "暂未发包"}</span>
-          {todayPlan && !todayStatus && user.role === "admin" && <MarkPackageSentForm weekId={selectedWeek.id} dayIndex={todayPlan.dayIndex} memberCount={todayPlan.assignments.length} />}
+          {todayPlan && !todayStatus && canConfirmPackageDelivery(user) && <MarkPackageSentForm weekId={selectedWeek.id} dayIndex={todayPlan.dayIndex} memberCount={todayPlan.assignments.length} />}
         </div>
         {todayDisplayDay && <div className="today-package-lineup" aria-label="今日发包五人名单">
           {Array.from({ length: PACKAGES_PER_DAY }, (_, index) => {

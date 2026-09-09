@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth";
+import { requirePackageConfirmer } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { getShanghaiDate } from "@/lib/data";
 import { confirmPackageDay } from "@/lib/package-delivery";
@@ -12,22 +12,26 @@ function addDays(date: string, days: number) {
 }
 
 export async function markPackageSentAction(formData: FormData) {
-  const admin = await requireAdmin();
-  const weekId = Number(formData.get("weekId"));
-  const dayIndex = Number(formData.get("dayIndex"));
-  if (!Number.isInteger(weekId) || weekId <= 0 || !Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex > 7) return;
+  const user = await requirePackageConfirmer();
+  const weekValue = formData.get("weekId");
+  const dayValue = formData.get("dayIndex");
+  if (typeof weekValue !== "string" || !weekValue.trim() || typeof dayValue !== "string" || !dayValue.trim()) return;
+  const weekId = Number(weekValue);
+  const dayIndex = Number(dayValue);
+  if (!Number.isSafeInteger(weekId) || weekId <= 0 || !Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex > 7) return;
 
   const database = getDb();
-  const week = database.prepare("SELECT event_date AS eventDate FROM weeks WHERE id = ?")
-    .get(weekId) as { eventDate: string } | undefined;
+  const week = database.prepare("SELECT event_date AS eventDate, status FROM weeks WHERE id = ?")
+    .get(weekId) as { eventDate: string; status: string } | undefined;
   if (!week || addDays(week.eventDate, dayIndex) !== getShanghaiDate()) return;
-  const marked = confirmPackageDay(database, {
+  if (week.status === "draft" && user.role !== "admin") return;
+  confirmPackageDay(database, {
     weekId,
     dayIndex,
     source: "manual",
-    markedBy: admin.id
+    markedBy: user.id
   });
-  if (!marked) return;
+  // Refresh stale pages even when another confirmer has already frozen this day.
   revalidatePath("/packages");
   revalidatePath("/home");
   revalidatePath("/reports");

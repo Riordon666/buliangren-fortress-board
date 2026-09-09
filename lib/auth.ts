@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { FORCE_PASSWORD_COOKIE, SESSION_TTL_DAYS } from "@/lib/constants";
 import { getDb } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
+import { canConfirmPackageDelivery } from "@/lib/permissions";
 import type { AccountType, SessionUser } from "@/lib/types";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -151,6 +152,12 @@ export async function requireAdmin() {
   const user = await requireUser();
   if (user.accountType !== "guest" && user.mustChangePassword) redirect("/profile?required=1");
   if (user.accountType !== "member" || user.role !== "admin") redirect("/scores");
+  return user;
+}
+
+export async function requirePackageConfirmer() {
+  const user = await requireReadyUser();
+  if (!canConfirmPackageDelivery(user)) redirect("/packages");
   return user;
 }
 
