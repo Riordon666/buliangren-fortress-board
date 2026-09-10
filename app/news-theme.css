@@ -132,3 +132,9 @@
   .news-masthead h1 { font-size: 32px; }
   .news-original { display: none; }
 }
+
+.news-schedule-status strong,.news-schedule-status span { display: block; }
+.news-schedule-status strong { color: #496343; font-size: 15px; margin-bottom: 7px; }
+.news-sync-card dd { text-align: right; }
+
+.news-mobile-status > small { flex-basis: 100%; font-size: 13px; line-height: 1.6; }

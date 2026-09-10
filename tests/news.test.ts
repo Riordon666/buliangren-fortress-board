@@ -25,7 +25,7 @@ beforeEach(async () => {
   directory = path.join(path.dirname(process.env.DATABASE_PATH!), `news-${crypto.randomUUID()}`);
   version = "526220";
   blocked = false;
-  now = Date.parse("2026-09-10T02:00:00Z");
+  now = Date.parse("2026-09-08T07:00:00Z");
   image = await sharp({ create: { width: 30, height: 60, channels: 3, background: "#446644" } }).jpeg().toBuffer();
   fetcher = vi.fn<NewsFetch>(async (input) => {
     const url = String(input);
@@ -90,98 +90,167 @@ describe("限定来源与读取大小", () => {
   });
 });
 
-describe("自动同步与手动立即刷新", () => {
-  it("首次读取即解析并缓存快报；并发访问只抓取一次", async () => {
-    const states = await Promise.all(Array.from({ length: 8 }, () => service.read()));
-    expect(fetcher).toHaveBeenCalledTimes(4);
-    expect(states.every(state => state.status === "ready")).toBe(true);
-    const page = states[0].edition!.pages[0];
-    expect(page).toMatchObject({ width: 30, height: 60 });
-    expect(await service.image(page.key)).toEqual(image);
-    expect(JSON.parse(await fs.readFile(path.join(directory, "edition.json"), "utf8")).edition.version).toBe(version);
+describe("按周计划同步与手动更新", () => {
+  const sync = async () => { await service.refresh(); return service.read(); };
+  const changedImage = async () => { image = await sharp({ create: { width: 30, height: 60, channels: 3, background: "#aa5522" } }).jpeg().toBuffer(); };
+
+  it("页面、GET 和并发访客只读本站缓存，不触发源站请求", async () => {
+    const states = await Promise.all(Array.from({ length: 20 }, () => service.read()));
+    expect(states.every(state => state.status === "unavailable")).toBe(true);
+    expect(fetcher).not.toHaveBeenCalled();
   });
-  it("30 秒内复用结果，到期只核对入口；新版本再读取内容", async () => {
-    await service.read();
-    await service.read();
+  it("非检查时段即使缓存为空也不自动请求", async () => {
+    now = Date.parse("2026-09-10T10:00:00+08:00");
+    await service.refresh();
+    expect(fetcher).not.toHaveBeenCalled();
+    expect((await service.read()).schedule.nextCheckAt).toBe("2026-09-15T07:00:00.000Z");
+  });
+  it("首次计划检查缓存完整长图；只建立基准，不误判本周已更新", async () => {
+    await Promise.all(Array.from({ length: 8 }, () => service.refresh()));
+    const state = await service.read();
     expect(fetcher).toHaveBeenCalledTimes(4);
-    now += 30_000;
-    await service.read();
+    expect(state).toMatchObject({ status: "ready", schedule: { phase: "active" } });
+    expect(await service.image(state.edition!.pages[0].key)).toEqual(image);
+  });
+  it("周二五分钟才再次读取入口；成功读取旧内容不暂停", async () => {
+    await sync();
+    now += 299_999;
+    await sync();
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    now++;
+    const checked = await sync();
     expect(fetcher).toHaveBeenCalledTimes(6);
-    version = "526221";
-    now += 30_000;
-    expect((await service.read()).edition?.version).toBe("526221");
-    expect(fetcher).toHaveBeenCalledTimes(10);
+    expect(checked.schedule.phase).toBe("active");
   });
-  it("手动刷新不等定时器，并重新读取配置和长图", async () => {
-    const first = await service.read();
-    image = await sharp({ create: { width: 30, height: 60, channels: 3, background: "#aa5522" } }).jpeg().toBuffer();
-    now += 1_000;
-    const forced = await service.forceRead();
-    expect(forced?.status).toBe("ready");
-    expect(forced?.edition?.pages[0].key).not.toBe(first.edition?.pages[0].key);
+  it("只有版本号变化、长图未变时继续检查，收录时间不变", async () => {
+    const first = await sync();
+    version = "526221"; now += 300_000;
+    const next = await sync();
+    expect(next.edition?.version).toBe(version);
+    expect(next.edition?.syncedAt).toBe(first.edition?.syncedAt);
+    expect(next.schedule.phase).toBe("active");
+  });
+  it("检测到新长图后暂停本周，周三不再抓取", async () => {
+    await sync();
+    version = "526221"; await changedImage(); now += 300_000;
+    expect((await sync()).schedule).toMatchObject({ phase: "complete", nextCheckAt: "2026-09-15T07:00:00.000Z" });
+    const calls = fetcher.mock.calls.length;
+    now = Date.parse("2026-09-09T16:00:00+08:00");
+    await sync();
+    expect(fetcher).toHaveBeenCalledTimes(calls);
+  });
+  it("本周暂停状态跨重启保留，下周恢复且不会把上一期当新一期", async () => {
+    await sync();
+    version = "526221"; await changedImage(); now += 300_000;
+    await sync();
+    service = new NewsService(directory, fetcher, () => now);
+    expect((await service.read()).schedule.phase).toBe("complete");
+    const count = fetcher.mock.calls.length;
+    await sync();
+    expect(fetcher).toHaveBeenCalledTimes(count);
+    now = Date.parse("2026-09-15T15:00:00+08:00");
+    expect((await sync()).schedule.phase).toBe("active");
+    expect(fetcher).toHaveBeenCalledTimes(count + 2);
+  });
+  it("周二20点停止，周三15点恢复且间隔一分钟", async () => {
+    now = Date.parse("2026-09-08T19:55:00+08:00");
+    await sync();
+    now += 300_000; await sync();
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    now = Date.parse("2026-09-09T15:00:00+08:00"); await sync();
+    now += 59_999; await sync();
+    expect(fetcher).toHaveBeenCalledTimes(6);
+    now++; await sync();
     expect(fetcher).toHaveBeenCalledTimes(8);
+  });
+  it("检查间隔也持久化，重启不会导致额外请求", async () => {
+    await sync();
+    service = new NewsService(directory, fetcher, () => now);
+    await sync();
+    expect(fetcher).toHaveBeenCalledTimes(4);
     expect(await service.forceRead()).toBeNull();
+    expect(service.retryAfterSeconds()).toBe(60);
+  });
+  it("时段外可手动更新，一分钟内重复点击不会重复访问", async () => {
+    now = Date.parse("2026-09-10T10:00:00+08:00");
+    const first = await service.forceRead();
+    expect(first?.status).toBe("ready");
+    expect(fetcher).toHaveBeenCalledTimes(4);
+    expect(await service.forceRead()).toBeNull();
+    now += 60_000; await changedImage();
+    const forced = await service.forceRead();
+    expect(forced?.edition?.pages[0].key).not.toBe(first?.edition?.pages[0].key);
     expect(fetcher).toHaveBeenCalledTimes(8);
   });
-  it("自动检查进行中点击刷新，完成后仍会重新抓取完整内容", async () => {
-    await service.read();
-    now += 30_000;
+  it("自动和手动同时触发时共用进行中的一次更新", async () => {
     let release!: () => void;
     const gate = new Promise<void>(resolve => { release = resolve; });
     fetcher.mockImplementationOnce(async () => { await gate; return new Response(null, { status: 302, headers: { Location: source } }); });
-    const automatic = service.read();
-    await Promise.resolve();
+    const automatic = service.refresh();
     const manual = service.forceRead();
     release();
     await Promise.all([automatic, manual]);
-    expect(fetcher).toHaveBeenCalledTimes(10);
-    expect(fetcher.mock.calls.filter(([url]) => String(url) === app)).toHaveLength(2);
+    expect(fetcher).toHaveBeenCalledTimes(4);
   });
-  it("无变化的手动核对不会改变本期收录时间", async () => {
-    const first = await service.read();
-    now += 2_000;
-    const forced = await service.forceRead();
-    expect(forced?.edition?.syncedAt).toBe(first.edition?.syncedAt);
-    expect(forced?.checkedAt).not.toBe(first.checkedAt);
+  it("未知新旧的首次内容和断档多周的缓存不会直接停止当前周期", async () => {
+    const first = await sync();
+    const old = JSON.parse(await fs.readFile(path.join(directory, "edition.json"), "utf8"));
+    old.checkedAt = "2026-08-01T00:00:00Z"; old.cycle = null; old.attemptedAt = null;
+    await fs.writeFile(path.join(directory, "edition.json"), JSON.stringify(old));
+    service = new NewsService(directory, fetcher, () => now);
+    version = "526221"; await changedImage();
+    const next = await sync();
+    expect(next.edition?.pages[0].key).not.toBe(first.edition?.pages[0].key);
+    expect(next.schedule.phase).toBe("active");
   });
-  it("源站失败时保留上一期和上次核对时间，恢复后自动追新", async () => {
-    const first = await service.read();
-    blocked = true;
-    now += 30_000;
-    const stale = await service.read();
-    expect(stale).toMatchObject({ status: "stale", edition: first.edition, checkedAt: first.checkedAt });
-    blocked = false;
-    version = "526222";
-    now += 30_000;
-    expect(await service.read()).toMatchObject({ status: "ready", edition: { version: "526222" } });
+  it("兼容旧版 edition.json，升级后时段外直接读取原有图片", async () => {
+    const first = await sync();
+    const stored = JSON.parse(await fs.readFile(path.join(directory, "edition.json"), "utf8"));
+    await fs.writeFile(path.join(directory, "edition.json"), JSON.stringify({ signature: stored.signature, edition: stored.edition }));
+    now = Date.parse("2026-09-10T10:00:00+08:00");
+    service = new NewsService(directory, fetcher, () => now);
+    expect((await service.read()).edition).toEqual(first.edition);
+    await sync();
+    expect(fetcher).toHaveBeenCalledTimes(4);
   });
-  it("返回 200 的验证页不会覆盖已有快报", async () => {
-    const first = await service.read();
+  it("验证页不会覆盖内容或完成本周；失败状态跨重启保留", async () => {
+    const first = await sync();
     fetcher.mockImplementation(async () => new Response("<title>安全验证</title>"));
-    now += 30_000;
-    expect(await service.read()).toMatchObject({ status: "stale", edition: first.edition });
+    now += 300_000;
+    expect(await sync()).toMatchObject({ status: "stale", edition: first.edition, checkedAt: first.checkedAt, schedule: { phase: "active" } });
+    service = new NewsService(directory, fetcher, () => now);
+    expect((await service.read()).status).toBe("stale");
+    await sync();
+    expect(fetcher).toHaveBeenCalledTimes(5);
   });
-  it("新版本长图失败时不发布不完整更新，重试后可恢复", async () => {
-    const first = await service.read();
-    version = "526223";
-    const validImage = image;
-    image = Buffer.from("<html>blocked</html>");
-    now += 30_000;
-    expect(await service.read()).toMatchObject({ status: "stale", edition: first.edition });
-    image = validImage;
-    now += 30_000;
-    expect((await service.read()).edition?.version).toBe("526223");
+  it("新版本图片失败时不暂停、不发布半成品，下次完整成功才暂停", async () => {
+    const first = await sync();
+    version = "526221";
+    image = Buffer.from("blocked"); now += 300_000;
+    expect(await sync()).toMatchObject({ status: "stale", edition: first.edition, schedule: { phase: "active" } });
+    await changedImage(); now += 300_000;
+    expect(await sync()).toMatchObject({ status: "ready", schedule: { phase: "complete" } });
   });
-  it("重启后源站不可用仍能读取持久缓存", async () => {
-    const first = await service.read();
+  it("源站失败也计入检查间隔，没有请求风暴", async () => {
     blocked = true;
-    const restarted = new NewsService(directory, fetcher, () => now);
-    expect(await restarted.read()).toMatchObject({ status: "stale", edition: first.edition });
-    expect(await restarted.image(first.edition!.pages[0].key)).toEqual(image);
+    await sync(); await sync(); await service.read();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect((await service.read()).status).toBe("unavailable");
+    now += 300_000; blocked = false;
+    expect((await sync()).status).toBe("ready");
   });
-  it("没有成功内容时明确返回不可用，不编造快报", async () => {
-    blocked = true;
-    expect(await service.read()).toMatchObject({ status: "unavailable", edition: null, checkedAt: null });
+  it("本周暂停后仍可手动检查，而周一的内容变化不提前暂停周二", async () => {
+    await sync();
+    version = "526221"; await changedImage(); now += 300_000;
+    await sync();
+    now += 60_000;
+    expect((await service.forceRead())?.schedule.phase).toBe("complete");
+    now = Date.parse("2026-09-14T16:00:00+08:00");
+    version = "526222";
+    image = await sharp({ create: { width: 30, height: 60, channels: 3, background: "#2222bb" } }).jpeg().toBuffer();
+    expect((await service.forceRead())?.schedule.phase).toBe("scheduled");
+    now = Date.parse("2026-09-15T15:00:00+08:00");
+    expect((await sync()).schedule.phase).toBe("active");
   });
   it("图片接口不能读取缓存目录外的文件", async () => {
     expect(await service.image("../../package.json")).toBeNull();

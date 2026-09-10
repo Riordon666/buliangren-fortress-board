@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "@/app/api/news/route";
 import { GET as imageGET } from "@/app/api/news/images/[key]/route";
 
-const service = vi.hoisted(() => ({ read: vi.fn(), forceRead: vi.fn(), image: vi.fn() }));
+const service = vi.hoisted(() => ({ read: vi.fn(), forceRead: vi.fn(), image: vi.fn(), retryAfterSeconds: vi.fn() }));
 vi.mock("@/lib/news/runtime", () => ({ getNewsService: () => service }));
 const state = { status: "ready", edition: { version: "526220" }, checkedAt: "2026-09-10T02:00:00Z", refreshSeconds: 30 };
-beforeEach(() => { vi.resetAllMocks(); service.read.mockResolvedValue(state); service.forceRead.mockResolvedValue(state); });
+beforeEach(() => { vi.resetAllMocks(); service.read.mockResolvedValue(state); service.forceRead.mockResolvedValue(state); service.retryAfterSeconds.mockReturnValue(60); });
 const request = (headers: HeadersInit = {}) => new Request("https://naruto.riordon.xyz/api/news", { method: "POST", headers });
 
 describe("公开快报刷新接口", () => {
@@ -21,11 +21,26 @@ describe("公开快报刷新接口", () => {
     expect((await POST(request(headers))).status).toBe(403);
     expect(service.forceRead).not.toHaveBeenCalled();
   });
+  it("生产反向代理使用内部 Host 时仍接受真实本站 Origin", async () => {
+    const response = await POST(new Request("http://127.0.0.1:3001/api/news", { method: "POST", headers: { Host: "127.0.0.1:3001", Origin: "https://naruto.riordon.xyz", "Sec-Fetch-Site": "same-origin" } }));
+    expect(response.status).toBe(200);
+    expect(service.forceRead).toHaveBeenCalledOnce();
+  });
+  it("框架内部使用 localhost 时仍接受实际访问的本机 Host", async () => {
+    const response = await POST(new Request("http://localhost:3102/api/news", { method: "POST", headers: { Host: "127.0.0.1:3102", Origin: "http://127.0.0.1:3102", "Sec-Fetch-Site": "same-origin" } }));
+    expect(response.status).toBe(200);
+    expect(service.forceRead).toHaveBeenCalledOnce();
+  });
+  it("伪造转发域名不能让跨站来源通过", async () => {
+    const response = await POST(new Request("http://127.0.0.1:3001/api/news", { method: "POST", headers: { Origin: "https://evil.test", "X-Forwarded-Host": "evil.test" } }));
+    expect(response.status).toBe(403);
+    expect(service.forceRead).not.toHaveBeenCalled();
+  });
   it("重复刷新返回短暂等待提示", async () => {
     service.forceRead.mockResolvedValue(null);
     const response = await POST(request());
     expect(response.status).toBe(429);
-    expect(response.headers.get("retry-after")).toBe("5");
+    expect(response.headers.get("retry-after")).toBe("60");
   });
   it("首次同步失败返回 503，已有缓存失败仍可阅读", async () => {
     service.read.mockResolvedValueOnce({ ...state, status: "unavailable", edition: null });
