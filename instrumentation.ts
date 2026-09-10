@@ -4,4 +4,6 @@ export async function register() {
   if (process.env.npm_lifecycle_event && process.env.npm_lifecycle_event !== "start") return;
   const { startPackageAutoConfirmScheduler } = await import("@/lib/package-auto");
   startPackageAutoConfirmScheduler();
+  const { startNewsScheduler } = await import("@/lib/news/runtime");
+  startNewsScheduler();
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpenText, Database, Flame, LockKeyhole, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpenText, Database, Flame, LockKeyhole, Newspaper, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { ACCESSORY_SERIES, ACCESSORY_SLOTS } from "@/lib/accessory-data";
 
 export const metadata = { title: "火影手游资料库" };
@@ -13,7 +13,7 @@ export default function PublicHomePage() {
           <span className="public-kicker"><Flame size={17} /> 木叶隐村 · 忍者情报站</span>
           <h1>火影手游资料库</h1>
           <div className="public-nindo">你的忍道，从这里出发。</div>
-          <p>查饰品、看战绩、与同伴并肩作战。<br />不良人为每一位忍者，整理好下一程的情报。</p>
+          <p>查饰品、看快报、与同伴并肩作战。<br />不良人为每一位忍者，整理好下一程的情报。</p>
           <div className="public-hero-actions">
             <Link href="/accessories" className="primary-button"><Search size={19} />查询饰品数据</Link>
             <Link href="/login" className="secondary-button"><ShieldCheck size={19} />进入组织内部</Link>
@@ -38,6 +38,11 @@ export default function PublicHomePage() {
         <article><span>资料查询</span><strong>公开</strong><small>无需注册或登录</small></article>
       </section>
       <section className="public-feature-grid">
+        <article className="public-panel news-home-teaser">
+          <div className="feature-icon"><Newspaper size={28} /></div>
+          <div><span className="eyebrow">木叶情报 · 每周上新</span><h2>木叶快报</h2><p>本周活动前瞻，村里消息早知道。自动跟进腾讯源站，电脑、手机都能轻松阅读。</p></div>
+          <Link href="/news" className="primary-button">阅读本期快报 <ArrowRight size={18} /></Link>
+        </article>
         <article className="public-panel featured-archive">
           <div className="feature-icon"><Database size={28} /></div>
           <div><span className="eyebrow">情报卷轴 · 随时查阅</span><h2>饰品资料库</h2><p>输入抗魔值，快速找到对应系列。穿戴等级、强化上限与各部位资料，一页查清。</p></div>

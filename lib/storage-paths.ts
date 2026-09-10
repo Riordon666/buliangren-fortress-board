@@ -36,3 +36,10 @@ export function reportCacheDirectory() {
     "REPORT_CACHE_DIR"
   );
 }
+
+export function newsCacheDirectory() {
+  return requireDedicatedDirectory(
+    resolveConfiguredPath(process.env.NEWS_CACHE_DIR, path.join(path.dirname(databaseFilePath()), "news-cache")),
+    "NEWS_CACHE_DIR"
+  );
+}

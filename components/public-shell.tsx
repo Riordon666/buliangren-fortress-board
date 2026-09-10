@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShinobiMark } from "@/components/shinobi-mark";
-import { BookOpenText, Database, Home, LogIn } from "lucide-react";
+import { BookOpenText, Database, Home, LogIn, Newspaper } from "lucide-react";
 
 export function PublicShell({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +15,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           <nav className="public-nav" aria-label="公开导航">
             <Link href="/"><Home size={18} />首页</Link>
             <Link href="/accessories"><Database size={18} />饰品资料</Link>
+            <Link href="/news"><Newspaper size={18} />木叶快报</Link>
           </nav>
 
           <Link href="/login" className="public-login-button">
@@ -29,10 +30,10 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
       <footer className="public-footer">
         <div>
           <span className="footer-mark"><BookOpenText size={19} /></span>
-          <p><strong>木叶资料卷轴</strong><small>玩家整理的火影忍者手游固定资料查询站</small></p>
+          <p><strong>木叶资料卷轴</strong><small>火影忍者手游资料查询与每周活动前瞻</small></p>
         </div>
         <p className="public-disclaimer">本站为玩家社区工具，资料仅供参考，与游戏官方无隶属关系。</p>
-        <nav aria-label="页脚导航"><Link href="/accessories">饰品资料</Link><Link href="/login">不良人组织入口</Link></nav>
+        <nav aria-label="页脚导航"><Link href="/news">木叶快报</Link><Link href="/accessories">饰品资料</Link><Link href="/login">不良人组织入口</Link></nav>
       </footer>
     </div>
   );

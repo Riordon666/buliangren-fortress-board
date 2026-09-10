@@ -9,6 +9,7 @@ node_modules/
 *.sqlite3-*
 data/backups/
 data/report-cache/
+data/news-cache/
 public/uploads/*
 !public/uploads/.gitkeep
 .env*
