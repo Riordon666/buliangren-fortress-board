@@ -46,7 +46,22 @@ node --env-file=.env.production scripts/news-mail-status.mjs
 
 `sent` 表示邮箱 API 已接受，不代表已进入收件箱；`unknown` 表示发送结果需要核对，程序不会自动重复发信。`queued` 会按重试时间继续处理，`cancelled` 已停止。日志只记录失败类别，不打印订阅邮箱、邮件内容或密钥。
 
-状态汇总中的 `retries` 会显示尝试次数及错误类别：`provider-authorization` 检查两端专用密钥；`provider-network` 检查服务器到邮箱 API 的 DNS、HTTPS 连接；`provider-unavailable` 表示邮箱 API 暂不可用；`local-preparation-failed` 检查应用日志与数据库权限。无需公开密钥、订阅地址或邮件链接。
+状态汇总中的 `retries` 会显示尝试次数及错误类别。先按类别定位，不需要公开密钥、订阅地址或邮件链接：
+
+| 错误类别 | 检查方向 |
+| --- | --- |
+| `provider-authorization` | 两端专用密钥、邮箱 API 的访问限制 |
+| `provider-network-dns` | 服务器 DNS 解析 |
+| `provider-network-timeout` | 服务器到邮箱 API 的连接或响应超时 |
+| `provider-network-tls` | HTTPS 证书、证书链和系统时间；保留证书校验 |
+| `provider-network-connection` | 连接被拒绝、断开或网络不可达 |
+| `provider-redirect` | API 地址是否正确、反向代理是否把请求重定向；发送程序不跟随跳转 |
+| `provider-request-header` | 密钥是否误填了中文说明文字、换行等非法请求头字符 |
+| `provider-network` | 旧版记录或未能进一步分类的请求错误，需从服务器复查连接 |
+| `provider-unavailable` | 邮箱 API 暂不可用 |
+| `local-preparation-failed` | 应用日志、数据库权限与邮件内容准备 |
+
+错误分类不改变任务的幂等键、退避重试和发送状态。程序只保存固定分类，不保存原始网络报错中的地址或请求头。
 
 订阅接口使用 `X-Real-IP` 做来源限流。Nginx 反向代理应由服务器覆写它：
 
