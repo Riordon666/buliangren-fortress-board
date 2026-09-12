@@ -7,15 +7,20 @@ import { createMailTables, consumeMailLimits, MailRequestError, type Subscriber,
 import { makeMailImages } from "@/lib/news-mail/images";
 import { confirmationMail, editionMail } from "@/lib/news-mail/templates";
 import { sendMail, type InlineAttachment, type MailPayload, type SendResult } from "@/lib/news-mail/provider";
+import { createMailFetcher } from "@/lib/news-mail/transport";
 
 const DAY = 86_400_000;
 export const editionFingerprint = (edition: NewsEdition | null) => edition ? createHash("sha256").update(edition.pages.map(page => page.key).join(",")).digest("hex") : null;
 type Source = { read(): Promise<NewsState>; image(key: string): Promise<Buffer | null> };
 type Sender = (key: string, payload: MailPayload) => Promise<SendResult>;
+const senderFor = (config: MailConfig): Sender => {
+  const fetcher = createMailFetcher(config.proxyUrl);
+  return (key, payload) => sendMail(config.apiUrl, config.apiToken, key, payload, fetcher);
+};
 type EditionRow = { edition_json: string; images_json: string | null };
 export class NewsMailService {
   private processing: Promise<void> | null = null;
-  constructor(private db: Database.Database, private config: MailConfig, private news: Source, private now = Date.now, private sender: Sender = (key, payload) => sendMail(config.apiUrl, config.apiToken, key, payload)) { createMailTables(db); }
+  constructor(private db: Database.Database, private config: MailConfig, private news: Source, private now = Date.now, private sender: Sender = senderFor(config)) { createMailTables(db); }
 
   async initialize() { this.observe((await this.news.read()).edition); }
   private observe(edition: NewsEdition | null) {

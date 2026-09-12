@@ -26,6 +26,7 @@
     "read-excel-file": "^9.3.8",
     "recharts": "^3.10.1",
     "sharp": "^0.35.3",
+    "socks-proxy-agent": "10.1.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10",

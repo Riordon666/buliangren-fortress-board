@@ -70,3 +70,22 @@ proxy_set_header X-Real-IP $remote_addr;
 ```
 
 缺少可信来源地址时，所有未知来源共用每小时限额。即使来源地址被伪造，独立的单邮箱与全站限流仍会生效。无需把此接口开放跨域。
+
+## 服务器直连邮箱 API 超时时
+
+如果服务器直连返回 `UND_ERR_CONNECT_TIMEOUT`，而同机已有 Mihomo 代理可以访问邮箱 API，可配置 `NEWS_MAIL_PROXY_URL=socks5h://用户名:密码@127.0.0.1:端口`。用户名和密码必须分别做 URL 编码；只在服务器受保护的环境文件中保存，不要粘贴到聊天、命令参数或 Git。
+
+该配置仅作用于木叶快报的邮件 API，使用代理端 DNS，保持 HTTPS 证书校验与原站点名称。网站其他请求、腾讯快报检查周期、Mihomo 监听与账号均不修改。不配置该项仍使用原来的直连方式。
+
+本项目提供本机配置助手，适用于已有 `/etc/mihomo/local-settings.json`（根级 `port`、`username`、`password`）的服务器。先停止宝塔 Node 项目并按原成品包流程部署新版本，再在宝塔终端以 root 执行：
+
+```bash
+cd /www/wwwroot/buliangren-runtime
+node scripts/configure-news-mail-proxy.mjs --apply
+```
+
+助手在服务器本地读取现有代理凭据，通过 curl 标准输入传递代理与 API 认证，不输出密码，也不把凭据放入进程参数。它使用空 JSON、没有收件人和任务编号的探针验证连接与认证，不发送邮件。只有拿到专用 API 预期的校验响应后，才备份 `.env.production` 并写入邮件专用代理；原有环境变量、文件属主和权限保留。不要放宽 Mihomo 设置文件的权限给网站用户。
+
+写入后，助手只提前已有 `queued` 且因网络失败推迟的任务的下次尝试时间；不改变任务编号、内容、尝试次数，不重发 `sent`、`unknown` 或 `cancelled` 的记录。启动或重启宝塔 Node 项目后，后台继续处理这些任务。运行 `node --env-file=.env.production scripts/news-mail-status.mjs` 检查 `sent` 是否增加，并让收件人确认收到邮件。
+
+不带 `--apply` 时只验证连接。若助手报告代理已通但 API 认证失败，核对两端邮件专用密钥；不要重置订阅签名密钥。

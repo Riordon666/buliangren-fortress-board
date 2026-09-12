@@ -39,6 +39,15 @@ describe("邮件配置与订阅确认", () => {
     expect(getMailConfig({ ...env, NEWS_PUBLIC_URL: config.publicUrl + "/news" })).toBeNull();
     expect(getMailConfig({ ...env, NEWS_MAIL_API_URL: "http://mail.riordon.xyz/api" })).toBeNull();
   });
+  it("邮件代理未设置时直连，设置后仅接受完整的SOCKS5远程DNS地址", () => {
+    const env = { NEWS_MAIL_API_URL: config.apiUrl, NEWS_MAIL_API_TOKEN: config.apiToken, NEWS_SUBSCRIPTION_SECRET: config.subscriptionSecret, NEWS_PUBLIC_URL: config.publicUrl };
+    expect(getMailConfig({ ...env, NEWS_MAIL_PROXY_URL: "" })).toEqual(config);
+    const proxyUrl = "socks5h://local-user:encoded%23password@127.0.0.1:38157";
+    expect(getMailConfig({ ...env, NEWS_MAIL_PROXY_URL: proxyUrl })).toEqual({ ...config, proxyUrl });
+    for (const value of ["http://127.0.0.1:38157", "socks5://127.0.0.1:38157", "socks5h://127.0.0.1", "socks5h://127.0.0.1:0", "socks5h://127.0.0.1:38157/path", "socks5h://127.0.0.1:38157?token=bad"]) {
+      expect(getMailConfig({ ...env, NEWS_MAIL_PROXY_URL: value })).toBeNull();
+    }
+  });
   it("只给输入的单一邮箱发确认邮件，未确认不发快报", async () => {
     service.subscribe(" Ninja@Example.com ", "127.0.0.1");
     expect(row().status).toBe("pending");

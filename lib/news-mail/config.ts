@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type MailConfig = { apiUrl: string; apiToken: string; subscriptionSecret: string; publicUrl: string };
+export type MailConfig = { apiUrl: string; apiToken: string; subscriptionSecret: string; publicUrl: string; proxyUrl?: string };
 export function getMailConfig(env: Record<string, string | undefined> = process.env): MailConfig | null {
   const apiToken = env.NEWS_MAIL_API_TOKEN?.trim() || "";
   const subscriptionSecret = env.NEWS_SUBSCRIPTION_SECRET?.trim() || "";
@@ -10,7 +10,18 @@ export function getMailConfig(env: Record<string, string | undefined> = process.
     const site = new URL(env.NEWS_PUBLIC_URL || "");
     if (api.protocol !== "https:" || api.username || api.password || api.hash || api.search ||
         site.protocol !== "https:" || site.username || site.password || site.hash || site.search || site.pathname !== "/") return null;
-    return { apiUrl: api.href, apiToken, subscriptionSecret, publicUrl: site.origin };
+    const proxyInput = env.NEWS_MAIL_PROXY_URL?.trim();
+    let proxyUrl: string | undefined;
+    if (proxyInput) {
+      const proxy = new URL(proxyInput);
+      if (proxy.protocol !== "socks5h:" || !proxy.hostname || !proxy.port || proxy.hash || proxy.search || (proxy.pathname && proxy.pathname !== "/")) return null;
+      decodeURIComponent(proxy.username);
+      decodeURIComponent(proxy.password);
+      const port = Number(proxy.port);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
+      proxyUrl = proxy.href;
+    }
+    return { apiUrl: api.href, apiToken, subscriptionSecret, publicUrl: site.origin, ...(proxyUrl ? { proxyUrl } : {}) };
   } catch { return null; }
 }
 export function mailConfigured() { return getMailConfig() !== null; }
