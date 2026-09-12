@@ -249,3 +249,82 @@ describe("本期快报发送给执行时全部已确认订阅", () => {
     }
   });
 });
+
+
+describe("指定邮箱的独立带图验收任务", () => {
+  it("正式邮件已经 sent 后仍可创建一次指定邮箱验收，原记录和其他订阅保持不变", async () => {
+    await service.initialize();
+    await activate();
+    await activate("other@example.com");
+    enqueueCurrentEdition(db, { to, send: true, now });
+    await service.tick();
+    const original = editionJobs()[0];
+    expect(original.status).toBe("sent");
+    const before = snapshot();
+
+    const result = enqueueCurrentEdition(db, { to, testId: "mail33-check-20260912", send: true, now });
+    expect(result).toMatchObject({ recipients: 1, added: 1, existing: {} });
+    expect(editionJobs()).toHaveLength(2);
+    expect(editionJobs().find(job => job.id === original.id)).toEqual(original);
+    expect(snapshot().news_mail_state).toEqual(before.news_mail_state);
+    expect(snapshot().news_mail_subscribers).toEqual(before.news_mail_subscribers);
+
+    await service.tick();
+    expect(sender).toHaveBeenCalledTimes(2);
+    const [testKey, payload] = sender.mock.calls[1];
+    expect(testKey).not.toBe(original.id);
+    expect(payload.to).toBe(to);
+    expect(payload.subject).toBe("木叶快报已经更新");
+    expect(payload.html).toContain('src="cid:konoha-1"');
+    expect(payload.attachments.length).toBeGreaterThan(0);
+    expect(payload).toEqual(sender.mock.calls[0][1]);
+    expect(editionJobs().find(job => job.id === original.id)).toEqual(original);
+    expect(editionJobs().every(job => job.status === "sent")).toBe(true);
+  });
+
+  it("相同验收编号在 queued 和 sent 后重复执行均不再创建任务或重置正式记录", async () => {
+    await service.initialize();
+    await activate();
+    enqueueCurrentEdition(db, { to, send: true, now });
+    await service.tick();
+    const options = { to, testId: "mail33-repeat-check", send: true, now };
+    expect(enqueueCurrentEdition(db, options)).toMatchObject({ added: 1 });
+    const queued = snapshot();
+    expect(enqueueCurrentEdition(db, options)).toMatchObject({ added: 0, existing: { queued: 1 } });
+    expect(snapshot()).toEqual(queued);
+    await service.tick();
+    expect(sender).toHaveBeenCalledTimes(2);
+    const sent = snapshot();
+    expect(enqueueCurrentEdition(db, options)).toMatchObject({ added: 0, existing: { sent: 1 } });
+    expect(snapshot()).toEqual(sent);
+    expect(enqueueCurrentEdition(db, { to, send: true, now })).toMatchObject({ added: 0, existing: { sent: 1 } });
+    await service.tick();
+    expect(sender).toHaveBeenCalledTimes(2);
+  });
+
+  it("验收编号只允许指定单个邮箱，不能启用全部订阅群发或省略邮箱", async () => {
+    await service.initialize();
+    await activate();
+    const before = snapshot();
+    for (const options of [
+      { allActive: true, testId: "mail33-unsafe", send: true, now },
+      { to, allActive: true, testId: "mail33-unsafe", send: true, now },
+      { testId: "mail33-unsafe", send: true, now }
+    ]) {
+      expect(() => enqueueCurrentEdition(db, options)).toThrow();
+      expect(snapshot()).toEqual(before);
+    }
+    expect(sender).not.toHaveBeenCalled();
+  });
+
+  it("无效验收编号在入队前拒绝，不允许空编号、分隔符、换行或超长值", async () => {
+    await service.initialize();
+    await activate();
+    const before = snapshot();
+    for (const testId of ["", "_invalid", "with space", "edition:collision", "../path", "line\nbreak", "中文", "x".repeat(65), 123, null]) {
+      expect(() => enqueueCurrentEdition(db, { to, testId, send: true, now })).toThrow();
+      expect(snapshot()).toEqual(before);
+    }
+    expect(sender).not.toHaveBeenCalled();
+  });
+});

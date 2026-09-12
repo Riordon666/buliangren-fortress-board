@@ -119,3 +119,13 @@ node --env-file=.env.production scripts/check-news-mail-api.mjs
 通过仅表示连接、专用认证和基础校验兼容，不证明图片处理、实际发信或送达。失败会区分网络/代理、认证、路由、重定向及响应格式问题。没有改变 API 时无需为了 3.3 修改本站业务代码；接口成功响应仍须保持 HTTP 200 和 `{ "status": "sent", "id": "..." }`，请求使用原 Bearer 认证、稳定的 `Idempotency-Key` 和 CID 附件字段。
 
 需要验收真实邮件时，使用已授权且自己控制的单个已确认邮箱：`news-mail-send-current.mjs --to 收件邮箱 --send`。只有明确要给所有订阅者补发时才使用 `--all-active`。同一期已发送的任务不会因验收重新发送，不能重置发送记录来绕过防重复保护。
+
+### 本期已发送时的单邮箱带图验收
+
+为自己控制且已确认订阅的邮箱添加 `--test-id`，可创建一封独立验收邮件，即使该邮箱已经收到本期正式快报。邮件继续由现有发送程序使用正式模板和内嵌快报图片发送，无需重启网站。
+
+```bash
+node --env-file=.env.production scripts/news-mail-send-current.mjs --to ninja@example.com --test-id mail-v33-images-20260912 --send
+```
+
+测试编号只能用于单个 `--to`，不能配合 `--all-active` 群发。同一期、同一轮订阅、同一测试编号重复执行只保留一条任务，沿用正常的代理、重试、退订检查和邮箱接口幂等保护；既有正式发送任务及其状态完全保留。输出 `added: 1` 表示已新增测试任务，`added: 0` 且有 `existing` 计数表示已有该任务。不要通过不断更换编号绕过不确定投递的核对流程。

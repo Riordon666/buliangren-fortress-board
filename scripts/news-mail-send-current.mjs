@@ -6,8 +6,11 @@ import { parseArgs } from "node:util";
 
 // Queue real edition jobs; the running website prepares its normal template and CID images.
 // Keep this dedupe format identical to NewsMailService.queue so retries never create extra mail.
-export function enqueueCurrentEdition(db, { to, allActive = false, send = false, now = Date.now() }) {
+export function enqueueCurrentEdition(db, { to, allActive = false, testId, send = false, now = Date.now() }) {
   if (Boolean(to) === Boolean(allActive)) throw new Error("请选择 --all-active 或 --to 收件邮箱，不能同时指定。");
+  if (testId !== undefined && (allActive || typeof testId !== "string" || !/^[a-z0-9][a-z0-9._-]{0,63}$/i.test(testId))) {
+    throw new Error("测试编号只能配合 --to 单邮箱使用，且需为 1～64 位英文字母、数字、点、下划线或短横线。");
+  }
   if (!allActive && (typeof to !== "string" || !to.trim() || to.length > 254 || /[\r\n]/.test(to))) {
     throw new Error("请通过 --to 指定一个已确认订阅的收件邮箱。");
   }
@@ -32,7 +35,10 @@ export function enqueueCurrentEdition(db, { to, allActive = false, send = false,
     let added = 0;
     const existing = {};
     for (const subscriber of subscribers) {
-      const dedupe = `edition:${subscriber.id}:${subscriber.generation}:${current.id}`;
+      const editionKey = `edition:${subscriber.id}:${subscriber.generation}:${current.id}`;
+      // A deliberately requested, single-recipient test has its own stable key.
+      // Never change or reset a real delivery to make an upgrade test send again.
+      const dedupe = testId === undefined ? editionKey : `test:${testId}:${editionKey}`;
       const job = findJob.get(dedupe);
       if (job) {
         existing[job.status] = (existing[job.status] || 0) + 1;
@@ -44,7 +50,7 @@ export function enqueueCurrentEdition(db, { to, allActive = false, send = false,
     return {
       mode: send ? "queued" : "preview",
       edition: { title: edition.title, version: edition.version, syncedAt: edition.syncedAt, pages: edition.pages.length },
-      recipients: subscribers.length, added, existing
+      recipients: subscribers.length, added, existing, ...(testId === undefined ? {} : { testId })
     };
   });
   // Select the current edition and recipients under the same lock as the inserts.
@@ -54,12 +60,12 @@ export function enqueueCurrentEdition(db, { to, allActive = false, send = false,
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   let db;
   try {
-    const { values } = parseArgs({ options: { to: { type: "string" }, "all-active": { type: "boolean", default: false }, send: { type: "boolean", default: false } }, strict: true, allowPositionals: false });
+    const { values } = parseArgs({ options: { to: { type: "string" }, "test-id": { type: "string" }, "all-active": { type: "boolean", default: false }, send: { type: "boolean", default: false } }, strict: true, allowPositionals: false });
     if (Boolean(values.to) === values["all-active"]) throw new Error("用法：node --env-file=.env.production scripts/news-mail-send-current.mjs --all-active --send（或用 --to 收件邮箱；省略 --send 仅预览）。");
     db = new Database(path.resolve(process.env.DATABASE_PATH?.trim() || "data/naruto-fortress.db"), { readonly: !values.send, fileMustExist: true });
     db.pragma("busy_timeout = 5000");
     if (values.send) db.pragma("foreign_keys = ON");
-    const result = enqueueCurrentEdition(db, { to: values.to, allActive: values["all-active"], send: values.send });
+    const result = enqueueCurrentEdition(db, { to: values.to, allActive: values["all-active"], testId: values["test-id"], send: values.send });
     console.log(JSON.stringify(result, null, 2));
     if (!values.send) console.log("仅预览，没有加入发送队列；带 --send 可发送。");
     else if (result.added) console.log(`已加入 ${result.added} 封本期快报邮件。保持网站运行，通常约 30 秒开始处理，按现有发送速率逐封发送。`);
