@@ -15,7 +15,7 @@ export default function PublicHomePage() {
           <div className="public-nindo">你的忍道，从这里出发。</div>
           <p>查饰品、看快报、与同伴并肩作战。<br />不良人为每一位忍者，整理好下一程的情报。</p>
           <div className="public-hero-actions">
-            <Link href="/accessories" className="primary-button"><Search size={19} />查询饰品数据</Link>
+            <Link href="/accessories" className="primary-button"><Search size={19} />查询强化与分解</Link>
             <Link href="/login" className="secondary-button"><ShieldCheck size={19} />进入组织内部</Link>
           </div>
           <div className="public-trust-row">
@@ -45,9 +45,9 @@ export default function PublicHomePage() {
         </article>
         <article className="public-panel featured-archive">
           <div className="feature-icon"><Database size={28} /></div>
-          <div><span className="eyebrow">情报卷轴 · 随时查阅</span><h2>饰品资料库</h2><p>输入抗魔值，快速找到对应系列。穿戴等级、强化上限与各部位资料，一页查清。</p></div>
+          <div><span className="eyebrow">情报卷轴 · 随时查阅</span><h2>饰品强化与分解</h2><p>每一级强化消耗多少材料，分解返还多少材料和保护符。选择系列与等级，查表、算合计、导出收藏。</p></div>
           <div className="feature-tags">{ACCESSORY_SLOTS.map((slot) => <span key={slot}>{slot}</span>)}</div>
-          <Link href="/accessories" className="primary-button">立即查询 <ArrowRight size={18} /></Link>
+          <Link href="/accessories" className="primary-button">打开材料表 <ArrowRight size={18} /></Link>
         </article>
         <article className="public-panel access-boundary-card">
           <span className="eyebrow"><LockKeyhole size={15} /> 组织作战中心</span>

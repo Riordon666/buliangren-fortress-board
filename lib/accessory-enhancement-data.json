@@ -1,0 +1,5915 @@
+[
+  {
+    "seriesId": "freedom",
+    "scope": "传说品质 · 按所列来源部位",
+    "note": "目前只核对到传说自由 +15 分解返还 5 张保护符；逐级尘、星与消耗数据未公开核实，保留空缺。",
+    "sourceIds": [
+      "gou-hailong"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 5
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "red-soul",
+    "scope": "传说品质 · 项链 / 手镯 / 戒指 / 徽章 / 腰带",
+    "note": "此表保护符适用于普通部位，+20 返还 45 张。耳环有差异：+20 返还 61 张，社区实录记录 41,900 尘；不能把本表套用给耳环。其他未核对材料保留空缺。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms",
+      "nangong-daybreak"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 3
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 6
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 11
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 17
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 23
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 30
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 37
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 45
+        }
+      }
+    ],
+    "variants": [
+      {
+        "id": "earring",
+        "label": "耳环",
+        "scope": "传说品质 · 赤魂耳环",
+        "note": "完整 +0→+20 单级消耗来自原作者实机录屏。+20 返还 41,900 尘 / 61 符来自社区分解实录；紫星及更低等级分解材料尚待核实。本表不能用于其他部位或精良品质。",
+        "rows": [
+          {
+            "level": 0,
+            "upgrade": {
+              "dust": 0,
+              "stars": 0,
+              "protection": 0
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 1,
+            "upgrade": {
+              "dust": 90,
+              "stars": 0,
+              "protection": 0
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 2,
+            "upgrade": {
+              "dust": 300,
+              "stars": 0,
+              "protection": 0
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 3,
+            "upgrade": {
+              "dust": 510,
+              "stars": 20,
+              "protection": 0
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 4,
+            "upgrade": {
+              "dust": 720,
+              "stars": 20,
+              "protection": 0
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 5,
+            "upgrade": {
+              "dust": 930,
+              "stars": 25,
+              "protection": 0
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 6,
+            "upgrade": {
+              "dust": 1140,
+              "stars": 25,
+              "protection": 1
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 7,
+            "upgrade": {
+              "dust": 1350,
+              "stars": 25,
+              "protection": 1
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 8,
+            "upgrade": {
+              "dust": 1560,
+              "stars": 25,
+              "protection": 1
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 9,
+            "upgrade": {
+              "dust": 1770,
+              "stars": 25,
+              "protection": 2
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 10,
+            "upgrade": {
+              "dust": 1980,
+              "stars": 30,
+              "protection": 4
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 11,
+            "upgrade": {
+              "dust": 2190,
+              "stars": 30,
+              "protection": 5
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 12,
+            "upgrade": {
+              "dust": 2400,
+              "stars": 30,
+              "protection": 7
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": 0
+            }
+          },
+          {
+            "level": 13,
+            "upgrade": {
+              "dust": 2610,
+              "stars": 30,
+              "protection": 10
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 14,
+            "upgrade": {
+              "dust": 2820,
+              "stars": 30,
+              "protection": 12
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 15,
+            "upgrade": {
+              "dust": 3030,
+              "stars": 30,
+              "protection": 14
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 16,
+            "upgrade": {
+              "dust": 3240,
+              "stars": 35,
+              "protection": 19
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 17,
+            "upgrade": {
+              "dust": 3450,
+              "stars": 35,
+              "protection": 20
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 18,
+            "upgrade": {
+              "dust": 3660,
+              "stars": 35,
+              "protection": 21
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 19,
+            "upgrade": {
+              "dust": 3870,
+              "stars": 35,
+              "protection": 22
+            },
+            "dismantle": {
+              "dust": null,
+              "stars": null,
+              "protection": null
+            }
+          },
+          {
+            "level": 20,
+            "upgrade": {
+              "dust": 4080,
+              "stars": 35,
+              "protection": 23
+            },
+            "dismantle": {
+              "dust": 41900,
+              "stars": null,
+              "protection": 61
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "seriesId": "loyalty",
+    "scope": "传说品质 · 按所列来源部位",
+    "note": "已收录 +13 至 +20 的逐级保护符返还；升级消耗与尘、星分解数据未获得完整可靠资料，保留空缺。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 5
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 11
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 19
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 30
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 41
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 53
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 66
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 79
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "nightmare",
+    "scope": "传说品质 · 按所列来源部位",
+    "note": "已收录 +13 至 +20 的逐级保护符返还；升级消耗与尘、星分解数据未获得完整可靠资料，保留空缺。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 5
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 13
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 21
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 33
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 45
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 58
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 72
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 87
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "rockfall",
+    "scope": "传说品质 · 按所列来源部位",
+    "note": "已补齐 +13～+30 返还保护符。+17→+18 消耗来自游戏面板；尘、星返还为社区记录的部分点位。+23 星列及 +24 尘有冲突，暂留空。+30 的 182,992 尘是项链实录，不外推到所有部位。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms",
+      "xiaomi-early"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 21
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 6
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 25
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 13
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 34
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 25
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 36
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 40
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 38
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 63
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 9800,
+          "stars": 90,
+          "protection": 40
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 81
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 126
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 151
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 176
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 112830,
+          "stars": 1339,
+          "protection": 203
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 121574,
+          "stars": null,
+          "protection": 229
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": 1491,
+          "protection": 254
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 139062,
+          "stars": 1567,
+          "protection": 280
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 147806,
+          "stars": 1643,
+          "protection": 305
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 332
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 357
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 383
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 182992,
+          "stars": null,
+          "protection": 408
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "seal",
+    "scope": "传说品质 · 分解材料点位为腰带",
+    "note": "尘、星返还以历史官方工具截图的 +14 / +30 两个点位核对；逐级保护符另据参考表。只补录已看清的 +12→+13 消耗，其余材料待核实。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms",
+      "official-simulator-2019",
+      "official-simulator-seal14",
+      "xiaomi-early"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 10650,
+          "stars": 120,
+          "protection": 17
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 6
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 21
+        },
+        "dismantle": {
+          "dust": 75734,
+          "stars": 1087,
+          "protection": 13
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 25
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 25
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 34
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 40
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 36
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 68
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 38
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 104
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 40
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 148
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 185
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 217
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 248
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 279
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 310
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 342
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 373
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 404
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 436
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 467
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 278886,
+          "stars": 4023,
+          "protection": 497
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "blessing",
+    "scope": "传说品质 · 社区表（+30 腰带官方工具截图交叉核对）",
+    "note": "收录 +11～+30 分解返还与 +11→+12 起的升级材料。+30 的 311,237 尘 / 4,490 星 / 497 符与历史官方工具截图一致；更低等级未按比例补值。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms",
+      "official-simulator-2019"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        },
+        "dismantle": {
+          "dust": 55984,
+          "stars": 891,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 10927,
+          "stars": 129,
+          "protection": 13
+        },
+        "dismantle": {
+          "dust": 64725,
+          "stars": 994,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 11885,
+          "stars": 134,
+          "protection": 17
+        },
+        "dismantle": {
+          "dust": 74233,
+          "stars": 1101,
+          "protection": 6
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 12855,
+          "stars": 140,
+          "protection": 21
+        },
+        "dismantle": {
+          "dust": 84517,
+          "stars": 1213,
+          "protection": 13
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 13805,
+          "stars": 145,
+          "protection": 25
+        },
+        "dismantle": {
+          "dust": 95561,
+          "stars": 1329,
+          "protection": 25
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 14765,
+          "stars": 152,
+          "protection": 34
+        },
+        "dismantle": {
+          "dust": 107373,
+          "stars": 1450,
+          "protection": 40
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 15737,
+          "stars": 155,
+          "protection": 36
+        },
+        "dismantle": {
+          "dust": 119962,
+          "stars": 1574,
+          "protection": 68
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 16684,
+          "stars": 163,
+          "protection": 38
+        },
+        "dismantle": {
+          "dust": 133309,
+          "stars": 1704,
+          "protection": 104
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 17645,
+          "stars": 168,
+          "protection": 40
+        },
+        "dismantle": {
+          "dust": 147425,
+          "stars": 1838,
+          "protection": 148
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 190,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 162317,
+          "stars": 1990,
+          "protection": 185
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 212,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 177209,
+          "stars": 2159,
+          "protection": 217
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 234,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 192101,
+          "stars": 2346,
+          "protection": 248
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 258,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 206993,
+          "stars": 2552,
+          "protection": 279
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 279,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 221885,
+          "stars": 2775,
+          "protection": 310
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 302,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 236777,
+          "stars": 3016,
+          "protection": 342
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 324,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 251669,
+          "stars": 3275,
+          "protection": 373
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 347,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 266561,
+          "stars": 3552,
+          "protection": 404
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 368,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 281453,
+          "stars": 3846,
+          "protection": 436
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 392,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 296345,
+          "stars": 4159,
+          "protection": 467
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 18615,
+          "stars": 414,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": 311237,
+          "stars": 4490,
+          "protection": 497
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "prayer",
+    "scope": "传说品质 · 社区参考表",
+    "note": "祈愿：只转录原图单次升级整数。分解绿为差额列，且未列 +0 基础返还；不能直接作为累计返还。分解符列 +31=570 与 +30=497/增量35不一致，+34=649.6为公式小数；整列不得直接作为验证游戏数据。尘单步+8=8817、+17=19883原图如此，需二次核实。原图声明资料鸣谢@711南宫@106山支。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 469,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 1606,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 2758,
+          "stars": 101,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 3924,
+          "stars": 109,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 5061,
+          "stars": 115,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 6213,
+          "stars": 123,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 7378,
+          "stars": 130,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 8817,
+          "stars": 137,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 9655,
+          "stars": 145,
+          "protection": 4
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 10820,
+          "stars": 152,
+          "protection": 7
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 11972,
+          "stars": 159,
+          "protection": 9
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 13111,
+          "stars": 166,
+          "protection": 13
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 14262,
+          "stars": 174,
+          "protection": 17
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 6
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 15427,
+          "stars": 182,
+          "protection": 21
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 13
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 16566,
+          "stars": 188,
+          "protection": 25
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 25
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 17718,
+          "stars": 196,
+          "protection": 34
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 40
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 19883,
+          "stars": 202,
+          "protection": 36
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 68
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 20020,
+          "stars": 210,
+          "protection": 38
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 104
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 21172,
+          "stars": 217,
+          "protection": 40
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 148
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 247,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 185
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 275,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 217
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 304,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 248
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 334,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 279
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 362,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 310
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 391,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 342
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 421,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 373
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 449,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 404
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 478,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 436
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 508,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 467
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 22338,
+          "stars": 536,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 497
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 25338,
+          "stars": 560,
+          "protection": 50
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 532
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 28338,
+          "stars": 585,
+          "protection": 53
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 30338,
+          "stars": 610,
+          "protection": 56
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 32338,
+          "stars": 635,
+          "protection": 59
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 34338,
+          "stars": 660,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 693
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "dawn",
+    "scope": "传说品质 · 社区参考表",
+    "note": "全 +1～+35 单次升级材料已收录。+30 返还来自原作者模拟器对比，沿用原作者口径，未确认是否包含 +0 本体基础返还；其他分解材料尚待核对。",
+    "sourceIds": [
+      "gou-hailong",
+      "benben-charms",
+      "nangong-sky"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 609,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 2087,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 3585,
+          "stars": 131,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 5101,
+          "stars": 141,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 6579,
+          "stars": 149,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 8076,
+          "stars": 159,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 9591,
+          "stars": 169,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 11072,
+          "stars": 178,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 12551,
+          "stars": 188,
+          "protection": 5
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 14066,
+          "stars": 197,
+          "protection": 8
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 15563,
+          "stars": 206,
+          "protection": 11
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 17044,
+          "stars": 215,
+          "protection": 16
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 18540,
+          "stars": 226,
+          "protection": 21
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 20055,
+          "stars": 236,
+          "protection": 26
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 15
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 21535,
+          "stars": 244,
+          "protection": 31
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 23033,
+          "stars": 254,
+          "protection": 42
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 24547,
+          "stars": 262,
+          "protection": 45
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 26026,
+          "stars": 273,
+          "protection": 47
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 27523,
+          "stars": 282,
+          "protection": 50
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 185
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 321,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": 231
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 357,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 395,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 434,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 470,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 508,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 547,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 583,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 621,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 660,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 29039,
+          "stars": 696,
+          "protection": 52
+        },
+        "dismantle": {
+          "dust": 485738,
+          "stars": 7569,
+          "protection": 614
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 32939,
+          "stars": 728,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 36839,
+          "stars": 760,
+          "protection": 66
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 39439,
+          "stars": 793,
+          "protection": 70
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 42039,
+          "stars": 825,
+          "protection": 73
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 44639,
+          "stars": 858,
+          "protection": 77
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "morning-light",
+    "scope": "传说品质 · 社区参考表",
+    "note": "原图仅给 0→1 到 34→35 的单次强化消耗与成功率，没有逐级分解表。upgrade 的 level N 表示 N-1→N；失败重试不计入。dismantle 全部 null 表示此图未提供。逐列和已与图片合计行核对。",
+    "sourceIds": [
+      "gou-hailong"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 736,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 2525,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 4337,
+          "stars": 158,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 6172,
+          "stars": 170,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 7960,
+          "stars": 180,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 9771,
+          "stars": 192,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 11605,
+          "stars": 204,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 13397,
+          "stars": 215,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 15186,
+          "stars": 227,
+          "protection": 6
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 17019,
+          "stars": 238,
+          "protection": 9
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 18831,
+          "stars": 249,
+          "protection": 13
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 20623,
+          "stars": 260,
+          "protection": 19
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 22433,
+          "stars": 273,
+          "protection": 25
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 24266,
+          "stars": 285,
+          "protection": 31
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 26057,
+          "stars": 295,
+          "protection": 37
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 27869,
+          "stars": 307,
+          "protection": 50
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 29701,
+          "stars": 317,
+          "protection": 54
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 31491,
+          "stars": 330,
+          "protection": 56
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 33302,
+          "stars": 341,
+          "protection": 60
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 388,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 431,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 477,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 525,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 568,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 614,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 661,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 705,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 751,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 798,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 35137,
+          "stars": 842,
+          "protection": 62
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 39856,
+          "stars": 880,
+          "protection": 75
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 44575,
+          "stars": 919,
+          "protection": 79
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 47721,
+          "stars": 959,
+          "protection": 84
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 50867,
+          "stars": 998,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 54013,
+          "stars": 1038,
+          "protection": 93
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "daybreak",
+    "scope": "传说品质 · 升级实录为曙光徽章",
+    "note": "尘与保护符覆盖 +1～+35，紫星 +1～+29 来自原作者 2023 年游戏录屏。+30 返还为 2025 年原作者模拟器显示值（849 符），未确认是否包含 +0 本体基础材料；不同年代参考资料可能存在取整或版本差异。",
+    "sourceIds": [
+      "gou-hailong",
+      "nangong-sky",
+      "nangong-daybreak"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 864,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 2966,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 5095,
+          "stars": 185,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 7252,
+          "stars": 199,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 9353,
+          "stars": 211,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 11480,
+          "stars": 225,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 13635,
+          "stars": 239,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 15741,
+          "stars": 252,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 17843,
+          "stars": 266,
+          "protection": 7
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 19997,
+          "stars": 279,
+          "protection": 10
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 22126,
+          "stars": 292,
+          "protection": 15
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 24232,
+          "stars": 305,
+          "protection": 22
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 26358,
+          "stars": 320,
+          "protection": 29
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 28512,
+          "stars": 334,
+          "protection": 36
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 30616,
+          "stars": 346,
+          "protection": 43
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 32746,
+          "stars": 360,
+          "protection": 58
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 34898,
+          "stars": 372,
+          "protection": 63
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 37001,
+          "stars": 387,
+          "protection": 65
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 39129,
+          "stars": 400,
+          "protection": 70
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 455,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 506,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 560,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 616,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 667,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 721,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 776,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 828,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 882,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 41285,
+          "stars": 937,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 41285,
+          "stars": null,
+          "protection": 72
+        },
+        "dismantle": {
+          "dust": 690464,
+          "stars": 10738,
+          "protection": 849
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 46830,
+          "stars": null,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 52375,
+          "stars": null,
+          "protection": 92
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 56072,
+          "stars": null,
+          "protection": 98
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 59768,
+          "stars": null,
+          "protection": 103
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 63465,
+          "stars": null,
+          "protection": 109
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "sunrise",
+    "scope": "传说品质 · 原作者参考表",
+    "note": "原视频6秒帧为单次强化与累计强化消耗表，并非分解返还表；只录强化至+35，后面的36～40精炼阶段已剔除。所有单次整数已和累计列交叉核对，总和吻合；比CSDN小数投影表更接近该原始资料。逐级返还图未提供，暂null。",
+    "sourceIds": [
+      "nangong-sunrise"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 967,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 3323,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 5706,
+          "stars": 207,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 8122,
+          "stars": 222,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 10475,
+          "stars": 236,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 12857,
+          "stars": 252,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 15272,
+          "stars": 268,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 17629,
+          "stars": 283,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 19985,
+          "stars": 299,
+          "protection": 7
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 22397,
+          "stars": 313,
+          "protection": 11
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 24781,
+          "stars": 327,
+          "protection": 16
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 27139,
+          "stars": 341,
+          "protection": 24
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 29522,
+          "stars": 359,
+          "protection": 32
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 31934,
+          "stars": 375,
+          "protection": 40
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 34291,
+          "stars": 387,
+          "protection": 48
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 36676,
+          "stars": 404,
+          "protection": 66
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 39086,
+          "stars": 416,
+          "protection": 70
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 41442,
+          "stars": 434,
+          "protection": 73
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 43824,
+          "stars": 448,
+          "protection": 78
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 510,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 566,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 628,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 691,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 748,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 807,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 869,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 927,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 987,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 1049,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 46240,
+          "stars": 1107,
+          "protection": 80
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 52450,
+          "stars": 1158,
+          "protection": 98
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 58661,
+          "stars": 1208,
+          "protection": 104
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 62800,
+          "stars": 1261,
+          "protection": 109
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 66941,
+          "stars": 1312,
+          "protection": 114
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 71081,
+          "stars": 1365,
+          "protection": 122
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "sky",
+    "scope": "传说品质 · 原作者参考表",
+    "note": "完整逐级消耗来自 2025 年原作者视频。原表 +32 单次尘与累计列存在 1 的差异，本页按单次列相加。+30 返还为原作者模拟器的强化投入返还，未确认是否包含 +0 本体基础材料。",
+    "sourceIds": [
+      "nangong-sky"
+    ],
+    "rows": [
+      {
+        "level": 0,
+        "upgrade": {
+          "dust": 0,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 1073,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 3686,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 6333,
+          "stars": 229,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 9015,
+          "stars": 246,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 11627,
+          "stars": 261,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 14271,
+          "stars": 279,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 16950,
+          "stars": 296,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 19568,
+          "stars": 313,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 22182,
+          "stars": 329,
+          "protection": 7
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 24859,
+          "stars": 346,
+          "protection": 12
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 27506,
+          "stars": 362,
+          "protection": 17
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 30124,
+          "stars": 378,
+          "protection": 26
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 32767,
+          "stars": 397,
+          "protection": 35
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 35445,
+          "stars": 415,
+          "protection": 44
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 38060,
+          "stars": 429,
+          "protection": 51
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 40709,
+          "stars": 447,
+          "protection": 70
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 43384,
+          "stars": 461,
+          "protection": 77
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 45999,
+          "stars": 480,
+          "protection": 79
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 48644,
+          "stars": 497,
+          "protection": 85
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 564,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 628,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 695,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 764,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 829,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 895,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 964,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 1028,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 1095,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 1164,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 51325,
+          "stars": 1228,
+          "protection": 88
+        },
+        "dismantle": {
+          "dust": 858085,
+          "stars": 13311,
+          "protection": 1032
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 58220,
+          "stars": 1285,
+          "protection": 108
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 65114,
+          "stars": 1341,
+          "protection": 112
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 69708,
+          "stars": 1400,
+          "protection": 120
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 74305,
+          "stars": 1456,
+          "protection": 125
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 78900,
+          "stars": 1515,
+          "protection": 133
+        },
+        "dismantle": {
+          "dust": null,
+          "stars": null,
+          "protection": null
+        }
+      }
+    ]
+  },
+  {
+    "seriesId": "cloud-trace",
+    "scope": "传说品质 · 原作者参考表",
+    "note": "按原作者 2026 年视频整数表收录至 +35。分解栏沿用作者表口径，未确认是否包含 +0 饰品本体的基础返还；与游戏画面有少量取整差异（如 +5→+6 绿瓶），请以游戏为准。未将精炼编码 36–40 当成强化等级。区间合计由本页各行相加。",
+    "sourceIds": [
+      "nangong-cloud"
+    ],
+    "rows": [
+      {
+        "level": 1,
+        "upgrade": {
+          "dust": 1191,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": 1191,
+          "stars": 0,
+          "protection": 0
+        }
+      },
+      {
+        "level": 2,
+        "upgrade": {
+          "dust": 4091,
+          "stars": 0,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": 5282,
+          "stars": 0,
+          "protection": 0
+        }
+      },
+      {
+        "level": 3,
+        "upgrade": {
+          "dust": 7029,
+          "stars": 254,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": 12311,
+          "stars": 254,
+          "protection": 0
+        }
+      },
+      {
+        "level": 4,
+        "upgrade": {
+          "dust": 10006,
+          "stars": 273,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": 22317,
+          "stars": 527,
+          "protection": 0
+        }
+      },
+      {
+        "level": 5,
+        "upgrade": {
+          "dust": 12905,
+          "stars": 289,
+          "protection": 0
+        },
+        "dismantle": {
+          "dust": 35222,
+          "stars": 816,
+          "protection": 0
+        }
+      },
+      {
+        "level": 6,
+        "upgrade": {
+          "dust": 15841,
+          "stars": 309,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": 51063,
+          "stars": 1125,
+          "protection": 0
+        }
+      },
+      {
+        "level": 7,
+        "upgrade": {
+          "dust": 18815,
+          "stars": 329,
+          "protection": 1
+        },
+        "dismantle": {
+          "dust": 69877,
+          "stars": 1454,
+          "protection": 0
+        }
+      },
+      {
+        "level": 8,
+        "upgrade": {
+          "dust": 21720,
+          "stars": 347,
+          "protection": 2
+        },
+        "dismantle": {
+          "dust": 91598,
+          "stars": 1801,
+          "protection": 0
+        }
+      },
+      {
+        "level": 9,
+        "upgrade": {
+          "dust": 24622,
+          "stars": 365,
+          "protection": 7
+        },
+        "dismantle": {
+          "dust": 116220,
+          "stars": 2166,
+          "protection": 0
+        }
+      },
+      {
+        "level": 10,
+        "upgrade": {
+          "dust": 27593,
+          "stars": 384,
+          "protection": 13
+        },
+        "dismantle": {
+          "dust": 143813,
+          "stars": 2550,
+          "protection": 0
+        }
+      },
+      {
+        "level": 11,
+        "upgrade": {
+          "dust": 30532,
+          "stars": 402,
+          "protection": 18
+        },
+        "dismantle": {
+          "dust": 171292,
+          "stars": 2912,
+          "protection": 0
+        }
+      },
+      {
+        "level": 12,
+        "upgrade": {
+          "dust": 33438,
+          "stars": 420,
+          "protection": 28
+        },
+        "dismantle": {
+          "dust": 198042,
+          "stars": 3248,
+          "protection": 0
+        }
+      },
+      {
+        "level": 13,
+        "upgrade": {
+          "dust": 36371,
+          "stars": 441,
+          "protection": 38
+        },
+        "dismantle": {
+          "dust": 227139,
+          "stars": 3600,
+          "protection": 12
+        }
+      },
+      {
+        "level": 14,
+        "upgrade": {
+          "dust": 39344,
+          "stars": 461,
+          "protection": 48
+        },
+        "dismantle": {
+          "dust": 258614,
+          "stars": 3969,
+          "protection": 26
+        }
+      },
+      {
+        "level": 15,
+        "upgrade": {
+          "dust": 42247,
+          "stars": 476,
+          "protection": 56
+        },
+        "dismantle": {
+          "dust": 292411,
+          "stars": 4350,
+          "protection": 58
+        }
+      },
+      {
+        "level": 16,
+        "upgrade": {
+          "dust": 45187,
+          "stars": 496,
+          "protection": 77
+        },
+        "dismantle": {
+          "dust": 328561,
+          "stars": 4746,
+          "protection": 94
+        }
+      },
+      {
+        "level": 17,
+        "upgrade": {
+          "dust": 48156,
+          "stars": 512,
+          "protection": 84
+        },
+        "dismantle": {
+          "dust": 367086,
+          "stars": 5156,
+          "protection": 140
+        }
+      },
+      {
+        "level": 18,
+        "upgrade": {
+          "dust": 51059,
+          "stars": 533,
+          "protection": 86
+        },
+        "dismantle": {
+          "dust": 407933,
+          "stars": 5582,
+          "protection": 196
+        }
+      },
+      {
+        "level": 19,
+        "upgrade": {
+          "dust": 53995,
+          "stars": 552,
+          "protection": 93
+        },
+        "dismantle": {
+          "dust": 451129,
+          "stars": 6023,
+          "protection": 264
+        }
+      },
+      {
+        "level": 20,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 626,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 496706,
+          "stars": 6524,
+          "protection": 343
+        }
+      },
+      {
+        "level": 21,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 697,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 542282,
+          "stars": 7082,
+          "protection": 432
+        }
+      },
+      {
+        "level": 22,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 771,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 587859,
+          "stars": 7699,
+          "protection": 530
+        }
+      },
+      {
+        "level": 23,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 848,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 633435,
+          "stars": 8378,
+          "protection": 638
+        }
+      },
+      {
+        "level": 24,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 920,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 679012,
+          "stars": 9114,
+          "protection": 735
+        }
+      },
+      {
+        "level": 25,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 993,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 724589,
+          "stars": 9908,
+          "protection": 804
+        }
+      },
+      {
+        "level": 26,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 1070,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 770165,
+          "stars": 10764,
+          "protection": 872
+        }
+      },
+      {
+        "level": 27,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 1141,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 815742,
+          "stars": 11677,
+          "protection": 940
+        }
+      },
+      {
+        "level": 28,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 1215,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 861318,
+          "stars": 12650,
+          "protection": 1009
+        }
+      },
+      {
+        "level": 29,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 1292,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 906895,
+          "stars": 13683,
+          "protection": 1077
+        }
+      },
+      {
+        "level": 30,
+        "upgrade": {
+          "dust": 56971,
+          "stars": 1363,
+          "protection": 96
+        },
+        "dismantle": {
+          "dust": 952472,
+          "stars": 14774,
+          "protection": 1145
+        }
+      },
+      {
+        "level": 31,
+        "upgrade": {
+          "dust": 64624,
+          "stars": 1427,
+          "protection": 117
+        },
+        "dismantle": {
+          "dust": 1004171,
+          "stars": 15915,
+          "protection": 1229
+        }
+      },
+      {
+        "level": 32,
+        "upgrade": {
+          "dust": 72276,
+          "stars": 1488,
+          "protection": 123
+        },
+        "dismantle": {
+          "dust": 1061992,
+          "stars": 17106,
+          "protection": 1316
+        }
+      },
+      {
+        "level": 33,
+        "upgrade": {
+          "dust": 77376,
+          "stars": 1554,
+          "protection": 130
+        },
+        "dismantle": {
+          "dust": 1123892,
+          "stars": 18349,
+          "protection": 1409
+        }
+      },
+      {
+        "level": 34,
+        "upgrade": {
+          "dust": 82478,
+          "stars": 1617,
+          "protection": 137
+        },
+        "dismantle": {
+          "dust": 1189875,
+          "stars": 19642,
+          "protection": 1506
+        }
+      },
+      {
+        "level": 35,
+        "upgrade": {
+          "dust": 87579,
+          "stars": 1682,
+          "protection": 146
+        },
+        "dismantle": {
+          "dust": 1259938,
+          "stars": 20898,
+          "protection": 1610
+        }
+      }
+    ]
+  }
+]
