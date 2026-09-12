@@ -88,3 +88,7 @@ bash scripts/deploy-latest.sh
 ```powershell
 node scripts/visual-check-news.mjs
 ```
+
+### 木叶快报邮件提醒
+
+快报页面提供邮箱订阅入口，确认邮箱后接收后续新一期通知，邮件包含快报图片、网页入口及退订链接。通过 `mail.riordon.xyz` 专用服务接口，使用 `naruto@riordon.xyz` 发信；图片变更去重、待发任务与订阅状态持久化，发送故障不会影响快报展示。配置未完成时不开放订阅。两个项目的配置和开通顺序见 [邮件订阅说明](docs/NEWS_EMAIL.md)。

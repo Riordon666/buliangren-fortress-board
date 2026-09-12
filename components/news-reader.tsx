@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowRight, ArrowUp, BookOpenText, CalendarDays, Check, CheckCheck, CircleAlert, Clock3, Database, ExternalLink, Flame, Maximize2, Minimize2, Newspaper, RefreshCw, ShieldCheck, X } from "lucide-react";
 import { ShinobiMark } from "@/components/shinobi-mark";
+import { NewsSubscriptionCard } from "@/components/news-subscription-card";
 import { NEWS_SOURCE_URL, type NewsState } from "@/lib/news/types";
 
 function timeLabel(value: string | null) {
@@ -11,7 +12,7 @@ function timeLabel(value: string | null) {
   return new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
 }
 
-export function NewsReader({ initial }: { initial: NewsState }) {
+export function NewsReader({ initial, subscriptionEnabled = false }: { initial: NewsState; subscriptionEnabled?: boolean }) {
   const [state, setState] = useState(initial);
   const [checking, setChecking] = useState(false);
   const [refreshMessage, setRefreshMessage] = useState("");
@@ -137,6 +138,7 @@ export function NewsReader({ initial }: { initial: NewsState }) {
 
       <aside className="news-right-rail" aria-label="快报更新与资料入口">
         <section className="news-side-card news-sync-card"><span className="eyebrow">INTELLIGENCE DESK</span><h2>情报同步台</h2><div className={`news-sync-badge ${stale ? "is-stale" : "is-ready"}`}>{stale ? <CircleAlert size={18} /> : <CheckCheck size={18} />}{!edition ? "等待快报" : stale ? "上次同步内容" : "已收录快报"}</div><dl><div><dt>最近核对</dt><dd>{timeLabel(state.checkedAt)}</dd></div><div><dt>本期收录</dt><dd>{edition ? timeLabel(edition.syncedAt) : "尚未收录"}</dd></div><div><dt>下次自动检查</dt><dd>{timeLabel(schedule.nextCheckAt)}</dd></div></dl><p className="news-schedule-status"><strong>{scheduleLabel}</strong><span>北京时间 · 周二 15:00–20:00 每 5 分钟，周三同一时段每 1 分钟。识别到本周新内容后暂停到下周。</span></p><div className="news-manual-update"><p>快报更新了，但这里还是旧的？</p><button onClick={() => void check(true)} disabled={checking}><RefreshCw size={17} className={checking ? "spin" : ""} />{checking ? "刷新中…" : "立即刷新"}</button><small role="status" aria-live="polite">{refreshMessage || "时段外也可手动检查，全站共用 1 分钟冷却。"}</small></div></section>
+        <NewsSubscriptionCard enabled={subscriptionEnabled} />
         <section className="news-side-card news-cadence"><span className="news-side-icon"><CalendarDays size={23} /></span><h2>每周情报日</h2><strong>周二 / 周三</strong><p>北京时间 15:00–20:00。其他时段不自动请求腾讯，阅读页面只读取本站缓存。</p><span><Clock3 size={15} />本周新一期收录后自动暂停</span></section>
         <Link href="/accessories" className="news-side-card news-related"><Database size={25} /><h2>饰品资料库</h2><p>升一级花多少，分解能返多少？查阅各系列饰品的材料与保护符明细。</p><span>打开资料卷轴 <ArrowRight size={17} /></span></Link>
         <button className="news-back-top" onClick={() => window.scrollTo({top: 0, behavior: "smooth"})}><ArrowUp size={17} />回到顶部</button>

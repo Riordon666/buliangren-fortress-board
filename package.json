@@ -8,7 +8,8 @@
     "start": "next start",
     "backup": "node scripts/backup-db.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "news:mail-status": "node scripts/news-mail-status.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",

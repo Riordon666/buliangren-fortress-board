@@ -1,5 +1,6 @@
 import { NewsReader } from "@/components/news-reader";
 import { getNewsService } from "@/lib/news/runtime";
+import { mailConfigured } from "@/lib/news-mail/config";
 
 export const metadata = {
   title: "木叶快报",
@@ -8,5 +9,5 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function NewsPage() {
-  return <NewsReader initial={await getNewsService().read()} />;
+  return <NewsReader initial={await getNewsService().read()} subscriptionEnabled={mailConfigured()} />;
 }

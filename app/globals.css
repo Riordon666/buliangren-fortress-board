@@ -5324,3 +5324,67 @@ body {
     white-space: nowrap;
   }
 }
+
+/* Konoha news opt-in mail subscription. */
+/* The expanded right rail is taller than a viewport; let all of its controls scroll into view. */
+.news-page .news-layout > .news-right-rail { position: static; }
+.news-page .news-right-rail > .news-subscription-card { display: block; border-top: 3px solid #bb6c37; min-width: 0; }
+.news-page .news-subscription-heading { display: flex; align-items: center; gap: 10px; }
+.news-page .news-subscription-heading > div { min-width: 0; }
+.news-page .news-subscription-heading > div > span { color: #ae7545; font-size: 15px; line-height: 1.5; }
+.news-page .news-subscription-heading h2 { margin: 3px 0 0; color: #304d37; font-size: 23px; line-height: 1.45; }
+.news-subscription-seal { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 43px; height: 43px; border: 1px solid #d0b07b69; border-radius: 8px; color: #a96132; background: #eee0c745; }
+.news-page .news-subscription-card .news-subscription-intro { margin: 14px 0 17px; color: #73735e; font-size: 15px; line-height: 1.8; }
+.news-subscription-form { display: grid; min-width: 0; gap: 9px; }
+.news-subscription-form label { color: #4d6046; font-size: 15px; font-weight: 650; }
+.news-subscription-form input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; border: 1px solid #b3a37b80; border-radius: 6px; padding: 10px 11px; background: #fffdf7; color: #344b37; font-size: 16px; line-height: 1.5; outline-offset: 3px; }
+.news-subscription-form input::placeholder { color: #929078; font-size: 15px; }
+.news-subscription-form input:focus { outline: 2px solid #b77943; }
+.news-subscription-form button { display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: 44px; padding: 10px 9px; border: 1px solid #365f41; border-radius: 6px; color: #fff7e4; background: #385d40; font-size: 15px; font-weight: 650; line-height: 1.6; cursor: pointer; }
+.news-subscription-form button > svg { flex-shrink: 0; }
+.news-subscription-form button:hover:not(:disabled) { background: #2d5036; }
+.news-subscription-form button:focus-visible { outline: 2px solid #bd783d; outline-offset: 3px; }
+.news-subscription-form :disabled { opacity: .64; cursor: not-allowed; }
+.news-subscription-status { display: flex; align-items: flex-start; gap: 7px; margin-top: 12px; color: #837659; font-size: 15px; line-height: 1.8; overflow-wrap: anywhere; }
+.news-subscription-status > svg { flex-shrink: 0; margin-top: 4px; }
+.news-subscription-status.is-success { color: #3b6a43; }
+.news-subscription-status.is-error { color: #a55836; }
+.news-page .news-subscription-card .news-subscription-note { margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed #b29c7161; color: #87816b; font-size: 15px; line-height: 1.8; }
+.news-subscription-note > span { color: #6c765d; overflow-wrap: anywhere; }
+.news-subscription-spinner { animation: news-subscription-spin 1s linear infinite; }
+@keyframes news-subscription-spin { to { transform: rotate(360deg); } }
+.news-subscription-action-page { display: grid; min-width: 0; justify-items: center; padding: 34px 0 48px; }
+.news-subscription-action { display: flex; width: min(100%, 630px); min-width: 0; flex-direction: column; align-items: center; padding: 34px 38px; border-top: 4px solid #bc703a; text-align: center; }
+.news-subscription-action-seal { display: inline-flex; align-items: center; justify-content: center; width: 78px; height: 78px; margin-bottom: 20px; border: 1px solid #c8a875; border-radius: 50%; outline: 1px solid #dfca9f; outline-offset: 5px; color: #a66335; background: #efe0c14f; }
+.news-subscription-action-seal.is-complete { color: #44704b; background: #e5eddc; border-color: #a5b790; outline-color: #d2dec4; }
+.news-subscription-action-kicker { margin-top: 5px; color: #9f825a; font-size: 15px; }
+.news-subscription-action h1 { margin: 12px 0 16px; color: #2d4a35; font-size: 34px; line-height: 1.45; }
+.news-subscription-action-intro { margin: 0; color: #74715c; font-size: 16px; line-height: 1.9; }
+.news-subscription-action-message { display: flex; align-items: flex-start; gap: 9px; width: 100%; margin-top: 22px; padding: 13px 15px; border-radius: 7px; color: #7d775f; background: #eee7d3; font-size: 15px; text-align: left; line-height: 1.8; overflow-wrap: anywhere; }
+.news-subscription-action-message:empty { display: none; }
+.news-subscription-action-message > svg { flex-shrink: 0; margin-top: 3px; }
+.news-subscription-action-message.is-success { color: #416d45; background: #e7eddb; }
+.news-subscription-action-message.is-error { color: #9b633b; background: #f4e6ce; }
+.news-subscription-action-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; width: min(100%, 340px); margin-top: 24px; border: 1px solid #31583c; border-radius: 7px; padding: 10px 18px; background: #395f42; color: #fff8e9; font-size: 16px; font-weight: 700; cursor: pointer; }
+.news-subscription-action-button:hover:not(:disabled) { background: #2e5037; }
+.news-subscription-action-button:disabled { opacity: .55; cursor: not-allowed; }
+.news-subscription-action-button:focus-visible, .news-subscription-return:focus-visible { outline: 2px solid #bc783f; outline-offset: 4px; }
+.news-subscription-return { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; margin-top: 15px; color: #8b704c; font-size: 15px; line-height: 1.8; }
+.news-subscription-action-footer { margin: 23px 0 0; padding-top: 18px; border-top: 1px dashed #b19e7670; width: 100%; color: #938971; font-size: 15px; line-height: 1.8; overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .news-page .news-right-rail > .news-subscription-card { margin-top: 12px; padding: 18px; }
+  .news-page .news-subscription-heading h2 { font-size: 22px; }
+  .news-page .news-subscription-card .news-subscription-intro { margin: 12px 0; }
+  .news-subscription-form { grid-template-columns: minmax(0, 1fr) minmax(170px, auto); }
+  .news-subscription-form label { grid-column: 1 / -1; }
+  .news-subscription-form button { align-self: stretch; }
+}
+@media (max-width: 540px) {
+  .news-page .news-right-rail > .news-subscription-card { padding: 17px 15px; }
+  .news-subscription-form { grid-template-columns: minmax(0, 1fr); }
+  .news-subscription-action-page { padding: 20px 0 28px; }
+  .news-subscription-action { padding: 28px 20px; }
+  .news-subscription-action h1 { font-size: 28px; }
+  .news-subscription-action-seal { width: 68px; height: 68px; }
+}
+@media (prefers-reduced-motion: reduce) { .news-subscription-spinner { animation: none; } }
