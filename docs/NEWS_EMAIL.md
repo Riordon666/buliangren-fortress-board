@@ -102,3 +102,20 @@ node --env-file=.env.production scripts/news-mail-send-current.mjs --all-active 
 命令为每个符合条件的订阅者各增加一条正式快报任务，沿用现有发送程序、模板、内嵌图片和代理配置，通常约 30 秒开始按现有速率处理。输出包含快报版本、收录时间、页数、收件人数、新增任务数及已有任务状态计数，不列出邮箱。省略 `--send` 可只读预览；用 `--to ninja@example.com` 替换 `--all-active` 可限定一个已确认订阅的测试邮箱。开发测试仍使用假的发信适配器。
 
 命令使用邮件程序最近观察到的本地快报，不访问腾讯，不修改新闻检查日程、内容指纹或订阅状态。同一期、同一轮订阅使用正式发送的同一幂等键：重复执行不会再发一封，也不会重置已有 `queued` 的重试时间或 `sent`、`unknown`、`cancelled` 状态。`pending` 和已退订的邮箱不会收到；入队后退订也会由现有发送程序取消。执行后可用 `news-mail-status.mjs` 查看队列，并由收件人确认送达。
+
+## 邮箱 3.3 升级：要塞侧兼容检查
+
+本站继续使用原专用发送 API，保留现有 `NEWS_MAIL_API_URL`、`NEWS_MAIL_API_TOKEN` 和 `NEWS_MAIL_PROXY_URL`。邮箱的收件 Webhook 不参与快报发信。订阅名单、确认/退订状态、邮件队列和新闻检查日程继续由要塞网站管理，升级邮箱不需要重置 `NEWS_SUBSCRIPTION_SECRET` 或让用户重新订阅。
+
+升级后在要塞运行目录执行：
+
+```bash
+cd /www/wwwroot/buliangren-runtime
+node --env-file=.env.production scripts/check-news-mail-api.mjs
+```
+
+检查读取网站现有环境变量，使用相同邮件代理配置（未设置则直连），仅发送 GET 和没有收件人、邮件正文或幂等键的空 JSON POST。预期分别返回 405 `post_required`、400 `idempotency_key_required`。命令不写环境文件或数据库、不触发队列、不发送邮件；无需访问 Mihomo 的 root 配置。curl 保持 HTTPS 证书校验、不跟随重定向、不自动重试，密钥和代理凭据仅通过标准输入传递，原始响应及错误不会输出。
+
+通过仅表示连接、专用认证和基础校验兼容，不证明图片处理、实际发信或送达。失败会区分网络/代理、认证、路由、重定向及响应格式问题。没有改变 API 时无需为了 3.3 修改本站业务代码；接口成功响应仍须保持 HTTP 200 和 `{ "status": "sent", "id": "..." }`，请求使用原 Bearer 认证、稳定的 `Idempotency-Key` 和 CID 附件字段。
+
+需要验收真实邮件时，使用已授权且自己控制的单个已确认邮箱：`news-mail-send-current.mjs --to 收件邮箱 --send`。只有明确要给所有订阅者补发时才使用 `--all-active`。同一期已发送的任务不会因验收重新发送，不能重置发送记录来绕过防重复保护。
