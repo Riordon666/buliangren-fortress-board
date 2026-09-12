@@ -1,7 +1,7 @@
 import { isIP } from "node:net";
 import { getMailConfig } from "@/lib/news-mail/config";
 import { getNewsMailService } from "@/lib/news-mail/runtime";
-import { MailRequestError } from "@/lib/news-mail/store";
+import { isMailRequestError, MailRequestError } from "@/lib/news-mail/store";
 
 async function smallJson(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new MailRequestError(400, "请求格式不正确，请刷新页面后重试。");
@@ -21,7 +21,7 @@ async function smallJson(request: Request) {
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("invalid-body");
     return value as Record<string, unknown>;
   } catch (error) {
-    if (error instanceof MailRequestError) throw error;
+    if (isMailRequestError(error)) throw error;
     throw new MailRequestError(400, "请求格式不正确，请刷新页面后重试。");
   } finally { reader.releaseLock(); }
 }
@@ -60,7 +60,7 @@ export async function subscriptionRequest(request: Request, operation: "subscrib
     service.unsubscribe(body.token);
     return Response.json({ message: "已取消订阅，之后不会再收到木叶快报更新提醒。" }, { headers });
   } catch (error) {
-    if (error instanceof MailRequestError) {
+    if (isMailRequestError(error)) {
       if (error.retryAfter) headers["Retry-After"] = String(error.retryAfter);
       return Response.json({ message: error.message }, { status: error.status, headers });
     }

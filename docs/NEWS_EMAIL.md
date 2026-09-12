@@ -46,6 +46,8 @@ node --env-file=.env.production scripts/news-mail-status.mjs
 
 `sent` 表示邮箱 API 已接受，不代表已进入收件箱；`unknown` 表示发送结果需要核对，程序不会自动重复发信。`queued` 会按重试时间继续处理，`cancelled` 已停止。日志只记录失败类别，不打印订阅邮箱、邮件内容或密钥。
 
+状态汇总中的 `retries` 会显示尝试次数及错误类别：`provider-authorization` 检查两端专用密钥；`provider-network` 检查服务器到邮箱 API 的 DNS、HTTPS 连接；`provider-unavailable` 表示邮箱 API 暂不可用；`local-preparation-failed` 检查应用日志与数据库权限。无需公开密钥、订阅地址或邮件链接。
+
 订阅接口使用 `X-Real-IP` 做来源限流。Nginx 反向代理应由服务器覆写它：
 
 ```nginx

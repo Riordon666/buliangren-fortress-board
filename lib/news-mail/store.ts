@@ -31,8 +31,19 @@ export function createMailTables(db: Database.Database) {
     );
   `);
 }
+// Next compiles instrumentation and request routes into separate modules while they share
+// the process-wide service instance. A global symbol survives that class-identity boundary.
+const MAIL_REQUEST_ERROR = Symbol.for("konoha.news-mail.request-error");
 export class MailRequestError extends Error {
+  readonly [MAIL_REQUEST_ERROR] = true;
   constructor(public status: number, message: string, public retryAfter?: number) { super(message); }
+}
+export function isMailRequestError(error: unknown): error is MailRequestError {
+  if (!error || typeof error !== "object") return false;
+  const value = error as Partial<MailRequestError>;
+  return value[MAIL_REQUEST_ERROR] === true && typeof value.message === "string" &&
+    typeof value.status === "number" && Number.isInteger(value.status) && value.status >= 400 && value.status <= 599 &&
+    (value.retryAfter === undefined || (Number.isSafeInteger(value.retryAfter) && value.retryAfter > 0));
 }
 export function consumeMailLimits(db: Database.Database, rules: Array<{ key: string; duration: number; maximum: number }>, now: number) {
   const states = rules.map(rule => ({ rule, row: db.prepare("SELECT window_start,count FROM news_mail_limits WHERE key=?").get(rule.key) as { window_start: number; count: number } | undefined }));

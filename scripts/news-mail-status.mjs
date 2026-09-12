@@ -17,12 +17,13 @@ try {
   } else {
     const subscribers = db.prepare("SELECT status, COUNT(*) AS count FROM news_mail_subscribers GROUP BY status").all();
     const deliveries = db.prepare("SELECT kind, status, COUNT(*) AS count FROM news_mail_outbox GROUP BY kind, status").all();
+    const retries = db.prepare("SELECT kind, status, attempts, last_error AS error, COUNT(*) AS count FROM news_mail_outbox WHERE status IN ('queued','sending','unknown') GROUP BY kind,status,attempts,last_error ORDER BY kind,status,attempts").all();
     const latest = db.prepare("SELECT MAX(sent_at) AS lastSentAt FROM news_mail_outbox WHERE status = 'sent'").get();
     const pending = db.prepare("SELECT MIN(next_attempt_at) AS nextAttemptAt FROM news_mail_outbox WHERE status = 'queued'").get();
     const state = db.prepare("SELECT initialized_at AS initializedAt FROM news_mail_state WHERE id = 1").get();
     const date = (value) => value ? new Date(value).toISOString() : null;
     console.log(JSON.stringify({
-      subscribers, deliveries,
+      subscribers, deliveries, retries,
       initializedAt: date(state?.initializedAt),
       lastSentAt: date(latest?.lastSentAt),
       nextAttemptAt: date(pending?.nextAttemptAt),
