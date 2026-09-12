@@ -48,6 +48,7 @@ jobs:
           cp -a .next/static/. deploy/.next/static/
           cp -a public/. deploy/public/
           cp scripts/news-mail-status.mjs deploy/scripts/news-mail-status.mjs
+          cp scripts/news-mail-send-current.mjs deploy/scripts/news-mail-send-current.mjs
           cp scripts/configure-news-mail-proxy.mjs deploy/scripts/configure-news-mail-proxy.mjs
           printf '%s\n' "$GITHUB_SHA" > deploy/BUILD_COMMIT
           node --version > deploy/NODE_VERSION

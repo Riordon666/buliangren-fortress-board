@@ -89,3 +89,16 @@ node scripts/configure-news-mail-proxy.mjs --apply
 写入后，助手只提前已有 `queued` 且因网络失败推迟的任务的下次尝试时间；不改变任务编号、内容、尝试次数，不重发 `sent`、`unknown` 或 `cancelled` 的记录。启动或重启宝塔 Node 项目后，后台继续处理这些任务。运行 `node --env-file=.env.production scripts/news-mail-status.mjs` 检查 `sent` 是否增加，并让收件人确认收到邮件。
 
 不带 `--apply` 时只验证连接。若助手报告代理已通但 API 认证失败，核对两端邮件专用密钥；不要重置订阅签名密钥。
+
+## 补发当前快报
+
+管理员需要发送一次正式更新邮件时，可将网站当前已收录的一期发给执行时全部 `active`（已确认订阅）的邮箱。保持网站 Node 项目运行，无需重启。
+
+```bash
+cd /www/wwwroot/buliangren-runtime
+node --env-file=.env.production scripts/news-mail-send-current.mjs --all-active --send
+```
+
+命令为每个符合条件的订阅者各增加一条正式快报任务，沿用现有发送程序、模板、内嵌图片和代理配置，通常约 30 秒开始按现有速率处理。输出包含快报版本、收录时间、页数、收件人数、新增任务数及已有任务状态计数，不列出邮箱。省略 `--send` 可只读预览；用 `--to ninja@example.com` 替换 `--all-active` 可限定一个已确认订阅的测试邮箱。开发测试仍使用假的发信适配器。
+
+命令使用邮件程序最近观察到的本地快报，不访问腾讯，不修改新闻检查日程、内容指纹或订阅状态。同一期、同一轮订阅使用正式发送的同一幂等键：重复执行不会再发一封，也不会重置已有 `queued` 的重试时间或 `sent`、`unknown`、`cancelled` 状态。`pending` 和已退订的邮箱不会收到；入队后退订也会由现有发送程序取消。执行后可用 `news-mail-status.mjs` 查看队列，并由收件人确认送达。
